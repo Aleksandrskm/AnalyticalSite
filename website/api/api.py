@@ -22,7 +22,7 @@ def proxy_report():
         print('API Proxy: incoming json: <unserializable>')
     try:
         print('API Proxy: forwarding POST /api/report to', f"{REPORT_SERVICE_URL}/report")
-        resp = requests.post(f"{REPORT_SERVICE_URL}/report", json=json_data, timeout=30)
+        resp = requests.post(f"{REPORT_SERVICE_URL}/report", json=json_data, timeout=300)
         print('API Proxy: remote status', resp.status_code)
         if resp.status_code >= 400:
             try:
@@ -62,7 +62,7 @@ def proxy_report_type(report_type):
         print('API Proxy: incoming json: <unserializable>')
     try:
         print('API Proxy: forwarding POST /api/report/%s to %s' % (report_type, f"{REPORT_SERVICE_URL}/report/{report_type}"))
-        resp = requests.post(f"{REPORT_SERVICE_URL}/report/{report_type}", json=json_data, timeout=30)
+        resp = requests.post(f"{REPORT_SERVICE_URL}/report/{report_type}", json=json_data, timeout=300)
         print('API Proxy: remote status', resp.status_code)
         if resp.status_code >= 400:
             try:
