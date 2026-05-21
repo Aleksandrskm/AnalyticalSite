@@ -1,4 +1,5 @@
 import {editRow,deleteRow,insertRow,postJSON,getRowsTable} from './db.js';
+import { sendReportCSV, sendReportDocx } from './reportService.js';
 import { Modal } from "./Modal.js";
 import {Loader} from "./Loader.js";
 export function table(url){
@@ -359,15 +360,25 @@ export function table(url){
         // console.log(tableRow);
         const buttons = document.createElement('div');
         buttons.classList = 'table-buttons';
-        buttons.innerHTML=`<button class="insert">Добавить</button>`
-        buttons.innerHTML += `<button class="edit">Редактировать</button>`;
-        buttons.innerHTML += `<button class="copy">Добавить с копированием</button>`;
-        buttons.innerHTML += `<button class="delete">Удалить</button>`;
-        buttons.innerHTML += `<button class="maps">Показать карту</button>`;
+        buttons.innerHTML = `
+          <div class="button-group">
+            <button class="insert">Добавить</button>
+            <button class="edit">Редактировать</button>
+            <button class="report-csv">Отчёт CSV</button>
+            <button class="report-docx">Отчёт docx</button>
+          </div>
+          <div class="button-group">
+            <button class="copy">Добавить с копированием</button>
+            <button class="delete">Удалить</button>
+            <button class="maps">Показать карту</button>
+          </div>
+        `;
         table.parentElement.append(buttons);
         // console.log(result.rows[0].length);
         const btnInsert=document.querySelector('.insert');
         const btnEdit=document.querySelector('.edit');
+        const btnReportCSV=document.querySelector('.report-csv');
+        const btnReportDocx=document.querySelector('.report-docx');
         const btnCopy=document.querySelector('.copy');
         const btnDelete=document.querySelector('.delete');
         const btmMap=document.querySelector('.maps');
@@ -378,7 +389,6 @@ export function table(url){
             btnDelete.setAttribute('disabled', '');
             btmMap.setAttribute('disabled', '');
           }
-          // console.log(result)
         const modalParent=document.querySelector('.container_content');
         const modalDelete= new Modal(modalParent,'delete',0,result.columns_info,tableRow,deleteRow,result,rusName,tableName);
         const modalInser= new Modal(modalParent,'insert',result.columns_info.length,result.columns_info,tableRow,insertRow,result,rusName,tableName);
@@ -392,6 +402,28 @@ export function table(url){
           modalEdit.createModal(createTable)});
         btnInsert.addEventListener('click',()=>{
           modalInser.createModal(createTable);
+        });
+        btnReportCSV.addEventListener('click', async () => {
+          try {
+            loader.show('Формирование отчёта CSV...');
+            await sendReportCSV(tableName, rusName, result.columns_info);
+          } catch (error) {
+            console.error(error);
+            alert('Ошибка при формировании CSV отчёта');
+          } finally {
+            loader.close();
+          }
+        });
+        btnReportDocx.addEventListener('click', async () => {
+          try {
+            loader.show('Формирование отчёта DOCX...');
+            await sendReportDocx(tableName, rusName, result.columns_info);
+          } catch (error) {
+            console.error(error);
+            alert('Ошибка при формировании DOCX отчёта');
+          } finally {
+            loader.close();
+          }
         });
       }
       getNameTables(url);

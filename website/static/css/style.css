@@ -1261,16 +1261,31 @@ label{
 .table-buttons{
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
     padding-top: 20px;
-    overflow: auto;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.table-buttons .button-group{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
 .table-buttons button{
     box-sizing: border-box;
     font-size: 1.2rem;
-    /* max-height: 55px; */
-    /* min-width: 230px; */
-    width: max(17%, 220px);
-    padding-right: 10px;
+    min-width: 170px;
+    padding: 10px 14px;
+}
+.report-csv,
+.report-docx{
+    font-size: 20px;
+    margin: 10px;
+    border-radius: 7px;
+    text-align: center;
+    cursor: pointer;
 }
 .table-row.selected {
     background-color: #f0f0f0;
