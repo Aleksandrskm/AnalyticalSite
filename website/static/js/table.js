@@ -1,68 +1,29 @@
-import {editRow,deleteRow,insertRow,postJSON,getRowsTable} from './db.js';
+import {editRow, deleteRow, insertRow, postJSON, getRowsTable} from './db.js';
 import { Modal } from "./Modal.js";
 import {Loader} from "./Loader.js";
+import { showReportModal, generateReportByFormat as generateReportByFormatUtil } from './report.js';
 
 const BASE_URL = 'http://185.192.247.60:8888';
 
-// Флаг для предотвращения повторных вызовов
-let isGeneratingReport = false;
-
-// Функция для скачивания CSV отчета
-async function downloadCsv(header, rows, filename = 'report.csv') {
-  const response = await fetch(`${BASE_URL}/report/csv`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ header, rows })
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// Функция для скачивания DOCX отчета
-async function downloadDocx(elements, filename = 'report.docx') {
-  const response = await fetch(`${BASE_URL}/report/docx`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ filename, elements })
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// Функция для фильтрации данных
-function filterData(data, field, value) {
+// Функция для фильтрации данных с поддержкой точного совпадения
+function filterData(data, field, value, exactMatch = false) {
   if (!value || !field) return data;
 
   return data.filter(row => {
     const cellValue = row[field];
     if (cellValue === null || cellValue === undefined) return false;
 
-    const strValue = String(cellValue).toLowerCase();
-    const searchValue = String(value).toLowerCase();
-
-    return strValue.includes(searchValue);
+    if (exactMatch) {
+      // Точное совпадение (без учета регистра)
+      const strValue = String(cellValue).toLowerCase();
+      const searchValue = String(value).toLowerCase();
+      return strValue === searchValue;
+    } else {
+      // Частичное совпадение (содержит)
+      const strValue = String(cellValue).toLowerCase();
+      const searchValue = String(value).toLowerCase();
+      return strValue.includes(searchValue);
+    }
   });
 }
 
@@ -73,6 +34,16 @@ export function table(url){
   let currentColumnsInfo = [];
   let currentTableName = '';
   let currentRusName = '';
+
+  // Обертка для функции generateReportByFormat с передачей loader
+  const generateReportByFormat = (tableName, rusName, columnsInfo, allRows, format) => {
+    return generateReportByFormatUtil(tableName, rusName, columnsInfo, allRows, format, loader);
+  };
+
+  // Обертка для функции showReportModal
+  const showReportModalWrapper = (tableName, rusName, columnsInfo, allRows) => {
+    showReportModal(tableName, rusName, columnsInfo, allRows, loader, generateReportByFormat);
+  };
 
   // Функция для создания компонента фильтрации
   function createFilterComponent(container, columnsInfo, onFilterApply, onFilterReset) {
@@ -92,6 +63,13 @@ export function table(url){
           <label>Значение</label>
           <input type="text" class="filter-value-input" placeholder="Введите значение...">
         </div>
+
+        <div class="filter-exact-match">
+          <label>
+            <input type="checkbox" class="filter-exact-checkbox">
+            Точное совпадение
+          </label>
+        </div>
         
         <div class="filter-buttons">
           <button class="filter-apply-btn">Применить</button>
@@ -102,20 +80,23 @@ export function table(url){
 
     const fieldSelect = container.querySelector('.filter-field-select');
     const valueInput = container.querySelector('.filter-value-input');
+    const exactCheckbox = container.querySelector('.filter-exact-checkbox');
     const applyBtn = container.querySelector('.filter-apply-btn');
     const resetBtn = container.querySelector('.filter-reset-btn');
 
     applyBtn.addEventListener('click', () => {
       const field = fieldSelect.value;
       const value = valueInput.value;
+      const exactMatch = exactCheckbox.checked;
       if (field && value) {
-        onFilterApply(field, value);
+        onFilterApply(field, value, exactMatch);
       }
     });
 
     resetBtn.addEventListener('click', () => {
       fieldSelect.value = '';
       valueInput.value = '';
+      exactCheckbox.checked = false;
       onFilterReset();
     });
   }
@@ -368,10 +349,10 @@ export function table(url){
   }
 
   // Функция для обработки фильтрации
-  function handleFilterApply(field, value, result, rusName, tableName) {
+  function handleFilterApply(field, value, exactMatch, result, rusName, tableName) {
     if (!currentTableData.length) return;
 
-    const filteredData = filterData(currentTableData, field, value);
+    const filteredData = filterData(currentTableData, field, value, exactMatch);
     const containerContent = document.querySelector('.container_content');
     const hasData = filteredData.length > 0;
     renderTableData(containerContent, filteredData, currentColumnsInfo, result, rusName, tableName, hasData);
@@ -392,8 +373,10 @@ export function table(url){
     if (filterContainer) {
       const fieldSelect = filterContainer.querySelector('.filter-field-select');
       const valueInput = filterContainer.querySelector('.filter-value-input');
+      const exactCheckbox = filterContainer.querySelector('.filter-exact-checkbox');
       if (fieldSelect) fieldSelect.value = '';
       if (valueInput) valueInput.value = '';
+      if (exactCheckbox) exactCheckbox.checked = false;
     }
 
     const hasData = currentTableData.length > 0;
@@ -429,7 +412,7 @@ export function table(url){
     createFilterComponent(
         filterContainer,
         result.columns_info,
-        (field, value) => handleFilterApply(field, value, result, rusName, tableName),
+        (field, value, exactMatch) => handleFilterApply(field, value, exactMatch, result, rusName, tableName),
         () => handleFilterReset(result, rusName, tableName)
     );
 
@@ -512,7 +495,7 @@ export function table(url){
       createFilterComponent(
           filterContainer,
           columnsInfo,
-          (field, value) => handleFilterApply(field, value, result, rusName, tableName),
+          (field, value, exactMatch) => handleFilterApply(field, value, exactMatch, result, rusName, tableName),
           () => handleFilterReset(result, rusName, tableName)
       );
 
@@ -562,219 +545,6 @@ export function table(url){
     }
   }
 
-  // Функция для показа модального окна выбора формата отчета
-  function showReportModal(tableName, rusName, columnsInfo, allRows) {
-    let reportModal = document.getElementById('reportFormatModal');
-    if (!reportModal) {
-      reportModal = document.createElement('div');
-      reportModal.id = 'reportFormatModal';
-      reportModal.className = 'modal';
-      reportModal.style.display = 'none';
-      reportModal.innerHTML = `
-        <div class="modal__dialog">
-          <div class="modal__content report-modal-content">
-            <h4 class="modal__title">Выберите формат отчета</h4>
-            <div class="report-modal-buttons">
-              <button class="report-format-btn" data-format="csv">CSV (Excel)</button>
-              <button class="report-format-btn" data-format="docx">DOCX (Word)</button>
-            </div>
-            <div class="confirmation-modal__buttons" style="text-align: center; padding-top: 10px;">
-              <button class="modal__closes report-modal-close">Отмена</button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(reportModal);
-    }
-
-    reportModal.style.display = 'flex';
-
-    const formatBtns = reportModal.querySelectorAll('.report-format-btn');
-    const closeBtn = reportModal.querySelector('.modal__closes');
-
-    const handleFormatSelect = (format) => {
-      reportModal.style.display = 'none';
-      generateReportByFormat(tableName, rusName, columnsInfo, allRows, format);
-    };
-
-    formatBtns.forEach(btn => {
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const format = newBtn.dataset.format;
-        handleFormatSelect(format);
-      });
-    });
-
-    const newCloseBtn = closeBtn.cloneNode(true);
-    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-    newCloseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      reportModal.style.display = 'none';
-    });
-  }
-
-  // Функция для генерации отчета в выбранном формате
-  async function generateReportByFormat(tableName, rusName, columnsInfo, allRows, format) {
-    if (isGeneratingReport) {
-      console.log('Отчет уже формируется, подождите...');
-      return;
-    }
-
-    isGeneratingReport = true;
-
-    try {
-      loader.show(`Формирование ${format.toUpperCase()} отчета...`);
-
-      const filename = `${tableName}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}`;
-
-      if (format === 'csv') {
-        const header = {};
-        columnsInfo.forEach(col => {
-          header[col.name] = col.description || col.name;
-        });
-
-        const rows = allRows.map(row => {
-          const csvRow = {};
-          columnsInfo.forEach(col => {
-            let value = row[col.name];
-            if (value === null || value === undefined) {
-              value = '';
-            } else if (typeof value === 'number' && !Number.isInteger(value)) {
-              value = value.toFixed(6);
-            }
-            csvRow[col.name] = value;
-          });
-          return csvRow;
-        });
-
-        await downloadCsv(header, rows, `${filename}.csv`);
-        console.log(`Отчет "${rusName}" в формате CSV успешно сохранен!`);
-      } else if (format === 'docx') {
-        const elements = [];
-
-        elements.push({
-          type: 'title',
-          text: `Отчет по таблице "${rusName}"`,
-          formatting: {
-            font_name: 'Arial',
-            font_size: 18,
-            alignment: 'center',
-            bold: true,
-            space_after: 12
-          }
-        });
-
-        elements.push({
-          type: 'paragraph',
-          text: `Дата формирования: ${new Date().toLocaleString('ru-RU')}`,
-          formatting: {
-            font_size: 11,
-            alignment: 'right',
-            italic: true,
-            space_after: 12
-          }
-        });
-
-        elements.push({
-          type: 'paragraph',
-          text: `Имя таблицы в БД: ${tableName}`,
-          formatting: { font_size: 11, space_after: 4 }
-        });
-
-        elements.push({
-          type: 'paragraph',
-          text: `Русское название: ${rusName}`,
-          formatting: { font_size: 11, space_after: 4 }
-        });
-
-        elements.push({
-          type: 'paragraph',
-          text: `Количество записей: ${allRows.length}`,
-          formatting: { font_size: 11, space_after: 16 }
-        });
-
-        elements.push({
-          type: 'title',
-          text: 'Структура таблицы',
-          formatting: {
-            font_size: 14,
-            bold: true,
-            space_before: 12,
-            space_after: 8
-          }
-        });
-
-        const structureHeaders = ['Поле (БД)', 'Описание', 'Тип данных'];
-        const structureRows = columnsInfo.map(col => [
-          col.name,
-          col.description || '-',
-          col.data_type || '-'
-        ]);
-
-        elements.push({
-          type: 'table',
-          headers: structureHeaders,
-          rows: structureRows
-        });
-
-        elements.push({
-          type: 'title',
-          text: 'Данные таблицы',
-          formatting: {
-            font_size: 14,
-            bold: true,
-            space_before: 12,
-            space_after: 8
-          }
-        });
-
-        const dataHeaders = columnsInfo.map(col => col.description || col.name);
-        const dataRows = allRows.map(row => {
-          return columnsInfo.map(col => {
-            let value = row[col.name];
-            if (value === null || value === undefined) return '';
-            if (typeof value === 'number' && !Number.isInteger(value)) {
-              return value.toFixed(6);
-            }
-            return String(value);
-          });
-        });
-
-        elements.push({
-          type: 'table',
-          headers: dataHeaders,
-          rows: dataRows
-        });
-
-        elements.push({
-          type: 'paragraph',
-          text: `Отчет сгенерирован автоматически. Всего записей: ${allRows.length}`,
-          formatting: {
-            font_size: 10,
-            alignment: 'center',
-            italic: true,
-            space_before: 16
-          }
-        });
-
-        await downloadDocx(elements, `${filename}.docx`);
-        console.log(`Отчет "${rusName}" в формате DOCX успешно сохранен!`);
-      }
-
-      loader.close();
-
-    } catch (error) {
-      console.error(`Ошибка при формировании ${format} отчета:`, error);
-      loader.close();
-    } finally {
-      setTimeout(() => {
-        isGeneratingReport = false;
-      }, 500);
-    }
-  }
-
   // Функция для сбора данных таблицы и формирования отчета
   async function generateReport(tableName, rusName, columnsInfo) {
     try {
@@ -800,7 +570,7 @@ export function table(url){
         filteredData = dataTable.rows;
       }
 
-      showReportModal(tableName, rusName, columnsInfo, filteredData);
+      showReportModalWrapper(tableName, rusName, columnsInfo, filteredData);
     } catch (error) {
       console.error('Ошибка при сборе данных:', error);
       loader.close();
