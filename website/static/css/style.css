@@ -3,20 +3,20 @@
     --background-color: #ffffff; /* Цвет фона */
     --background-top-panel-color: #ffffff; /* Цвет шапки */
     --disabled-color: #5c5c5c;
-  
+
     --text-color-level-2: #000000; /* Цвет текста второго уровня */
     --background-color-level-2: #e6e3e3; /* Цвет фона */
-  
+
     --button-background-color: #ada5a5; /* Цвет кнопок */
-  
+
     --highlight-text-color: #0060df; /*Цвет важного текста */
-  
+
     --hover-background-color: #cac5c5; /* Цвет при наведении */
     --hover-text-color: #ffffff; /* Цвет  текст при наведении */
-  
+
     --selected-background-color: #434141; /* Цвет выбранного элемента*/
     --selected-text-color: #ffffff; /* Цвет текста при выборе*/
-  
+
     --font-size-h1: 24px; /* Размер шрифта заголовка */
     --font-size-h2: 18px; /* Размер шрифта заголовка*/
     --font-size-h3: 16px; /* Размер шрифта заголовка*/
@@ -25,21 +25,21 @@
     --font-family-main-text: "Avenir Next", "Helvetica Neue", "Helvetica"; /* шрифт  */
     --font-family-sub-text: "Cousine", monospace; /* шрифт  */
     --font-family-left-menu-text: "Arial", sans-serif;
-  
+
     --font-weight-super-light: 400; /* Низкий вес текста */
     --font-weight-light: 500; /* Легкий вес текста */
     --font-weight-normal: 700; /* Нормальный вес текста */
     --font-weight-medium: 800; /* Средний вес текста */
     --font-weight-bold: 1000; /* Жирный вес текста */
-  
+
     --z-index-up: 1000; /* По умолчанию если надо поверх всего */
     --z-index-lowe_up: 999; /* Ниже чем максимальный, но выше всего остального */
     --z-index-max: 99999; /* 'Экстренное, если надо что-то типа принять куки выводить выше все.' */
-  
+
     /* Цвет фона всплывающего окна */
     --background-color-popup: rgba(255, 255, 255, 0.8);
     --text-popup: #000000; /* Цвет текста всплывающего окна */
-  
+
     --size-header-height: 75px;
     --size-header-level-2-height: 20px;
     --size-top-panel-height: 66px;
@@ -249,7 +249,7 @@ input{
     max-width: 33vw;
     box-sizing: border-box;
     overflow-y: auto;
-    
+
     height: 100%;
     /* max-height: 800px; */
 }
@@ -531,7 +531,7 @@ font-family: Arial, sans-serif;
 }
 .csus{
     text-align: center;
-   
+
 }
 .data-district{
     margin-bottom: auto;
@@ -672,7 +672,7 @@ font-family: Arial, sans-serif;
     flex-grow: 4;
     line-height: 1.5;
     width: 50%;
-    /* height: 60vh; */
+     /*height: 79vh;*/
     margin: 10px auto;
     background-color: #f1f1f1;
     border-radius: 20px;
@@ -680,6 +680,7 @@ font-family: Arial, sans-serif;
     padding-left: 30px;
     padding-bottom: 0px;
     box-sizing: border-box;
+    overflow: auto;
 }
 
 
@@ -770,7 +771,7 @@ body {
 }
 
 td{
-   
+
     border: 1px solid black; /* Линия-обрамление ячеек */
     padding: 5px; /* Отступ внутренний для содержимого ячеек */
     cursor: pointer; /* Изменение вида курсора */
@@ -781,11 +782,11 @@ tr:hover{
 }
 .mainTable{
     /* height: calc(100vh - var(--size-header-height) - var(--size-header-height)- var(--size-header-height)); */
-    overflow-wrap: anywhere; 
+    overflow-wrap: anywhere;
 }
 table table{
-  
-    
+
+
     padding: 5px; /* Отступ внутренний для содержимого ячеек */
 }
 /* th{
@@ -842,7 +843,7 @@ img {
     background-color: #C0C0C0;
 }
 
-.butt { 
+.butt {
     height: calc(100vh - var(--size-header-height) - var(--size-header-height));
     display: flex;
     flex-direction: column;
@@ -1109,7 +1110,7 @@ label{
     margin:40px auto
 }
 .close {
-    
+
         background-color: var(--button-background-color);
         border-radius: 5px;
         box-shadow: none;
@@ -1119,14 +1120,14 @@ label{
         cursor: pointer;
         font-size: var(--font-size-sub-text);
         font-weight: var(--font-weight-normal);
-    
+
     /* margin-top: 70%; */
 }
 .close-modal{
     display: none;
 }
 .modal_wrapper{
-    
+
     height: 80%;
     display: grid
 ;
@@ -1261,16 +1262,31 @@ label{
 .table-buttons{
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
     padding-top: 20px;
-    overflow: auto;
+    gap: 10px;
+    /*justify-content: space-between;*/
+    align-items: flex-start;
+}
+.table-buttons .button-group{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
 .table-buttons button{
     box-sizing: border-box;
     font-size: 1.2rem;
-    /* max-height: 55px; */
-    /* min-width: 230px; */
-    width: max(17%, 220px);
-    padding-right: 10px;
+    min-width: 170px;
+    padding: 10px 14px;
+}
+.report-csv,
+.report-docx{
+    font-size: 20px;
+    margin: 10px;
+    border-radius: 7px;
+    text-align: center;
+    cursor: pointer;
 }
 .table-row.selected {
     background-color: #f0f0f0;
@@ -1492,13 +1508,13 @@ tr td{
 ;
     width: 1000px;
     overflow: auto;
-    
+
 }
 #beam-KA{
     display: flex;
         width: 45%;
         flex-direction: column;
-   height: 100%;     
+   height: 100%;
    margin-left: 20px;
 }
 #canvas{
@@ -1671,7 +1687,7 @@ body:has(dialog[open]) {
     /* border-bottom: 6px solid #999999; */
     text-align: center;
     font-size: 22px;
-    
+
 }
 .confirmation-modal__content-copy{
     position: relative;
@@ -1735,6 +1751,15 @@ body:has(dialog[open]) {
     cursor: pointer; /* Изменение вида курсора */
 }
 .copy{
+    font-size: 20px;
+    margin: 10px;
+    /* width: 300px; */
+    /* height: 35px; */
+    border-radius: 7px;
+    text-align: center;
+    cursor: pointer; /* Изменение вида курсора */
+}
+.report{
     font-size: 20px;
     margin: 10px;
     /* width: 300px; */
@@ -1811,14 +1836,14 @@ text-transform:uppercase}
     height: calc(100% - 90px);
     /* height: calc(50vh - var(--size-header-height) - var(--size-footer-height)); */
     /* height:50vh; */
-  overflow:auto;  
+  overflow:auto;
   margin-top:20px;
   }
   .table-scroll-beam {
   width: 100%;
     /* height: calc(50vh - var(--size-header-height) - var(--size-footer-height)); */
-    /* height:50vh; */
-  overflow:auto;  
+     height:75vh;
+  overflow:auto;
   /*margin-top:20px;*/
   }
   .table-wrapper{
@@ -1826,16 +1851,220 @@ text-transform:uppercase}
   }
   .table-wrapper table {
     width:100%;
-  
+
   }
  .container_content{
-    height: 100%;
+    height: 80%;
+
  }
   .table-wrapper table thead th .text {
-    position:absolute;   
+    position:absolute;
     top:-20px;
     z-index:2;
     height:20px;
     width:35%;
     border:1px solid red;
   }
+/* Компонент фильтрации */
+.filter-container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-field {
+    flex: 2;
+    min-width: 180px;
+}
+
+.filter-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+}
+
+.filter-field-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.filter-value {
+    flex: 2;
+    min-width: 180px;
+}
+
+.filter-value label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+}
+
+.filter-value-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-apply-btn {
+    padding: 8px 20px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.filter-apply-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.filter-reset-btn {
+    padding: 8px 20px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.filter-reset-btn:hover {
+    background: #da190b;
+    transform: translateY(-1px);
+}
+
+.filter-info {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+    padding: 5px;
+}
+
+/* Кнопка отчета */
+.report {
+    font-size: 20px;
+    margin: 10px;
+    border-radius: 7px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.report:hover {
+    background-color: #C0C0C0;
+    transform: translateY(-1px);
+}
+
+.report:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Кнопки в таблице */
+.table-buttons button {
+    transition: all 0.2s ease;
+}
+
+.table-buttons button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.table-buttons button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.table-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Пустая таблица */
+.empty-table-message {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Модальное окно отчета */
+.report-modal-content {
+    max-width: 500px;
+}
+
+.report-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 0;
+}
+
+.report-format-btn {
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.report-format-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.report-format-btn[data-format="csv"] {
+    background: #4caf50;
+    color: white;
+}
+
+.report-format-btn[data-format="docx"] {
+    background: #2196f3;
+    color: white;
+}
+
+.report-modal-close {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    margin: 10px;
+    /* width: 500px; */
+    /* height: 55px; */
+    width:250px;
+
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.report-modal-close:hover {
+    background: #e0e0e0;
+}
