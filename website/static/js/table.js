@@ -34,6 +34,7 @@ export function table(url){
   let currentColumnsInfo = [];
   let currentTableName = '';
   let currentRusName = '';
+  let currentFilteredData = null; // Храним отфильтрованные данные для отчета
 
   // Обертка для функции generateReportByFormat с передачей loader
   const generateReportByFormat = (tableName, rusName, columnsInfo, allRows, format) => {
@@ -278,6 +279,7 @@ export function table(url){
     currentColumnsInfo = [];
     currentTableName = '';
     currentRusName = '';
+    currentFilteredData = null;
 
     // Удаляем старую модалку отчета если есть
     const reportModal = document.getElementById('reportFormatModal');
@@ -353,6 +355,7 @@ export function table(url){
     if (!currentTableData.length) return;
 
     const filteredData = filterData(currentTableData, field, value, exactMatch);
+    currentFilteredData = filteredData; // Сохраняем отфильтрованные данные
     const containerContent = document.querySelector('.container_content');
     const hasData = filteredData.length > 0;
     renderTableData(containerContent, filteredData, currentColumnsInfo, result, rusName, tableName, hasData);
@@ -362,6 +365,7 @@ export function table(url){
   function handleFilterReset(result, rusName, tableName) {
     if (!currentTableData.length) return;
 
+    currentFilteredData = null; // Сбрасываем отфильтрованные данные
     const containerContent = document.querySelector('.container_content');
     const filterContainer = document.querySelector('#filter-container');
     const filterInfo = document.querySelector('.filter-info');
@@ -381,6 +385,281 @@ export function table(url){
 
     const hasData = currentTableData.length > 0;
     renderTableData(containerContent, currentTableData, currentColumnsInfo, result, rusName, tableName, hasData);
+  }
+
+  // Функция для создания SQL модального окна с табличным видом (с русским наименованием)
+  function createSqlModal(result, tableName, rusName) {
+    const modalSql = document.querySelector('#modal__sql');
+    if (!modalSql) return;
+
+    // Удаляем старую кнопку закрытия modal__closes
+    const oldCloseBtn = modalSql.querySelector('.modal__closes');
+    if (oldCloseBtn) {
+      oldCloseBtn.remove();
+    }
+
+    modalSql.style.display = 'block';
+
+    const modalData = modalSql.querySelector('.modal_data');
+    modalData.innerHTML = '';
+
+    // Создаем контейнер для скролла
+    const tableScrollContainer = document.createElement('div');
+    tableScrollContainer.classList.add('sql-modal-table-scroll');
+    tableScrollContainer.style.maxHeight = '400px';
+    tableScrollContainer.style.overflow = 'auto';
+
+    // Создаем таблицу для отображения структуры с черными границами
+    const table = document.createElement('table');
+    table.classList.add('sql-structure-table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.fontSize = '13px';
+    table.style.border = '1px solid black';
+
+    // Заголовок таблицы С колонкой "Русское наименование"
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.style.backgroundColor = '#f5f5f5';
+    headerRow.style.borderBottom = '1px solid black';
+
+    const headers = ['№', 'Поле (БД)', 'Русское наименование', 'Тип данных', 'Null', 'Первичный ключ', 'Уникальность'];
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      th.style.padding = '10px 8px';
+      th.style.textAlign = 'left';
+      th.style.fontWeight = 'bold';
+      th.style.border = '1px solid black';
+      th.style.backgroundColor = '#f0f0f0';
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Тело таблицы с номерами строк и русским наименованием
+    const tbody = document.createElement('tbody');
+    result.columns_info.forEach((column, index) => {
+      const row = document.createElement('tr');
+      row.style.borderBottom = '1px solid black';
+
+      // Номер строки
+      const numCell = document.createElement('td');
+      numCell.textContent = (index + 1).toString();
+      numCell.style.padding = '8px';
+      numCell.style.border = '1px solid black';
+      numCell.style.textAlign = 'left';
+      numCell.style.fontWeight = 'bold';
+
+      const nameCell = document.createElement('td');
+      nameCell.textContent = column.name;
+      nameCell.style.padding = '8px';
+      nameCell.style.border = '1px solid black';
+
+      const descCell = document.createElement('td');
+      descCell.textContent = column.description || '-';
+      descCell.style.padding = '8px';
+      descCell.style.border = '1px solid black';
+
+      const typeCell = document.createElement('td');
+      typeCell.textContent = column.data_type || '-';
+      typeCell.style.padding = '8px';
+      typeCell.style.border = '1px solid black';
+
+      const nullCell = document.createElement('td');
+      nullCell.textContent = column.is_not_null === 'YES' || column.is_not_null === true ? 'Да' : 'Нет';
+      nullCell.style.padding = '8px';
+      nullCell.style.border = '1px solid black';
+      nullCell.style.textAlign = 'left';
+
+      const pkCell = document.createElement('td');
+      pkCell.textContent = column.is_primary_key === 'PRI' || column.is_primary_key === true ? 'Да' : 'Нет';
+      pkCell.style.padding = '8px';
+      pkCell.style.border = '1px solid black';
+      pkCell.style.textAlign = 'left';
+
+      const uniqueCell = document.createElement('td');
+      uniqueCell.textContent = column.is_unique === 'UNI' || column.is_unique === true ? 'Да' : 'Нет';
+      uniqueCell.style.padding = '8px';
+      uniqueCell.style.border = '1px solid black';
+      uniqueCell.style.textAlign = 'left';
+
+      row.appendChild(numCell);
+      row.appendChild(nameCell);
+      row.appendChild(descCell);
+      row.appendChild(typeCell);
+      row.appendChild(nullCell);
+      row.appendChild(pkCell);
+      row.appendChild(uniqueCell);
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    tableScrollContainer.appendChild(table);
+
+    // Добавляем информацию о таблице
+    const tableInfo = document.createElement('div');
+    tableInfo.classList.add('sql-table-info');
+    tableInfo.style.marginBottom = '15px';
+    tableInfo.style.padding = '10px';
+    tableInfo.style.backgroundColor = '#f9f9f9';
+    tableInfo.style.borderRadius = '5px';
+    tableInfo.style.border = '1px solid #ddd';
+    tableInfo.innerHTML = `
+      <div><strong>Наименование таблицы в БД:</strong> ${tableName}</div>
+      <div><strong>Русское название:</strong> ${rusName}</div>
+      <div><strong>Количество полей:</strong> ${result.columns_info.length}</div>
+    `;
+
+    modalData.appendChild(tableInfo);
+    modalData.appendChild(tableScrollContainer);
+
+    // Создаем единый контейнер для кнопок снизу
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.marginTop = '20px';
+    buttonContainer.style.padding = '15px';
+    buttonContainer.style.borderTop = '1px solid #ddd';
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.gap = '10px';
+
+    // Кнопка сохранения структуры в DOCX
+    const printBtn = document.createElement('button');
+    printBtn.textContent = 'Печать';
+    printBtn.style.padding = '8px 20px';
+    printBtn.style.backgroundColor = '#4CAF50';
+    printBtn.style.color = 'white';
+    printBtn.style.border = 'none';
+    printBtn.style.borderRadius = '4px';
+    printBtn.style.cursor = 'pointer';
+    printBtn.style.fontSize = '14px';
+
+    printBtn.addEventListener('click', async () => {
+      await generateStructureReport(tableName, rusName, result.columns_info);
+    });
+
+    // Кнопка закрытия
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Закрыть';
+    closeButton.style.padding = '8px 20px';
+    closeButton.style.backgroundColor = '#6c757d';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '4px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontSize = '14px';
+
+    closeButton.addEventListener('click', () => {
+      modalSql.style.display = 'none';
+    });
+
+    buttonContainer.appendChild(printBtn);
+    buttonContainer.appendChild(closeButton);
+    modalData.appendChild(buttonContainer);
+  }
+
+  // Функция для генерации DOCX отчета со структурой таблицы (БЕЗ русского наименования)
+  async function generateStructureReport(tableName, rusName, columnsInfo) {
+    try {
+      loader.show('Формирование DOCX отчета...');
+
+      const elements = [];
+
+      // Заголовок
+      elements.push({
+        type: 'title',
+        text: `Структура таблицы "${rusName}"`,
+        formatting: {
+          font_name: 'Arial',
+          font_size: 18,
+          alignment: 'center',
+          bold: true,
+          space_after: 12
+        }
+      });
+
+      // Дата
+      elements.push({
+        type: 'paragraph',
+        text: `Дата формирования: ${new Date().toLocaleString('ru-RU')}`,
+        formatting: {
+          font_size: 11,
+          alignment: 'right',
+          italic: true,
+          space_after: 12
+        }
+      });
+
+      // Информация о таблице
+      elements.push({
+        type: 'paragraph',
+        text: `Имя таблицы в БД: ${tableName}`,
+        formatting: { font_size: 11, space_after: 4 }
+      });
+
+      // elements.push({
+      //   type: 'paragraph',
+      //   text: `Русское название: ${rusName}`,
+      //   formatting: { font_size: 11, space_after: 4 }
+      // });
+
+      elements.push({
+        type: 'paragraph',
+        text: `Количество полей: ${columnsInfo.length}`,
+        formatting: { font_size: 11, space_after: 16 }
+      });
+
+      // Заголовок для таблицы структуры
+      elements.push({
+        type: 'title',
+        text: 'Детальная структура таблицы',
+        formatting: {
+          font_size: 14,
+          bold: true,
+          space_before: 12,
+          space_after: 8
+        }
+      });
+
+      // Таблица структуры БЕЗ колонки "Русское наименование"
+      const structureHeaders = ['№', 'Поле (БД)', 'Тип данных', 'Null', 'Первичный ключ', 'Уникальность'];
+      const structureRows = columnsInfo.map((col, index) => [
+        (index + 1).toString(),
+        col.name,
+        col.data_type || '-',
+        (col.is_not_null === 'YES' || col.is_not_null === true) ? 'Да' : 'Нет',
+        (col.is_primary_key === 'PRI' || col.is_primary_key === true) ? 'Да' : 'Нет',
+        (col.is_unique === 'UNI' || col.is_unique === true) ? 'Да' : 'Нет'
+      ]);
+
+      elements.push({
+        type: 'table',
+        headers: structureHeaders,
+        rows: structureRows
+      });
+
+      // Подвал
+      elements.push({
+        type: 'paragraph',
+        text: `Отчет сгенерирован автоматически. Всего полей: ${columnsInfo.length}`,
+        formatting: {
+          font_size: 10,
+          alignment: 'center',
+          italic: true,
+          space_before: 16
+        }
+      });
+
+      // Импортируем функцию downloadDocx из report.js
+      const { downloadDocx } = await import('./report.js');
+      const filename = `${tableName}_structure_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.docx`;
+      await downloadDocx(elements, filename);
+
+      loader.close();
+      console.log(`Отчет со структурой таблицы "${rusName}" успешно сохранен!`);
+    } catch (error) {
+      console.error('Ошибка при формировании отчета:', error);
+      loader.close();
+    }
   }
 
   /* функция  которая проверяет  пустая таблица или нет и если она пустая строит её структуру  */
@@ -417,32 +696,8 @@ export function table(url){
     );
 
     document.querySelector('.sql-img').addEventListener('click', (e) => {
-      document.querySelector('#modal__sql').style = `display: block;`
-      document.querySelector('#modal__sql .modal__closes').addEventListener('click', () => {
-        document.querySelector('#modal__sql').style = `display: none;`
-      })
-      const modalRow = document.createElement('div');
-      document.querySelector('#modal__sql .modal_data').innerHTML = ``;
-      modalRow.classList.add('modal__rows');
-      result['columns_info'].forEach(column => {
-        const modalRowData = document.createElement('div');
-        modalRowData.innerHTML += `<div>Наименование поля: ${column.name}</div> `;
-        modalRowData.innerHTML += `<div>Русское наименование поля:${column.description}</div> `;
-        modalRowData.innerHTML += `<div>Тип поля: ${column['data_type']}</div> `;
-        modalRowData.innerHTML += `<div>Может ли быть null: ${column['is_not_null']}</div> `;
-        modalRowData.innerHTML += `<div>Первичный ключ:${column['is_primary_key']}</div> `;
-        modalRowData.innerHTML += `<div>Уникальность поля: ${column['is_unique']}</div> `;
-        modalRowData.classList.add('modal__row');
-        modalRow.append(modalRowData);
-      })
-
-      const modalRowData = document.createElement('div');
-      modalRowData.innerHTML += `<div>Наименование таблицы в БД:    ${tableName}</div> `;
-      modalRowData.innerHTML += `<div>Наименование таблицы (рус):    ${rusName}</div> `;
-      modalRowData.classList.add('modal__names');
-      modalRow.prepend(modalRowData)
-      document.querySelector('#modal__sql .modal_data').append(modalRow);
-    })
+      createSqlModal(result, tableName, rusName);
+    });
 
     const tr = document.createElement('table');
     tr.classList.add('mainTable');
@@ -509,30 +764,7 @@ export function table(url){
     });
 
     document.querySelector('.sql-img').addEventListener('click', (e) => {
-      document.querySelector('#modal__sql').style = `display: block;`
-      document.querySelector('#modal__sql .modal__closes').addEventListener('click', () => {
-        document.querySelector('#modal__sql').style = `display: none;`
-      })
-      const modalRow = document.createElement('div');
-      document.querySelector('#modal__sql .modal_data').innerHTML = ``;
-      modalRow.classList.add('modal__rows');
-      columnsInfo.forEach(column => {
-        const modalRowData = document.createElement('div');
-        modalRowData.innerHTML += `<div>Наименование поля: ${column.name}</div> `;
-        modalRowData.innerHTML += `<div>Русское наименование поля:${column.description}</div> `;
-        modalRowData.innerHTML += `<div>Тип поля: ${column['data_type']}</div> `;
-        modalRowData.innerHTML += `<div>Может ли быть null: ${column['is_not_null']}</div> `;
-        modalRowData.innerHTML += `<div>Первичный ключ:${column['is_primary_key']}</div> `;
-        modalRowData.innerHTML += `<div>Уникальность поля: ${column['is_unique']}</div> `;
-        modalRowData.classList.add('modal__row');
-        modalRow.append(modalRowData);
-      })
-      const modalRowData = document.createElement('div');
-      modalRowData.innerHTML += `<div>Наименование таблицы в БД: ${tableName}</div> `;
-      modalRowData.innerHTML += `<div>Наименование таблицы (рус): ${rusName}</div> `;
-      modalRowData.classList.add('modal__names');
-      modalRow.prepend(modalRowData)
-      document.querySelector('#modal__sql .modal_data').append(modalRow);
+      createSqlModal(result, tableName, rusName);
     });
   }
 
@@ -548,29 +780,16 @@ export function table(url){
   // Функция для сбора данных таблицы и формирования отчета
   async function generateReport(tableName, rusName, columnsInfo) {
     try {
-      const currentRows = document.querySelectorAll('.mainTable tbody tr');
-      let filteredData = [];
+      // Если есть отфильтрованные данные - используем их, иначе берем все данные
+      let reportData = currentFilteredData || currentTableData;
 
-      if (currentRows.length > 0 && currentRows[0].querySelectorAll('td').length > 0) {
-        const firstCellText = currentRows[0].querySelector('td')?.textContent || '';
-        if (firstCellText !== 'Нет данных, соответствующих фильтру' && firstCellText !== 'Таблица пуста. Нажмите "Добавить" чтобы создать запись.') {
-          currentRows.forEach(row => {
-            const rowData = {};
-            const cells = row.querySelectorAll('td');
-            columnsInfo.forEach((col, idx) => {
-              rowData[col.name] = cells[idx]?.textContent || '';
-            });
-            filteredData.push(rowData);
-          });
-        }
-      }
-
-      if (filteredData.length === 0) {
+      if (reportData.length === 0) {
+        // Если данных нет, пробуем загрузить из таблицы
         const dataTable = await getRowsTable(tableName);
-        filteredData = dataTable.rows;
+        reportData = dataTable.rows;
       }
 
-      showReportModalWrapper(tableName, rusName, columnsInfo, filteredData);
+      showReportModalWrapper(tableName, rusName, columnsInfo, reportData);
     } catch (error) {
       console.error('Ошибка при сборе данных:', error);
       loader.close();

@@ -103,7 +103,7 @@ export function showReportModal(tableName, rusName, columnsInfo, allRows, loader
     });
 }
 
-// Функция для генерации отчета в выбранном формате
+// Функция для генерации отчета в выбранном формате (только данные таблицы)
 export async function generateReportByFormat(tableName, rusName, columnsInfo, allRows, format, loader) {
     if (isGeneratingReport) {
         console.log('Отчет уже формируется, подождите...');
@@ -142,6 +142,7 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
         } else if (format === 'docx') {
             const elements = [];
 
+            // Заголовок
             elements.push({
                 type: 'title',
                 text: `Отчет по таблице "${rusName}"`,
@@ -154,6 +155,7 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
                 }
             });
 
+            // Дата
             elements.push({
                 type: 'paragraph',
                 text: `Дата формирования: ${new Date().toLocaleString('ru-RU')}`,
@@ -165,17 +167,18 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
                 }
             });
 
+            // Информация о таблице
             elements.push({
                 type: 'paragraph',
                 text: `Имя таблицы в БД: ${tableName}`,
                 formatting: { font_size: 11, space_after: 4 }
             });
 
-            elements.push({
-                type: 'paragraph',
-                text: `Русское название: ${rusName}`,
-                formatting: { font_size: 11, space_after: 4 }
-            });
+            // elements.push({
+            //     type: 'paragraph',
+            //     text: `Русское название: ${rusName}`,
+            //     formatting: { font_size: 11, space_after: 4 }
+            // });
 
             elements.push({
                 type: 'paragraph',
@@ -183,30 +186,7 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
                 formatting: { font_size: 11, space_after: 16 }
             });
 
-            elements.push({
-                type: 'title',
-                text: 'Структура таблицы',
-                formatting: {
-                    font_size: 14,
-                    bold: true,
-                    space_before: 12,
-                    space_after: 8
-                }
-            });
-
-            const structureHeaders = ['Поле (БД)', 'Описание', 'Тип данных'];
-            const structureRows = columnsInfo.map(col => [
-                col.name,
-                col.description || '-',
-                col.data_type || '-'
-            ]);
-
-            elements.push({
-                type: 'table',
-                headers: structureHeaders,
-                rows: structureRows
-            });
-
+            // Заголовок для данных таблицы
             elements.push({
                 type: 'title',
                 text: 'Данные таблицы',
@@ -218,6 +198,7 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
                 }
             });
 
+            // Только таблица с данными (без структуры)
             const dataHeaders = columnsInfo.map(col => col.description || col.name);
             const dataRows = allRows.map(row => {
                 return columnsInfo.map(col => {
@@ -236,6 +217,7 @@ export async function generateReportByFormat(tableName, rusName, columnsInfo, al
                 rows: dataRows
             });
 
+            // Подвал
             elements.push({
                 type: 'paragraph',
                 text: `Отчет сгенерирован автоматически. Всего записей: ${allRows.length}`,
