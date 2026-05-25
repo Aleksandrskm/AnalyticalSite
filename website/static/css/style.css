@@ -932,6 +932,7 @@ img {
     cursor: pointer;
     font-size: var(--font-size-sub-text);
     font-weight: var(--font-weight-normal);
+
 }
 .modal__row div{
     font-weight: normal;
@@ -1875,6 +1876,7 @@ text-transform:uppercase}
     border-radius: 8px;
     margin-bottom: 15px;
     flex-wrap: wrap;
+    border: 1.2px solid black;
 }
 
 .filter-field {
@@ -1885,7 +1887,7 @@ text-transform:uppercase}
 .filter-field label {
     display: block;
     margin-bottom: 5px;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: bold;
     color: #333;
 }
@@ -1893,7 +1895,7 @@ text-transform:uppercase}
 .filter-field-select {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid black;
     border-radius: 6px;
     font-size: 14px;
     background: white;
@@ -1908,7 +1910,7 @@ text-transform:uppercase}
 .filter-value label {
     display: block;
     margin-bottom: 5px;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: bold;
     color: #333;
 }
@@ -1916,7 +1918,7 @@ text-transform:uppercase}
 .filter-value-input {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid black;
     border-radius: 6px;
     font-size: 14px;
     box-sizing: border-box;
