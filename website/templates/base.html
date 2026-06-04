@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Администратор</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rating.css') }}">
 </head>
 <body>
 
@@ -27,25 +28,17 @@
     <main class="butt">
         <div id="container-menu">
             <div class="colum_menu">
-                <div class="name-column-menu">Редактирование данных</div>
-                <a href="/viewing_tables" target="_blank"><button class="btn">Редактор данных</button></a>
-                <a href="/abonents" target="_blank"><button class="btn">Редактор данных абонента</button></a>
-                <a href="/maps_territorial_districts" target="_blank"><button class="btn">Cервис географического ресурса</button></a>
-                <a href="/plan_ochr" target="_blank"><button class="btn">Частотный план</button></a>
-                <a href="/edit_KA" target="_blank"><button class="btn">Редактирование данных КА</button></a>
+                <div class="name-column-menu">Рейтинг состояния телеком инфраструктуры</div>
+                <a href="/" target="_blank"><button class="btn">Рейтинг регионов</button></a>
+                <a href="/rating-localities" target="_blank"><button class="btn">Рейтинг населенных пунктов</button></a>
+                <a href="/" target="_blank"><button class="btn">Рейтинг социальных объектов</button></a>
+                <a href="/" target="_blank"><button class="btn">Рейтинг автомобильных трасс</button></a>
             </div>
             <div class="colum_menu">
-                <div class="name-column-menu">Функциональные подсистемы</div>
-                <a href="/subsystem_of calibration_beams" target="_blank"><button class="btn">Подсистема калибровки лучей КА</button></a>
-                <a href="/monotonous_time_service" target="_blank"><button class="btn">Cервис монотонного времени</button></a>
-                <a href="/system-for-view-curr-sessions" target="_blank"><button class="btn">Просмотр активности пользователей</button></a>
+                <div class="name-column-menu">Редактор данных</div>
+                <a href="/viewing_tables" target="_blank"><button class="btn">Общий редактор данных</button></a>
             </div>
-            <div class="colum_menu">
-                <div class="name-column-menu">Расчетные задачи</div>
-                <a href="/azimuth_and_elevation_angle" target="_blank"><button class="btn">Определение азимута и угла места</button></a>
-                <a href="/get_coordinates" target="_blank"><button class="btn">Нахождение координат через API</button></a>
-                <a href="/communication_availability" target="_blank"><button class="btn">Вычисление доступности связи</button></a>
-            </div>
+
         </div>
 
 
@@ -158,16 +151,13 @@
                         </div>
                       </div>
                 </div>
-                
-                <div class="closes">
-                    <button class="close">Закрыть</button>
-                </div>
+
+
             </div>
         </div>
         
     </div>
     {% endblock %}
-    <script src="{{ url_for('static', filename='js/abonents.js') }}"type="module"></script>
     <script src="{{ url_for('static', filename='js/Modal.js') }}" type="module"></script>
     <script src="{{ url_for('static', filename='js/db.js') }}" type="module"></script>
     <script src="{{ url_for('static', filename='js/table.js') }}" type="module"></script>

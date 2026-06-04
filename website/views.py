@@ -50,3 +50,6 @@ def function_edit_KA():
 @views.route('/system-for-view-curr-sessions')
 def function_system_for_view_curr_sessions():
     return render_template('system-for-view-curr-sessions.html')
+@views.route('/rating-localities')
+def function_rating_localities():
+    return render_template('rating-localities.html')
