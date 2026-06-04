@@ -126,15 +126,10 @@ export function table(url){
     const btnReport = document.querySelector('.report');
     const btmMap = document.querySelector('.maps');
 
-    // Кнопка добавления всегда активна
     btnInsert.disabled = false;
-
-    // Отчет всегда активен
     btnReport.disabled = false;
-
     btmMap.disabled = true;
 
-    // Если нет данных - отключаем кнопки редактирования, копирования, удаления
     if (!hasData || !result.total_rows_count) {
       btnEdit.disabled = true;
       btnCopy.disabled = true;
@@ -146,7 +141,18 @@ export function table(url){
       btnDelete.disabled = false;
     }
 
-    const modalParent = document.querySelector('.container_content');
+    // ИСПРАВЛЕНО: используем правильный родительский элемент
+    const modalParent = document.querySelector('.column2_vi'); // Берем из HTML
+
+    if (!modalParent) {
+      console.error('Modal parent (.column2_vi) not found');
+      return;
+    }
+
+    // Удаляем старые модалки перед созданием новых
+    const oldModals = modalParent.querySelectorAll('.modal:not(#myModal):not(#modal__sql)');
+    oldModals.forEach(modal => modal.remove());
+
     const modalDelete = new Modal(modalParent, 'delete', 0, result.columns_info, tableRow, deleteRow, result, rusName, tableName);
     const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName);
     const modalCopy = new Modal(modalParent, 'copy', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName);
@@ -157,14 +163,17 @@ export function table(url){
     });
 
     btnDelete.addEventListener('click', () => {
-      modalDelete.createModal(createTable)
+      modalDelete.createModal(createTable);
     });
+
     btnCopy.addEventListener('click', () => {
-      modalCopy.createModal(createTable)
+      modalCopy.createModal(createTable);
     });
+
     btnEdit.addEventListener('click', () => {
-      modalEdit.createModal(createTable)
+      modalEdit.createModal(createTable);
     });
+
     btnInsert.addEventListener('click', () => {
       modalInser.createModal(createTable);
     });
@@ -663,6 +672,7 @@ export function table(url){
   }
 
   /* функция  которая проверяет  пустая таблица или нет и если она пустая строит её структуру  */
+  /* функция которая проверяет пустая таблица или нет и если она пустая строит её структуру */
   function checkVoidTable(result, tableName, totalRowsCount, rusName) {
     console.log(totalRowsCount);
     console.log(result);
@@ -699,28 +709,74 @@ export function table(url){
       createSqlModal(result, tableName, rusName);
     });
 
-    const tr = document.createElement('table');
-    tr.classList.add('mainTable');
+    const table = document.createElement('table');
+    table.classList.add('mainTable');
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
     result.columns_info.forEach(column => {
       const th = document.createElement('th');
       th.innerHTML = `${column.description}`;
-      tableHead.append(th);
-    })
-    tr.append(tableHead);
-    tableScroll.append(tr);
-    tableWrapper.append(tableScroll);
-    containerContent.append(tableWrapper);
+      headerRow.append(th);
+    });
+    thead.append(headerRow);
+    table.append(thead);
 
+    const tbody = document.createElement('tbody');
     const emptyRow = document.createElement('tr');
     const emptyCell = document.createElement('td');
     emptyCell.colSpan = result.columns_info.length;
     emptyCell.textContent = 'Таблица пуста. Нажмите "Добавить" чтобы создать запись.';
     emptyCell.classList.add('empty-table-message');
     emptyRow.appendChild(emptyCell);
-    const tbody = document.querySelector('.mainTable tbody');
-    if (tbody) tbody.appendChild(emptyRow);
+    tbody.appendChild(emptyRow);
+    table.appendChild(tbody);
 
-    createButtonsTable(tableScroll, result, null, rusName, tableName, false);
+    tableScroll.appendChild(table);
+    tableWrapper.appendChild(tableScroll);
+    containerContent.append(tableWrapper);
+
+    // ВАЖНО: Сначала добавляем кнопки в DOM, потом создаем модалки
+    const btns = document.querySelector('.table-buttons');
+    if (btns) {
+      btns.remove();
+    }
+
+    const buttons = document.createElement('div');
+    buttons.classList = 'table-buttons';
+    buttons.innerHTML = `<button class="insert">Добавить</button>`
+    buttons.innerHTML += `<button class="edit" disabled>Редактировать</button>`;
+    buttons.innerHTML += `<button class="copy" disabled>Добавить с копированием</button>`;
+    buttons.innerHTML += `<button class="delete" disabled>Удалить</button>`;
+    buttons.innerHTML += `<button class="report">Отчет</button>`;
+    buttons.innerHTML += `<button class="maps" disabled>Показать карту</button>`;
+
+    // Добавляем кнопки в правильное место
+    tableScroll.parentElement.append(buttons);
+
+    const btnInsert = document.querySelector('.insert');
+    const btnEdit = document.querySelector('.edit');
+    const btnCopy = document.querySelector('.copy');
+    const btnDelete = document.querySelector('.delete');
+    const btnReport = document.querySelector('.report');
+    const btmMap = document.querySelector('.maps');
+
+    // Создаем модальные окна
+    const modalParent = document.querySelector('.container_content');
+    const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, null, insertRow, result, rusName, tableName);
+
+    // Обработчик для кнопки Добавить
+    btnInsert.addEventListener('click', () => {
+      console.log('Insert button clicked in void table');
+      modalInser.createModal(() => {
+        createTable(tableName, rusName);
+      });
+    });
+
+    // Обработчик для кнопки Отчет
+    btnReport.addEventListener('click', () => {
+      generateReport(tableName, rusName, result.columns_info);
+    });
   }
 
   /* функция  в которую  передается вся информация о таблице */
