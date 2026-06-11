@@ -14,3 +14,7 @@ def function_view():
 @views.route('/rating-localities')
 def function_rating_localities():
     return render_template('rating-localities.html')
+
+@views.route('/rating-regions')
+def function_rating_regions():
+    return render_template('rating-regions.html')
