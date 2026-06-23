@@ -18,3 +18,7 @@ def function_rating_localities():
 @views.route('/rating-regions')
 def function_rating_regions():
     return render_template('rating-regions.html')
+
+@views.route('/beams')
+def function_beams():
+    return render_template('beams.html')

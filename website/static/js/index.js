@@ -3,7 +3,7 @@ import { table } from "./table.js";
 
 
 document.addEventListener('DOMContentLoaded', function() {
-  const url = 'http://185.192.247.60:7130/Database/db_structure';
+  const url = 'http://185.192.247.60:8910/db/structure';
   const h2=document.querySelector('h2');
   function getDateTime() {
     let now     = new Date(); 

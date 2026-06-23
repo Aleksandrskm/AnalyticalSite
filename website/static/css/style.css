@@ -1141,7 +1141,7 @@ label{
     display: flex;
     flex-direction: column;
     position:relative;
-    /* width:100%; */
+     width:100%;
     padding:40px;
     background-color:#fff;
     border:1px solid rgba(0,0,0,.2);
@@ -1637,7 +1637,7 @@ body:has(dialog[open]) {
 }
 .beams-btns{
     display: flex;
-    overflow: auto;
+    /*overflow: auto;*/
     margin-bottom: 10px;
 }
 #copy-beams-Kas{
