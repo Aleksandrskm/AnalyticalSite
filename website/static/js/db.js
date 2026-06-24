@@ -3,7 +3,7 @@ import {Loader} from "./Loader.js";
 
 let URL = `185.192.247.60:8910`;
 const testURL = `127.0.0.1:8000`;
-// URL = testURL
+//URL = testURL
 let loader;
 
 if (document.querySelector('#dialog-res')) {

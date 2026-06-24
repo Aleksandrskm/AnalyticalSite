@@ -1640,7 +1640,7 @@ body:has(dialog[open]) {
     /*overflow: auto;*/
     margin-bottom: 10px;
 }
-#copy-beams-Kas{
+#copy-beams-Kas,#refresh-ka{
     box-sizing: border-box;
     font-size: 1.2rem;
     margin: 10px;
@@ -1653,6 +1653,13 @@ body:has(dialog[open]) {
 .wrapper-top div.head-wrapper{
     width: 80%;
     margin-left: auto;
+}
+.beams_group{
+    display: flex;
+    margin-top: 5px;
+}
+#ka-group-select{
+    margin-left: 10px;
 }
 .clear-map {
     cursor: pointer;

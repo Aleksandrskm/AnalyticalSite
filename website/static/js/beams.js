@@ -183,6 +183,34 @@ function generateBeamUpdateQuery(tableName, arrDataBeams, arrIdBeams, idKa, colu
     return `UPDATE ${tableName} SET ${caseStatements} WHERE ID IN (${arrIdBeams.join(', ')}) AND ID_KA = ${idKa};`;
 }
 
+// Функция обновления состояния кнопок
+function updateButtonsState() {
+    const beamRows = document.querySelectorAll('.beams-Table tbody tr');
+    const hasBeams = beamRows && beamRows.length > 0;
+
+    const saveBtn = document.getElementById('save-beams');
+    const copyBtn = document.getElementById('copy-beams-Kas');
+    const editBtn = document.getElementById('edit-beams');
+
+    if (saveBtn) {
+        saveBtn.disabled = !hasBeams;
+        saveBtn.style.opacity = hasBeams ? '1' : '0.5';
+        saveBtn.style.cursor = hasBeams ? 'pointer' : 'not-allowed';
+    }
+
+    if (copyBtn) {
+        copyBtn.disabled = !hasBeams;
+        copyBtn.style.opacity = hasBeams ? '1' : '0.5';
+        copyBtn.style.cursor = hasBeams ? 'pointer' : 'not-allowed';
+    }
+
+    if (editBtn) {
+        editBtn.disabled = !hasBeams;
+        editBtn.style.opacity = hasBeams ? '1' : '0.5';
+        editBtn.style.cursor = hasBeams ? 'pointer' : 'not-allowed';
+    }
+}
+
 // Загрузка группировок
 async function loadGroups() {
     const loader = initLoader();
@@ -285,6 +313,7 @@ async function createKATable(page = 1) {
             document.getElementById('id-ka').innerHTML = 'КА:';
             document.getElementById('ka-name').innerHTML = '';
             clearCanvas();
+            updateButtonsState();
         }
 
         loader.close();
@@ -354,8 +383,9 @@ async function createBeamTable(satelliteId) {
 
         if (!beams || beams.length === 0) {
             loader.close();
-            document.querySelector('.tab-Beams-name').innerHTML = 'Нет лучей для данного спутника';
+            document.querySelector('.tab-Beams-name').innerHTML = 'Нет лучей для данного КА';
             clearCanvas();
+            updateButtonsState();
             return;
         }
 
@@ -431,11 +461,15 @@ async function createBeamTable(satelliteId) {
             });
         });
 
+        // Обновляем состояние кнопок после загрузки лучей
+        updateButtonsState();
+
         loader.close();
     } catch (error) {
         loader.close();
         renderPopup(document.querySelector('#dialog-res'), `Ошибка загрузки лучей: ${error}`);
         console.error('Error loading beams:', error);
+        updateButtonsState();
     }
 }
 
@@ -500,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('id-ka').innerHTML = 'КА:';
         document.getElementById('ka-name').innerHTML = '';
         clearCanvas();
+        updateButtonsState();
         createKATable(1);
     });
 
@@ -511,6 +546,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (idKa) {
                 document.querySelector('.beams-Table').innerHTML = '<thead></thead><tbody></tbody>';
                 createBeamTable(idKa);
+            } else {
+                updateButtonsState();
             }
         });
     });
@@ -903,28 +940,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else if (colName === 'ID_KA_SOST') {
                             row[col] = beam.id_ka_sost || 1;
                         } else {
-                            // Если колонка не найдена в beam, ставим значение по умолчанию
                             row[col] = beam[col] || 0;
                         }
                     });
 
-                    // Создаем body для updateOrInsert
                     const body = {
                         row: row,
-                        matching: ['ID_KA', 'NUM_BEAM'] // уникальный ключ для поиска
+                        matching: ['ID_KA', 'NUM_BEAM']
                     };
 
                     promises.push(updateOrInsert(selectedValue, body));
                 }
             }
 
-            // Выполняем все запросы параллельно
             await Promise.all(promises);
 
             loader.close();
             renderPopup(document.querySelector('#dialog-res'), 'Скопировано на ' + targetKaIds.length + ' КА (всего ' + (sourceBeams.length * targetKaIds.length) + ' лучей)');
 
-            // Обновляем таблицу КА, чтобы показать актуальные данные
             setTimeout(function() {
                 createKATable(currentPage);
             }, 500);
