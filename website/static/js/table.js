@@ -33,7 +33,8 @@ export function table(){
   let currentFilteredData = null;
   let currentDbName = 'KA';
   let currentTableNamesData = {};
-  let isDbSelectInitialized = false; // Флаг, что селект уже создан
+  let isDbSelectCreated = false;
+  let dbSelectElement = null;
 
   // Обертка для функции generateReportByFormat с передачей loader
   const generateReportByFormat = (tableName, rusName, columnsInfo, allRows, format) => {
@@ -45,86 +46,90 @@ export function table(){
     showReportModal(tableName, rusName, columnsInfo, allRows, loader, generateReportByFormat);
   };
 
-  // ==================== ФУНКЦИЯ ДЛЯ СОЗДАНИЯ/ОБНОВЛЕНИЯ СЕЛЕКТА БД ====================
+  // ==================== ФУНКЦИЯ ДЛЯ СОЗДАНИЯ СЕЛЕКТА БД (ОДИН РАЗ) ====================
 
-  function createOrUpdateDbSelect(dbNames) {
+  function createDbSelectOnce() {
+    if (isDbSelectCreated) return;
+
     const container = document.querySelector('.container_content');
-    if (!container) return null;
+    if (!container) return;
 
-    let dbSelectContainer = container.querySelector('.db-select-container');
+    const dbSelectContainer = document.createElement('div');
+    dbSelectContainer.className = 'db-select-container';
+    dbSelectContainer.style.marginBottom = '15px';
+    dbSelectContainer.style.padding = '10px';
+    dbSelectContainer.style.backgroundColor = '#f5f5f5';
+    dbSelectContainer.style.borderRadius = '5px';
+    dbSelectContainer.style.display = 'flex';
+    dbSelectContainer.style.alignItems = 'center';
+    dbSelectContainer.style.gap = '10px';
 
-    // Если контейнера нет - создаем
-    if (!dbSelectContainer) {
-      dbSelectContainer = document.createElement('div');
-      dbSelectContainer.className = 'db-select-container';
-      dbSelectContainer.style.marginBottom = '15px';
-      dbSelectContainer.style.padding = '10px';
-      dbSelectContainer.style.backgroundColor = '#f5f5f5';
-      dbSelectContainer.style.borderRadius = '5px';
-      dbSelectContainer.style.display = 'flex';
-      dbSelectContainer.style.alignItems = 'center';
-      dbSelectContainer.style.gap = '10px';
+    const label = document.createElement('label');
+    label.textContent = 'Выбор БД:';
+    label.style.fontWeight = 'bold';
+    label.style.fontSize = '14px';
+    dbSelectContainer.appendChild(label);
 
-      const label = document.createElement('label');
-      label.textContent = 'Выбор БД:';
-      label.style.fontWeight = 'bold';
-      label.style.fontSize = '18px';
-      dbSelectContainer.appendChild(label);
+    const select = document.createElement('select');
+    select.id = 'db-select-tables';
+    select.style.padding = '5px 10px';
+    select.style.borderRadius = '4px';
+    select.style.border = '1px solid #ccc';
+    select.style.fontSize = '14px';
+    select.style.minWidth = '150px';
+    dbSelectContainer.appendChild(select);
 
-      const select = document.createElement('select');
-      select.id = 'db-select-tables';
-      select.style.padding = '5px 10px';
-      select.style.borderRadius = '4px';
-      select.style.border = '1px solid #ccc';
-      select.style.fontSize = '14px';
-      select.style.minWidth = '150px';
-      dbSelectContainer.appendChild(select);
+    // Вставляем в начало container_content
+    container.prepend(dbSelectContainer);
 
-      // Вставляем в начало container_content
-      container.prepend(dbSelectContainer);
+    dbSelectElement = select;
+    isDbSelectCreated = true;
+  }
+
+  // ==================== ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ ОПЦИЙ СЕЛЕКТА ====================
+
+  function updateDbSelectOptions(dbNames, selectedValue) {
+    if (!dbSelectElement) {
+      createDbSelectOnce();
     }
 
-    const select = dbSelectContainer.querySelector('#db-select-tables');
-    if (!select) return null;
+    if (!dbSelectElement) return;
 
-    // Запоминаем текущее выбранное значение
-    const currentValue = select.value;
+    // Запоминаем текущее выбранное значение, если не передано
+    const currentValue = selectedValue || dbSelectElement.value;
 
     // Заполняем опции
-    select.innerHTML = '';
+    dbSelectElement.innerHTML = '';
 
     dbNames.forEach(dbName => {
       const option = document.createElement('option');
       option.value = dbName;
       option.textContent = dbName;
-      select.appendChild(option);
+      dbSelectElement.appendChild(option);
     });
 
     // Восстанавливаем выбранное значение
     if (currentValue && dbNames.includes(currentValue)) {
-      select.value = currentValue;
+      dbSelectElement.value = currentValue;
     } else if (dbNames.includes('KA')) {
-      select.value = 'KA';
+      dbSelectElement.value = 'KA';
     } else if (dbNames.length > 0) {
-      select.value = dbNames[0];
+      dbSelectElement.value = dbNames[0];
     }
 
     // Обновляем currentDbName
-    currentDbName = select.value;
+    currentDbName = dbSelectElement.value;
 
-    // Обработчик изменения БД
-    select.removeEventListener('change', handleDbChange);
-    select.addEventListener('change', handleDbChange);
-
-    return select;
+    // Удаляем старый обработчик и добавляем новый
+    dbSelectElement.removeEventListener('change', handleDbChange);
+    dbSelectElement.addEventListener('change', handleDbChange);
   }
 
   // Обработчик изменения БД
   function handleDbChange() {
-    const select = document.getElementById('db-select-tables');
-    if (!select) return;
+    if (!dbSelectElement) return;
 
-    const newDbName = select.value;
+    const newDbName = dbSelectElement.value;
     if (newDbName === currentDbName) return;
 
     currentDbName = newDbName;
@@ -142,8 +147,22 @@ export function table(){
       containerContent.innerHTML = '';
       if (dbSelect) {
         containerContent.appendChild(dbSelect);
+        // Обновляем ссылку на селект
+        dbSelectElement = dbSelect.querySelector('#db-select-tables');
+        // Перепривязываем обработчик
+        if (dbSelectElement) {
+          dbSelectElement.removeEventListener('change', handleDbChange);
+          dbSelectElement.addEventListener('change', handleDbChange);
+        }
       }
     }
+
+    // Сбрасываем текущие данные таблицы
+    currentTableData = [];
+    currentColumnsInfo = [];
+    currentTableName = '';
+    currentRusName = '';
+    currentFilteredData = null;
 
     // Загружаем таблицы для новой БД
     loadTables(currentDbName);
@@ -155,11 +174,11 @@ export function table(){
     try {
       const dbNames = await getDbNames();
 
-      // Создаем или обновляем селект
-      const select = createOrUpdateDbSelect(dbNames);
-      if (select) {
-        currentDbName = select.value;
-      }
+      // Создаем селект если еще не создан
+      createDbSelectOnce();
+
+      // Обновляем опции селекта
+      updateDbSelectOptions(dbNames);
 
       console.log('Загружены БД:', dbNames, 'Текущая:', currentDbName);
       return dbNames;
@@ -225,6 +244,26 @@ export function table(){
       console.error('Ошибка загрузки таблиц:', error);
       loader.close();
     }
+  }
+
+  // Функция для сохранения селекта БД при очистке контента
+  function preserveDbSelect(containerContent) {
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
+    if (dbSelectContainer) {
+      containerContent.innerHTML = '';
+      containerContent.appendChild(dbSelectContainer);
+      // Обновляем ссылку на селект
+      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
+      // Перепривязываем обработчик
+      if (dbSelectElement) {
+        dbSelectElement.removeEventListener('change', handleDbChange);
+        dbSelectElement.addEventListener('change', handleDbChange);
+        // Синхронизируем currentDbName
+        currentDbName = dbSelectElement.value;
+      }
+      return true;
+    }
+    return false;
   }
 
   // Функция для создания компонента фильтрации
@@ -462,11 +501,7 @@ export function table(){
     const containerContent = document.querySelector('.container_content');
     if (containerContent) {
       // Сохраняем селект БД
-      const dbSelectContainer = containerContent.querySelector('.db-select-container');
-      containerContent.innerHTML = '';
-      if (dbSelectContainer) {
-        containerContent.appendChild(dbSelectContainer);
-      }
+      preserveDbSelect(containerContent);
     }
 
     currentTableData = [];
@@ -488,7 +523,11 @@ export function table(){
       console.log(result)
       loader.close();
       if (result === undefined) {
-        containerContent.innerHTML += `<h3>В данный момент таблица отсутствует</h3>`
+        if (containerContent) {
+          containerContent.innerHTML += `<h3>В данный момент таблица отсутствует</h3>`;
+          // Восстанавливаем селект БД
+          preserveDbSelect(containerContent);
+        }
       } else {
         generateTable(result, rusName, engName);
       }
@@ -497,6 +536,8 @@ export function table(){
       loader.close();
       if (containerContent) {
         containerContent.innerHTML += `<h3>Ошибка загрузки таблицы: ${error.message}</h3>`;
+        // Восстанавливаем селект БД
+        preserveDbSelect(containerContent);
       }
     });
   }
@@ -807,11 +848,7 @@ export function table(){
     currentTableData = [];
 
     // Сохраняем селект БД
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    containerContent.innerHTML = '';
-    if (dbSelectContainer) {
-      containerContent.appendChild(dbSelectContainer);
-    }
+    preserveDbSelect(containerContent);
 
     const name = document.createElement('div');
     const tableWrapper = document.createElement('div');
@@ -913,11 +950,7 @@ export function table(){
     currentRusName = rusName;
 
     // Сохраняем селект БД
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    containerContent.innerHTML = '';
-    if (dbSelectContainer) {
-      containerContent.appendChild(dbSelectContainer);
-    }
+    preserveDbSelect(containerContent);
 
     const name = document.createElement('div');
     name.classList = 'table-name';
@@ -978,6 +1011,9 @@ export function table(){
   }
 
   // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
+  // Создаем селект один раз и загружаем данные
+  createDbSelectOnce();
 
   // Загружаем список БД, затем таблицы
   loadDbNames().then(() => {
