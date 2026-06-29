@@ -1,9 +1,7 @@
-import {editRow, deleteRow, insertRow, postJSON, getRowsTable} from './db.js';
+import {editRow, deleteRow, insertRow, postJSON, getRowsTable, getDbNames, getTableNames} from './db.js';
 import { Modal } from "./Modal.js";
 import {Loader} from "./Loader.js";
 import { showReportModal, generateReportByFormat as generateReportByFormatUtil } from './report.js';
-
-const BASE_URL = 'http://185.192.247.60:8888';
 
 // Функция для фильтрации данных с поддержкой точного совпадения
 function filterData(data, field, value, exactMatch = false) {
@@ -14,12 +12,10 @@ function filterData(data, field, value, exactMatch = false) {
     if (cellValue === null || cellValue === undefined) return false;
 
     if (exactMatch) {
-      // Точное совпадение (без учета регистра)
       const strValue = String(cellValue).toLowerCase();
       const searchValue = String(value).toLowerCase();
       return strValue === searchValue;
     } else {
-      // Частичное совпадение (содержит)
       const strValue = String(cellValue).toLowerCase();
       const searchValue = String(value).toLowerCase();
       return strValue.includes(searchValue);
@@ -27,14 +23,17 @@ function filterData(data, field, value, exactMatch = false) {
   });
 }
 
-export function table(url){
+export function table(){
   const loader = new Loader('.loader-container');
 
   let currentTableData = [];
   let currentColumnsInfo = [];
   let currentTableName = '';
   let currentRusName = '';
-  let currentFilteredData = null; // Храним отфильтрованные данные для отчета
+  let currentFilteredData = null;
+  let currentDbName = 'KA';
+  let currentTableNamesData = {};
+  let isDbSelectInitialized = false; // Флаг, что селект уже создан
 
   // Обертка для функции generateReportByFormat с передачей loader
   const generateReportByFormat = (tableName, rusName, columnsInfo, allRows, format) => {
@@ -46,44 +45,231 @@ export function table(url){
     showReportModal(tableName, rusName, columnsInfo, allRows, loader, generateReportByFormat);
   };
 
+  // ==================== ФУНКЦИЯ ДЛЯ СОЗДАНИЯ/ОБНОВЛЕНИЯ СЕЛЕКТА БД ====================
+
+  function createOrUpdateDbSelect(dbNames) {
+    const container = document.querySelector('.container_content');
+    if (!container) return null;
+
+    let dbSelectContainer = container.querySelector('.db-select-container');
+
+    // Если контейнера нет - создаем
+    if (!dbSelectContainer) {
+      dbSelectContainer = document.createElement('div');
+      dbSelectContainer.className = 'db-select-container';
+      dbSelectContainer.style.marginBottom = '15px';
+      dbSelectContainer.style.padding = '10px';
+      dbSelectContainer.style.backgroundColor = '#f5f5f5';
+      dbSelectContainer.style.borderRadius = '5px';
+      dbSelectContainer.style.display = 'flex';
+      dbSelectContainer.style.alignItems = 'center';
+      dbSelectContainer.style.gap = '10px';
+
+      const label = document.createElement('label');
+      label.textContent = 'Выбор БД:';
+      label.style.fontWeight = 'bold';
+      label.style.fontSize = '18px';
+      dbSelectContainer.appendChild(label);
+
+      const select = document.createElement('select');
+      select.id = 'db-select-tables';
+      select.style.padding = '5px 10px';
+      select.style.borderRadius = '4px';
+      select.style.border = '1px solid #ccc';
+      select.style.fontSize = '14px';
+      select.style.minWidth = '150px';
+      dbSelectContainer.appendChild(select);
+
+      // Вставляем в начало container_content
+      container.prepend(dbSelectContainer);
+    }
+
+    const select = dbSelectContainer.querySelector('#db-select-tables');
+    if (!select) return null;
+
+    // Запоминаем текущее выбранное значение
+    const currentValue = select.value;
+
+    // Заполняем опции
+    select.innerHTML = '';
+
+    dbNames.forEach(dbName => {
+      const option = document.createElement('option');
+      option.value = dbName;
+      option.textContent = dbName;
+      select.appendChild(option);
+    });
+
+    // Восстанавливаем выбранное значение
+    if (currentValue && dbNames.includes(currentValue)) {
+      select.value = currentValue;
+    } else if (dbNames.includes('KA')) {
+      select.value = 'KA';
+    } else if (dbNames.length > 0) {
+      select.value = dbNames[0];
+    }
+
+    // Обновляем currentDbName
+    currentDbName = select.value;
+
+    // Обработчик изменения БД
+    select.removeEventListener('change', handleDbChange);
+    select.addEventListener('change', handleDbChange);
+
+    return select;
+  }
+
+  // Обработчик изменения БД
+  function handleDbChange() {
+    const select = document.getElementById('db-select-tables');
+    if (!select) return;
+
+    const newDbName = select.value;
+    if (newDbName === currentDbName) return;
+
+    currentDbName = newDbName;
+
+    // Очищаем навигацию
+    const nav = document.querySelector('.container__nav');
+    if (nav) {
+      nav.innerHTML = '';
+    }
+
+    // Очищаем контент, но сохраняем селект БД
+    const containerContent = document.querySelector('.container_content');
+    if (containerContent) {
+      const dbSelect = containerContent.querySelector('.db-select-container');
+      containerContent.innerHTML = '';
+      if (dbSelect) {
+        containerContent.appendChild(dbSelect);
+      }
+    }
+
+    // Загружаем таблицы для новой БД
+    loadTables(currentDbName);
+  }
+
+  // ==================== ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СПИСКА БД ====================
+
+  async function loadDbNames() {
+    try {
+      const dbNames = await getDbNames();
+
+      // Создаем или обновляем селект
+      const select = createOrUpdateDbSelect(dbNames);
+      if (select) {
+        currentDbName = select.value;
+      }
+
+      console.log('Загружены БД:', dbNames, 'Текущая:', currentDbName);
+      return dbNames;
+    } catch (error) {
+      console.error('Ошибка загрузки списка БД:', error);
+      return [];
+    }
+  }
+
+  // ==================== ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СПИСКА ТАБЛИЦ ====================
+
+  async function loadTables(dbName) {
+    try {
+      loader.show('Загрузка списка таблиц...');
+
+      const tableNamesData = await getTableNames(dbName);
+      currentTableNamesData = tableNamesData;
+
+      // Очищаем навигацию
+      const nav = document.querySelector('.container__nav');
+      if (!nav) {
+        loader.close();
+        return;
+      }
+      nav.innerHTML = '';
+
+      // Строим меню
+      for (const key in tableNamesData) {
+        const elemSection = document.createElement('div');
+        const dateTablesName = tableNamesData[key];
+        const nameSection = document.createElement('span');
+        nameSection.classList.add('menu-section');
+        nameSection.innerText = key;
+        elemSection.append(nameSection);
+
+        for (const field in dateTablesName) {
+          const nameTable = document.createElement('div');
+          nameTable.classList.add('container__nav__el');
+          nameTable.append(dateTablesName[field]);
+          nameTable.setAttribute("id", field);
+          elemSection.append(nameTable);
+        }
+        nav.append(elemSection);
+
+        elemSection.addEventListener('click', (e) => {
+          const trsNavMenu = document.querySelectorAll('.container__nav__el');
+          trsNavMenu.forEach((trMenu) => {
+            if (trMenu == e.target) {
+              trMenu.style = 'background-color: #B5B8B1';
+              console.log(e.target.id, e.target.innerHTML);
+              createTable(e.target.id, e.target.innerHTML);
+            } else {
+              if (e.target.id) {
+                trMenu.style = '';
+              }
+            }
+          });
+        });
+      }
+
+      loader.close();
+    } catch (error) {
+      console.error('Ошибка загрузки таблиц:', error);
+      loader.close();
+    }
+  }
+
   // Функция для создания компонента фильтрации
   function createFilterComponent(container, columnsInfo, onFilterApply, onFilterReset) {
-    container.innerHTML = `
-      <div class="filter-container">
-        <div class="filter-field">
-          <label>Поле для фильтрации</label>
-          <select class="filter-field-select">
-            <option value="">-- Выберите поле --</option>
-            ${columnsInfo.map(col => `
-              <option value="${col.name}">${col.description || col.name}</option>
-            `).join('')}
-          </select>
-        </div>
-        
-        <div class="filter-value">
-          <label>Значение</label>
-          <input type="text" class="filter-value-input" placeholder="Введите значение...">
-        </div>
+    let filterContainer = container.querySelector('.filter-container');
+    if (filterContainer) {
+      filterContainer.remove();
+    }
 
-        <div class="filter-exact-match">
-          <label>
-            <input type="checkbox" class="filter-exact-checkbox">
-            Точное совпадение
-          </label>
-        </div>
-        
-        <div class="filter-buttons">
-          <button class="filter-apply-btn">Применить</button>
-          <button class="filter-reset-btn">Сбросить</button>
-        </div>
+    filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container';
+    filterContainer.innerHTML = `
+      <div class="filter-field">
+        <label>Поле для фильтрации</label>
+        <select class="filter-field-select">
+          <option value="">-- Выберите поле --</option>
+          ${columnsInfo.map(col => `
+            <option value="${col.name}">${col.description || col.name}</option>
+          `).join('')}
+        </select>
+      </div>
+      
+      <div class="filter-value">
+        <label>Значение</label>
+        <input type="text" class="filter-value-input" placeholder="Введите значение...">
+      </div>
+
+      <div class="filter-exact-match">
+        <label>
+          <input type="checkbox" class="filter-exact-checkbox">
+          Точное совпадение
+        </label>
+      </div>
+      
+      <div class="filter-buttons">
+        <button class="filter-apply-btn">Применить</button>
+        <button class="filter-reset-btn">Сбросить</button>
       </div>
     `;
 
-    const fieldSelect = container.querySelector('.filter-field-select');
-    const valueInput = container.querySelector('.filter-value-input');
-    const exactCheckbox = container.querySelector('.filter-exact-checkbox');
-    const applyBtn = container.querySelector('.filter-apply-btn');
-    const resetBtn = container.querySelector('.filter-reset-btn');
+    const fieldSelect = filterContainer.querySelector('.filter-field-select');
+    const valueInput = filterContainer.querySelector('.filter-value-input');
+    const exactCheckbox = filterContainer.querySelector('.filter-exact-checkbox');
+    const applyBtn = filterContainer.querySelector('.filter-apply-btn');
+    const resetBtn = filterContainer.querySelector('.filter-reset-btn');
 
     applyBtn.addEventListener('click', () => {
       const field = fieldSelect.value;
@@ -100,6 +286,8 @@ export function table(url){
       exactCheckbox.checked = false;
       onFilterReset();
     });
+
+    container.appendChild(filterContainer);
   }
 
   // Функция для создания кнопок таблицы
@@ -141,22 +329,20 @@ export function table(url){
       btnDelete.disabled = false;
     }
 
-    // ИСПРАВЛЕНО: используем правильный родительский элемент
-    const modalParent = document.querySelector('.column2_vi'); // Берем из HTML
+    const modalParent = document.querySelector('.column2_vi');
 
     if (!modalParent) {
       console.error('Modal parent (.column2_vi) not found');
       return;
     }
 
-    // Удаляем старые модалки перед созданием новых
     const oldModals = modalParent.querySelectorAll('.modal:not(#myModal):not(#modal__sql)');
     oldModals.forEach(modal => modal.remove());
 
-    const modalDelete = new Modal(modalParent, 'delete', 0, result.columns_info, tableRow, deleteRow, result, rusName, tableName);
-    const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName);
-    const modalCopy = new Modal(modalParent, 'copy', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName);
-    const modalEdit = new Modal(modalParent, 'edit', result.columns_info.length, result.columns_info, tableRow, editRow, result, rusName, tableName);
+    const modalDelete = new Modal(modalParent, 'delete', 0, result.columns_info, tableRow, deleteRow, result, rusName, tableName, currentDbName);
+    const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName, currentDbName);
+    const modalCopy = new Modal(modalParent, 'copy', result.columns_info.length, result.columns_info, tableRow, insertRow, result, rusName, tableName, currentDbName);
+    const modalEdit = new Modal(modalParent, 'edit', result.columns_info.length, result.columns_info, tableRow, editRow, result, rusName, tableName, currentDbName);
 
     btnReport.addEventListener('click', () => {
       generateReport(tableName, rusName, result.columns_info);
@@ -194,7 +380,6 @@ export function table(url){
     const table = document.createElement('table');
     table.classList.add('mainTable');
 
-    // Создаем заголовок
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     columnsInfo.forEach(column => {
@@ -206,7 +391,6 @@ export function table(url){
     thead.append(headerRow);
     table.append(thead);
 
-    // Создаем тело таблицы
     const tbody = document.createElement('tbody');
 
     if (data.length === 0) {
@@ -253,7 +437,6 @@ export function table(url){
     tableWrapper.innerHTML = '';
     tableWrapper.appendChild(tableScroll);
 
-    // Выделяем последнюю строку если есть данные
     const trs = document.querySelectorAll('.mainTable tbody tr');
     if (trs.length > 0 && data.length > 0) {
       trs[trs.length - 1].style.backgroundColor = '#B5B8B1';
@@ -262,7 +445,6 @@ export function table(url){
       createButtonsTable(tableScroll, result, null, rusName, tableName, false);
     }
 
-    // Обновляем информацию о количестве записей
     let filterInfo = document.querySelector('.filter-info');
     if (!filterInfo) {
       filterInfo = document.createElement('div');
@@ -277,31 +459,32 @@ export function table(url){
 
   // функция в которую передается название выбранной таблицы и на его основе создается таблица
   function createTable(engName, rusName) {
-    // Очищаем контейнер перед загрузкой новой таблицы
     const containerContent = document.querySelector('.container_content');
     if (containerContent) {
+      // Сохраняем селект БД
+      const dbSelectContainer = containerContent.querySelector('.db-select-container');
       containerContent.innerHTML = '';
+      if (dbSelectContainer) {
+        containerContent.appendChild(dbSelectContainer);
+      }
     }
 
-    // Сбрасываем текущие данные
     currentTableData = [];
     currentColumnsInfo = [];
     currentTableName = '';
     currentRusName = '';
     currentFilteredData = null;
 
-    // Удаляем старую модалку отчета если есть
     const reportModal = document.getElementById('reportFormatModal');
     if (reportModal) {
       reportModal.remove();
     }
 
-    // Показываем загрузчик
     loader.show('Загрузка таблицы...');
 
     let data = { name: engName };
 
-    postJSON(data).then(result => {
+    postJSON(data, currentDbName).then(result => {
       console.log(result)
       loader.close();
       if (result === undefined) {
@@ -318,53 +501,12 @@ export function table(url){
     });
   }
 
-// функция которая получает названия таблиц из API и генерирует их на странице
-  function getNameTables(url){
-    fetch(url)
-        .then(response => response.json())
-        .then(jsonRsponse => {
-          for (const key in jsonRsponse) {
-            const elemSection = document.createElement('div');
-            const dateTablesName = jsonRsponse[key];
-            const nameSection = document.createElement('span');
-            nameSection.classList.add('menu-section');
-            nameSection.innerText = key;
-            elemSection.append(nameSection);
-            for (const field in dateTablesName) {
-              const nameTable = document.createElement('div');
-              nameTable.classList.add('container__nav__el');
-              nameTable.append(dateTablesName[field]);
-              nameTable.setAttribute("id", field);
-              elemSection.append(nameTable);
-            }
-            document.querySelector('.container__nav').append(elemSection);
-            elemSection.addEventListener('click', (e) => {
-              const trsNavMenu = document.querySelectorAll('.container__nav__el');
-              trsNavMenu.forEach((trMenu) => {
-                if (trMenu == e.target) {
-                  trMenu.style = 'background-color: #B5B8B1';
-                  console.log(e.target.id, e.target.innerHTML);
-                  createTable(e.target.id, e.target.innerHTML);
-                } else {
-                  if (e.target.id) {
-                    trMenu.style = '';
-                  }
-                }
-              })
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Ошибка загрузки таблиц:', error);
-        });
-  }
-
   // Функция для обработки фильтрации
   function handleFilterApply(field, value, exactMatch, result, rusName, tableName) {
     if (!currentTableData.length) return;
 
     const filteredData = filterData(currentTableData, field, value, exactMatch);
-    currentFilteredData = filteredData; // Сохраняем отфильтрованные данные
+    currentFilteredData = filteredData;
     const containerContent = document.querySelector('.container_content');
     const hasData = filteredData.length > 0;
     renderTableData(containerContent, filteredData, currentColumnsInfo, result, rusName, tableName, hasData);
@@ -374,7 +516,7 @@ export function table(url){
   function handleFilterReset(result, rusName, tableName) {
     if (!currentTableData.length) return;
 
-    currentFilteredData = null; // Сбрасываем отфильтрованные данные
+    currentFilteredData = null;
     const containerContent = document.querySelector('.container_content');
     const filterContainer = document.querySelector('#filter-container');
     const filterInfo = document.querySelector('.filter-info');
@@ -382,7 +524,6 @@ export function table(url){
       filterInfo.remove();
     }
 
-    // Сбрасываем значения в полях фильтра
     if (filterContainer) {
       const fieldSelect = filterContainer.querySelector('.filter-field-select');
       const valueInput = filterContainer.querySelector('.filter-value-input');
@@ -401,7 +542,6 @@ export function table(url){
     const modalSql = document.querySelector('#modal__sql');
     if (!modalSql) return;
 
-    // Удаляем старую кнопку закрытия modal__closes
     const oldCloseBtn = modalSql.querySelector('.modal__closes');
     if (oldCloseBtn) {
       oldCloseBtn.remove();
@@ -412,13 +552,11 @@ export function table(url){
     const modalData = modalSql.querySelector('.modal_data');
     modalData.innerHTML = '';
 
-    // Создаем контейнер для скролла
     const tableScrollContainer = document.createElement('div');
     tableScrollContainer.classList.add('sql-modal-table-scroll');
     tableScrollContainer.style.maxHeight = '400px';
     tableScrollContainer.style.overflow = 'auto';
 
-    // Создаем таблицу для отображения структуры с черными границами
     const table = document.createElement('table');
     table.classList.add('sql-structure-table');
     table.style.width = '100%';
@@ -426,7 +564,6 @@ export function table(url){
     table.style.fontSize = '13px';
     table.style.border = '1px solid black';
 
-    // Заголовок таблицы С колонкой "Русское наименование"
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headerRow.style.backgroundColor = '#f5f5f5';
@@ -446,13 +583,11 @@ export function table(url){
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Тело таблицы с номерами строк и русским наименованием
     const tbody = document.createElement('tbody');
     result.columns_info.forEach((column, index) => {
       const row = document.createElement('tr');
       row.style.borderBottom = '1px solid black';
 
-      // Номер строки
       const numCell = document.createElement('td');
       numCell.textContent = (index + 1).toString();
       numCell.style.padding = '8px';
@@ -505,7 +640,6 @@ export function table(url){
     table.appendChild(tbody);
     tableScrollContainer.appendChild(table);
 
-    // Добавляем информацию о таблице
     const tableInfo = document.createElement('div');
     tableInfo.classList.add('sql-table-info');
     tableInfo.style.marginBottom = '15px';
@@ -517,12 +651,12 @@ export function table(url){
       <div><strong>Наименование таблицы в БД:</strong> ${tableName}</div>
       <div><strong>Русское название:</strong> ${rusName}</div>
       <div><strong>Количество полей:</strong> ${result.columns_info.length}</div>
+      <div><strong>База данных:</strong> ${currentDbName}</div>
     `;
 
     modalData.appendChild(tableInfo);
     modalData.appendChild(tableScrollContainer);
 
-    // Создаем единый контейнер для кнопок снизу
     const buttonContainer = document.createElement('div');
     buttonContainer.style.marginTop = '20px';
     buttonContainer.style.padding = '15px';
@@ -531,7 +665,6 @@ export function table(url){
     buttonContainer.style.justifyContent = 'flex-end';
     buttonContainer.style.gap = '10px';
 
-    // Кнопка сохранения структуры в DOCX
     const printBtn = document.createElement('button');
     printBtn.textContent = 'Печать';
     printBtn.style.padding = '8px 20px';
@@ -546,7 +679,6 @@ export function table(url){
       await generateStructureReport(tableName, rusName, result.columns_info);
     });
 
-    // Кнопка закрытия
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Закрыть';
     closeButton.style.padding = '8px 20px';
@@ -566,14 +698,13 @@ export function table(url){
     modalData.appendChild(buttonContainer);
   }
 
-  // Функция для генерации DOCX отчета со структурой таблицы (БЕЗ русского наименования)
+  // Функция для генерации DOCX отчета со структурой таблицы
   async function generateStructureReport(tableName, rusName, columnsInfo) {
     try {
       loader.show('Формирование DOCX отчета...');
 
       const elements = [];
 
-      // Заголовок
       elements.push({
         type: 'title',
         text: `Структура таблицы "${rusName}"`,
@@ -586,7 +717,6 @@ export function table(url){
         }
       });
 
-      // Дата
       elements.push({
         type: 'paragraph',
         text: `Дата формирования: ${new Date().toLocaleString('ru-RU')}`,
@@ -598,18 +728,17 @@ export function table(url){
         }
       });
 
-      // Информация о таблице
       elements.push({
         type: 'paragraph',
         text: `Имя таблицы в БД: ${tableName}`,
         formatting: { font_size: 11, space_after: 4 }
       });
 
-      // elements.push({
-      //   type: 'paragraph',
-      //   text: `Русское название: ${rusName}`,
-      //   formatting: { font_size: 11, space_after: 4 }
-      // });
+      elements.push({
+        type: 'paragraph',
+        text: `База данных: ${currentDbName}`,
+        formatting: { font_size: 11, space_after: 4 }
+      });
 
       elements.push({
         type: 'paragraph',
@@ -617,7 +746,6 @@ export function table(url){
         formatting: { font_size: 11, space_after: 16 }
       });
 
-      // Заголовок для таблицы структуры
       elements.push({
         type: 'title',
         text: 'Детальная структура таблицы',
@@ -629,7 +757,6 @@ export function table(url){
         }
       });
 
-      // Таблица структуры БЕЗ колонки "Русское наименование"
       const structureHeaders = ['№', 'Поле (БД)', 'Тип данных', 'Null', 'Первичный ключ', 'Уникальность'];
       const structureRows = columnsInfo.map((col, index) => [
         (index + 1).toString(),
@@ -646,7 +773,6 @@ export function table(url){
         rows: structureRows
       });
 
-      // Подвал
       elements.push({
         type: 'paragraph',
         text: `Отчет сгенерирован автоматически. Всего полей: ${columnsInfo.length}`,
@@ -658,7 +784,6 @@ export function table(url){
         }
       });
 
-      // Импортируем функцию downloadDocx из report.js
       const { downloadDocx } = await import('./report.js');
       const filename = `${tableName}_structure_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.docx`;
       await downloadDocx(elements, filename);
@@ -671,8 +796,6 @@ export function table(url){
     }
   }
 
-  /* функция  которая проверяет  пустая таблица или нет и если она пустая строит её структуру  */
-  /* функция которая проверяет пустая таблица или нет и если она пустая строит её структуру */
   function checkVoidTable(result, tableName, totalRowsCount, rusName) {
     console.log(totalRowsCount);
     console.log(result);
@@ -683,7 +806,13 @@ export function table(url){
     currentRusName = rusName;
     currentTableData = [];
 
+    // Сохраняем селект БД
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
     containerContent.innerHTML = '';
+    if (dbSelectContainer) {
+      containerContent.appendChild(dbSelectContainer);
+    }
+
     const name = document.createElement('div');
     const tableWrapper = document.createElement('div');
     const tableScroll = document.createElement('div');
@@ -736,7 +865,6 @@ export function table(url){
     tableWrapper.appendChild(tableScroll);
     containerContent.append(tableWrapper);
 
-    // ВАЖНО: Сначала добавляем кнопки в DOM, потом создаем модалки
     const btns = document.querySelector('.table-buttons');
     if (btns) {
       btns.remove();
@@ -751,7 +879,6 @@ export function table(url){
     buttons.innerHTML += `<button class="report">Отчет</button>`;
     buttons.innerHTML += `<button class="maps" disabled>Показать карту</button>`;
 
-    // Добавляем кнопки в правильное место
     tableScroll.parentElement.append(buttons);
 
     const btnInsert = document.querySelector('.insert');
@@ -761,11 +888,9 @@ export function table(url){
     const btnReport = document.querySelector('.report');
     const btmMap = document.querySelector('.maps');
 
-    // Создаем модальные окна
     const modalParent = document.querySelector('.container_content');
-    const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, null, insertRow, result, rusName, tableName);
+    const modalInser = new Modal(modalParent, 'insert', result.columns_info.length, result.columns_info, null, insertRow, result, rusName, tableName, currentDbName);
 
-    // Обработчик для кнопки Добавить
     btnInsert.addEventListener('click', () => {
       console.log('Insert button clicked in void table');
       modalInser.createModal(() => {
@@ -773,13 +898,11 @@ export function table(url){
       });
     });
 
-    // Обработчик для кнопки Отчет
     btnReport.addEventListener('click', () => {
       generateReport(tableName, rusName, result.columns_info);
     });
   }
 
-  /* функция  в которую  передается вся информация о таблице */
   function createTableContent(result, columnsInfo, tableName, rusName) {
     loader.show('Загрузка....');
 
@@ -789,7 +912,12 @@ export function table(url){
     currentTableName = tableName;
     currentRusName = rusName;
 
+    // Сохраняем селект БД
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
     containerContent.innerHTML = '';
+    if (dbSelectContainer) {
+      containerContent.appendChild(dbSelectContainer);
+    }
 
     const name = document.createElement('div');
     name.classList = 'table-name';
@@ -800,7 +928,7 @@ export function table(url){
     filterContainer.id = 'filter-container';
     containerContent.appendChild(filterContainer);
 
-    getRowsTable(tableName).then(dataTable => {
+    getRowsTable(tableName, null, null, currentDbName).then(dataTable => {
       currentTableData = dataTable.rows;
 
       createFilterComponent(
@@ -824,7 +952,6 @@ export function table(url){
     });
   }
 
-  /* функция  которая   создает таблицу на сайте  */
   function generateTable(result, rusName, tableNane) {
     if (result.total_rows_count === 0) {
       checkVoidTable(result, tableNane, result.total_rows_count, rusName);
@@ -836,12 +963,10 @@ export function table(url){
   // Функция для сбора данных таблицы и формирования отчета
   async function generateReport(tableName, rusName, columnsInfo) {
     try {
-      // Если есть отфильтрованные данные - используем их, иначе берем все данные
       let reportData = currentFilteredData || currentTableData;
 
       if (reportData.length === 0) {
-        // Если данных нет, пробуем загрузить из таблицы
-        const dataTable = await getRowsTable(tableName);
+        const dataTable = await getRowsTable(tableName, null, null, currentDbName);
         reportData = dataTable.rows;
       }
 
@@ -852,5 +977,10 @@ export function table(url){
     }
   }
 
-  getNameTables(url);
+  // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
+  // Загружаем список БД, затем таблицы
+  loadDbNames().then(() => {
+    loadTables(currentDbName);
+  });
 }

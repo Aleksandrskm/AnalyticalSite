@@ -36,15 +36,42 @@ function cleanStringCompact(str) {
       .trim();
 }
 
+// ==================== НОВАЯ ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ СПИСКА БД ====================
+
+/**
+ * Получение списка доступных баз данных
+ * @returns {Promise<string[]>} - массив названий БД
+ */
+async function getDbNames() {
+  try {
+    const response = await fetch(`http://${URL}/db/names`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    console.log('Database names:', result);
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching database names:', error);
+    throw error;
+  }
+}
+
 // ==================== НОВЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ГРУППИРОВКАМИ ====================
 
 /**
  * Получение списка всех группировок спутников
+ * @param {string} dbName - имя базы данных (по умолчанию 'KA')
  * @returns {Promise<string[]>} - массив названий группировок
  */
-async function getSatelliteGroups() {
+async function getSatelliteGroups(dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/satellites/groups`, {
+    const response = await fetch(`http://${URL}/satellites/groups?db_name=${dbName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -67,11 +94,12 @@ async function getSatelliteGroups() {
  * @param {string} group - название группировки
  * @param {number} page - номер страницы (по умолчанию 1)
  * @param {number} pageSize - размер страницы (по умолчанию 10)
+ * @param {string} dbName - имя базы данных (по умолчанию 'KA')
  * @returns {Promise<Object>} - объект с данными спутников и информацией о пагинации
  */
-async function getSatellitesByGroup(group, page = 1, pageSize = 10) {
+async function getSatellitesByGroup(group, page = 1, pageSize = 10, dbName = 'KA') {
   try {
-    const url = `http://${URL}/satellites?group=${encodeURIComponent(group)}&page=${page}&page_size=${pageSize}`;
+    const url = `http://${URL}/satellites?group=${encodeURIComponent(group)}&page=${page}&page_size=${pageSize}&db_name=${dbName}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -94,11 +122,12 @@ async function getSatellitesByGroup(group, page = 1, pageSize = 10) {
  * Получение лучей спутника по его ID и типу луча
  * @param {number} satelliteId - ID спутника
  * @param {string} beamType - тип луча ('transmitting' или 'receiving')
+ * @param {string} dbName - имя базы данных (по умолчанию 'KA')
  * @returns {Promise<Array>} - массив лучей
  */
-async function getSatelliteBeams(satelliteId, beamType) {
+async function getSatelliteBeams(satelliteId, beamType, dbName = 'KA') {
   try {
-    const url = `http://${URL}/satellites/${satelliteId}/beams?beam_type=${beamType}`;
+    const url = `http://${URL}/satellites/${satelliteId}/beams?beam_type=${beamType}&db_name=${dbName}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -117,7 +146,7 @@ async function getSatelliteBeams(satelliteId, beamType) {
   }
 }
 
-// ==================== СТАРЫЕ ФУНКЦИИ (сохранены для обратной совместимости) ====================
+// ==================== СТАРЫЕ ФУНКЦИИ (с добавлением параметра dbName) ====================
 
 async function getDistanceBeam(elevationAngle, satelliteAltitude) {
   try {
@@ -137,9 +166,9 @@ async function getDistanceBeam(elevationAngle, satelliteAltitude) {
   }
 }
 
-async function getActiveSessions() {
+async function getActiveSessions(dbName = 'USERS') {
   try {
-    const response = await fetch(`http://${URL}/users/sessions`, {
+    const response = await fetch(`http://${URL}/users/sessions?db_name=${dbName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -155,9 +184,9 @@ async function getActiveSessions() {
   }
 }
 
-async function getAllUsers() {
+async function getAllUsers(dbName = 'USERS') {
   try {
-    const response = await fetch(`http://${URL}/users`, {
+    const response = await fetch(`http://${URL}/users?db_name=${dbName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -173,9 +202,9 @@ async function getAllUsers() {
   }
 }
 
-async function postUsersActivity(userIds, startDate, endDate) {
+async function postUsersActivity(userIds, startDate, endDate, dbName = 'USERS') {
   try {
-    const response = await fetch(`http://${URL}/users/activity?start_date=${startDate}&end_date=${endDate}`, {
+    const response = await fetch(`http://${URL}/users/activity?start_date=${startDate}&end_date=${endDate}&db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -192,9 +221,9 @@ async function postUsersActivity(userIds, startDate, endDate) {
   }
 }
 
-async function editRow(data, tableName) {
+async function editRow(data, tableName, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/update/${tableName}`, {
+    const response = await fetch(`http://${URL}/db/update/${tableName}?db_name=${dbName}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -215,9 +244,9 @@ async function editRow(data, tableName) {
   }
 }
 
-async function deleteRow(data, tableName) {
+async function deleteRow(data, tableName, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/delete/${tableName}`, {
+    const response = await fetch(`http://${URL}/db/delete/${tableName}?db_name=${dbName}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -232,9 +261,9 @@ async function deleteRow(data, tableName) {
   }
 }
 
-async function recalculateKA(idKA) {
+async function recalculateKA(idKA, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/ka/${idKA}/recalculate`, {
+    const response = await fetch(`http://${URL}/ka/${idKA}/recalculate?db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -264,9 +293,9 @@ async function recalculateKA(idKA) {
   }
 }
 
-async function insertRow(data, tableName) {
+async function insertRow(data, tableName, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/insert_row/${tableName}`, {
+    const response = await fetch(`http://${URL}/db/insert_row/${tableName}?db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -281,9 +310,9 @@ async function insertRow(data, tableName) {
   }
 }
 
-async function postJSON(data) {
+async function postJSON(data, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/${data.name}/info`, {
+    const response = await fetch(`http://${URL}/db/${data.name}/info?db_name=${dbName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -299,9 +328,9 @@ async function postJSON(data) {
   }
 }
 
-async function getRowsTable(tableName, skipRows, rowsCount) {
+async function getRowsTable(tableName, skipRows, rowsCount, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/select/${tableName}`, {
+    const response = await fetch(`http://${URL}/db/select/${tableName}?db_name=${dbName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -315,9 +344,9 @@ async function getRowsTable(tableName, skipRows, rowsCount) {
   }
 }
 
-async function changeQuery(query) {
+async function changeQuery(query, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/custom_change_query`, {
+    const response = await fetch(`http://${URL}/db/custom_change_query?db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -337,9 +366,9 @@ async function changeQuery(query) {
   }
 }
 
-async function updateOrInsert(tableName, body) {
+async function updateOrInsert(tableName, body, dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/update_or_insert_row/${tableName}`, {
+    const response = await fetch(`http://${URL}/db/update_or_insert_row/${tableName}?db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -358,10 +387,10 @@ async function updateOrInsert(tableName, body) {
   }
 }
 
-async function selectQuery(query) {
+async function selectQuery(query, dbName = 'KA') {
   try {
     console.log((query));
-    const response = await fetch(`http://${URL}/db/custom_select_query`, {
+    const response = await fetch(`http://${URL}/db/custom_select_query?db_name=${dbName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -376,10 +405,10 @@ async function selectQuery(query) {
   }
 }
 
-async function recalculateKas() {
+async function recalculateKas(dbName = 'KA') {
   try {
     loader.show('Ожидание ответа от сервера....');
-    const response = await fetch(`http://${URL}/ka/recalculate`, {
+    const response = await fetch(`http://${URL}/ka/recalculate?db_name=${dbName}`, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
@@ -412,9 +441,37 @@ async function recalculateKas() {
   }
 }
 
+// ==================== ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ СПИСКА ТАБЛИЦ ====================
+
+/**
+ * Получение структуры всех таблиц (имена таблиц по разделам)
+ * @param {string} dbName - имя базы данных (по умолчанию 'KA')
+ * @returns {Promise<Object>} - объект с разделами и таблицами
+ */
+async function getTableNames(dbName = 'KA') {
+  try {
+    const response = await fetch(`http://${URL}/db/structure?db_name=${dbName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    console.log('Table names:', result);
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
+
 export {
   editRow, deleteRow, insertRow, postJSON, getRowsTable, changeQuery,
   selectQuery, recalculateKas, recalculateKA, getDistanceBeam,
   updateOrInsert, getActiveSessions, getAllUsers, postUsersActivity,
-  getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams
+  getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams,
+  getDbNames, getTableNames
 };

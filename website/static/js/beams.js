@@ -12,7 +12,8 @@ import {
     updateOrInsert,
     getSatelliteGroups,
     getSatellitesByGroup,
-    getSatelliteBeams
+    getSatelliteBeams,
+    getDbNames
 } from './db.js';
 import { Loader } from './Loader.js';
 
@@ -25,6 +26,7 @@ let currentPage = 1;
 let pageSize = 10;
 let totalSatellites = 0;
 let loader = null;
+let currentDbName = 'KA'; // Текущая выбранная БД
 
 // Кэш для информации о таблице
 let tableColumnsInfo = null;
@@ -135,14 +137,14 @@ function getPageSize() {
 }
 
 // Получение информации о полях таблицы
-async function getTableColumnsInfo(tableName) {
+async function getTableColumnsInfo(tableName, dbName = 'KA') {
     if (tableColumnsInfo && currentTableName === tableName) {
         return tableColumnsInfo;
     }
 
     try {
         const data = { name: tableName };
-        const result = await postJSON(data);
+        const result = await postJSON(data, dbName);
         if (result && result.columns_info) {
             tableColumnsInfo = result.columns_info;
             currentTableName = tableName;
@@ -211,13 +213,50 @@ function updateButtonsState() {
     }
 }
 
+// ==================== НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СПИСКА БД ====================
+
+async function loadDbNames() {
+    const loader = initLoader();
+    loader.show('Загрузка списка БД...');
+
+    try {
+        const dbNames = await getDbNames();
+        const select = document.getElementById('db-select');
+        if (!select) return;
+
+        select.innerHTML = '';
+
+        dbNames.forEach(dbName => {
+            const option = document.createElement('option');
+            option.value = dbName;
+            option.textContent = dbName;
+            select.appendChild(option);
+        });
+
+        // Устанавливаем значение по умолчанию 'KA'
+        if (dbNames.includes('KA')) {
+            select.value = 'KA';
+        } else if (dbNames.length > 0) {
+            select.value = dbNames[0];
+        }
+        currentDbName = select.value;
+
+        loader.close();
+        return dbNames;
+    } catch (error) {
+        loader.close();
+        renderPopup(document.querySelector('#dialog-res'), `Ошибка загрузки списка БД: ${error}`);
+        return [];
+    }
+}
+
 // Загрузка группировок
-async function loadGroups() {
+async function loadGroups(dbName = 'KA') {
     const loader = initLoader();
     loader.show('Загрузка группировок...');
 
     try {
-        const groups = await getSatelliteGroups();
+        const groups = await getSatelliteGroups(dbName);
         const select = document.getElementById('ka-group-select');
         if (!select) return;
 
@@ -245,7 +284,7 @@ async function loadGroups() {
 }
 
 // Создание таблицы КА с пагинацией
-async function createKATable(page = 1) {
+async function createKATable(page = 1, dbName = 'KA') {
     const loader = initLoader();
     loader.show('Загрузка спутников...');
 
@@ -253,12 +292,13 @@ async function createKATable(page = 1) {
     const group = groupSelect ? groupSelect.value : currentGroup;
     currentGroup = group;
     currentPage = page;
+    currentDbName = dbName;
 
     const currentPageSize = getPageSize();
     pageSize = currentPageSize;
 
     try {
-        const data = await getSatellitesByGroup(group, page, currentPageSize);
+        const data = await getSatellitesByGroup(group, page, currentPageSize, dbName);
 
         const tbody = document.querySelector('.KA-Table tbody');
         const thead = document.querySelector('.KA-Table thead');
@@ -358,14 +398,14 @@ function updatePagination() {
             if (direction === 'prev' && currentPage > 1) newPage = currentPage - 1;
             if (direction === 'next' && currentPage < totalPages) newPage = currentPage + 1;
             if (newPage !== currentPage) {
-                createKATable(newPage);
+                createKATable(newPage, currentDbName);
             }
         });
     });
 }
 
 // Создание таблицы лучей
-async function createBeamTable(satelliteId) {
+async function createBeamTable(satelliteId, dbName = 'KA') {
     const loader = initLoader();
     loader.show('Загрузка лучей...');
 
@@ -373,7 +413,7 @@ async function createBeamTable(satelliteId) {
     const beamTypeApi = beamType === 'KA_BEAM_PRD' ? 'transmitting' : 'receiving';
 
     try {
-        const beams = await getSatelliteBeams(satelliteId, beamTypeApi);
+        const beams = await getSatelliteBeams(satelliteId, beamTypeApi, dbName);
         console.log('Получены лучи:', beams);
 
         const thead = document.querySelector('.beams-Table thead');
@@ -461,9 +501,7 @@ async function createBeamTable(satelliteId) {
             });
         });
 
-        // Обновляем состояние кнопок после загрузки лучей
         updateButtonsState();
-
         loader.close();
     } catch (error) {
         loader.close();
@@ -489,7 +527,7 @@ function selectFirstRow() {
     document.getElementById('ka-name').innerHTML = `${name} (орбита ${orbit})`;
 
     currentSatelliteId = id;
-    createBeamTable(id);
+    createBeamTable(id, currentDbName);
 }
 
 // Выбор КА
@@ -506,7 +544,7 @@ function selectFirstKa(e) {
             document.getElementById('ka-name').innerHTML = `${name} (орбита ${orbit})`;
 
             currentSatelliteId = id;
-            createBeamTable(id);
+            createBeamTable(id, currentDbName);
         } else {
             tr.classList.remove('selected');
         }
@@ -519,8 +557,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('exit')?.addEventListener('click', closeTab);
 
-    loadGroups().then(() => {
-        createKATable(1);
+    // Загружаем список БД и затем группировки
+    loadDbNames().then(() => {
+        const dbSelect = document.getElementById('db-select');
+        if (dbSelect) {
+            dbSelect.addEventListener('change', function() {
+                const newDbName = this.value;
+                currentDbName = newDbName;
+                // Сбрасываем таблицу лучей
+                document.querySelector('.beams-Table').innerHTML = '<thead></thead><tbody></tbody>';
+                document.getElementById('id-ka').innerHTML = 'КА:';
+                document.getElementById('ka-name').innerHTML = '';
+                clearCanvas();
+                updateButtonsState();
+                // Загружаем группировки для новой БД
+                loadGroups(newDbName).then(() => {
+                    createKATable(1, newDbName);
+                });
+            });
+        }
+
+        // Загружаем группировки для начальной БД
+        const initialDb = dbSelect ? dbSelect.value : 'KA';
+        loadGroups(initialDb).then(() => {
+            createKATable(1, initialDb);
+        });
     });
 
     const canvas = document.getElementById('canvas');
@@ -535,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('ka-name').innerHTML = '';
         clearCanvas();
         updateButtonsState();
-        createKATable(1);
+        createKATable(1, currentDbName);
     });
 
     // Переключение типа лучей
@@ -545,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const idKa = document.getElementById('id-ka').innerHTML.replace(/\D/g, '');
             if (idKa) {
                 document.querySelector('.beams-Table').innerHTML = '<thead></thead><tbody></tbody>';
-                createBeamTable(idKa);
+                createBeamTable(idKa, currentDbName);
             } else {
                 updateButtonsState();
             }
@@ -594,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const selectedValue = document.querySelector('input[name="type_beams"]:checked').value;
+        const dbName = currentDbName || 'KA';
 
         const beamRows = document.querySelectorAll('tr.beams-element');
         if (!beamRows || beamRows.length === 0) {
@@ -605,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loader.show('Сохранение лучей для КА ' + idKa + '...');
 
         try {
-            const columnsInfo = await getTableColumnsInfo(selectedValue);
+            const columnsInfo = await getTableColumnsInfo(selectedValue, dbName);
             if (!columnsInfo) {
                 loader.close();
                 renderPopup(document.querySelector('#dialog-res'), 'Ошибка получения структуры таблицы');
@@ -664,7 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             console.log('Update query for KA ' + idKa + ':', query);
 
-            await changeQuery(query);
+            await changeQuery(query, dbName);
 
             loader.close();
             const modal = document.querySelector('.modal-beams-save');
@@ -827,6 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== ДУБЛИРОВАНИЕ ЛУЧЕЙ НА ВСЕ КА (UPDATE OR INSERT) ====================
     document.getElementById('copy-beams-Kas')?.addEventListener('click', async function() {
         const sourceKaId = document.getElementById('id-ka').innerHTML.replace(/\D/g, '');
+        const dbName = currentDbName || 'KA';
 
         if (!sourceKaId) {
             renderPopup(document.querySelector('#dialog-res'), 'Сначала выберите КА с лучами для копирования');
@@ -844,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             do {
-                const data = await getSatellitesByGroup(currentGroup, page, pageSizeAll);
+                const data = await getSatellitesByGroup(currentGroup, page, pageSizeAll, dbName);
                 const satellites = data.satellites || data.items || [];
                 if (satellites.length === 0) break;
                 allSatellites = allSatellites.concat(satellites);
@@ -870,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Получаем лучи исходного КА
-        const sourceBeams = await getSatelliteBeams(sourceKaId, beamTypeApi);
+        const sourceBeams = await getSatelliteBeams(sourceKaId, beamTypeApi, dbName);
         if (!sourceBeams || sourceBeams.length === 0) {
             renderPopup(document.querySelector('#dialog-res'), 'У текущего КА нет лучей для копирования');
             return;
@@ -881,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Получаем информацию о полях таблицы
-            const columnsInfo = await getTableColumnsInfo(selectedValue);
+            const columnsInfo = await getTableColumnsInfo(selectedValue, dbName);
             if (!columnsInfo) {
                 loader.close();
                 renderPopup(document.querySelector('#dialog-res'), 'Ошибка получения структуры таблицы');
@@ -949,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         matching: ['ID_KA', 'NUM_BEAM']
                     };
 
-                    promises.push(updateOrInsert(selectedValue, body));
+                    promises.push(updateOrInsert(selectedValue, body, dbName));
                 }
             }
 
@@ -959,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderPopup(document.querySelector('#dialog-res'), 'Скопировано на ' + targetKaIds.length + ' КА (всего ' + (sourceBeams.length * targetKaIds.length) + ' лучей)');
 
             setTimeout(function() {
-                createKATable(currentPage);
+                createKATable(currentPage, dbName);
             }, 500);
         } catch (error) {
             loader.close();

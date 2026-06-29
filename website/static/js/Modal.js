@@ -1,6 +1,6 @@
 //класс для создания модальных окон 
 export class Modal{
-    constructor(modalParent,typeModal,colInputs,columns,tableRow,funcRow,table,rusName,tableName){
+    constructor(modalParent,typeModal,colInputs,columns,tableRow,funcRow,table,rusName,tableName,dbName = 'KA'){
         this.modalParent=modalParent;
         this.typeModal=typeModal;
         this.colInputs=colInputs;
@@ -9,23 +9,22 @@ export class Modal{
         this.funcRow=funcRow;
         this.table=table;
         this.rusName=rusName;
-        this.tableName=tableName
+        this.tableName=tableName;
+        this.dbName = dbName;
     }
 
     createModal(callback){
         console.log('Creating modal:', this.typeModal);
 
-        // создание модального окна по полученным параметрам
         const modal=document.createElement('div');
         const modalDialog=document.createElement('div');
         const modalContent=document.createElement('div');
 
         modal.classList.add('modal');
-        modal.style.display = 'flex'; // Важно!
+        modal.style.display = 'flex';
         modalDialog.classList.add('modal__dialog');
         modalContent.classList.add('modal__content');
 
-        // Устанавливаем содержимое в зависимости от типа
         if (this.typeModal==='insert') {
             modalContent.innerHTML=` <div class="modal__title">Добавление новой строки в таблицу</div>`;
         }
@@ -75,7 +74,6 @@ export class Modal{
             }
         }
 
-        // Добавляем кнопки
         if (this.typeModal=='insert') {
             modalContent.innerHTML+=` 
             <div class='btnsModal'>
@@ -104,7 +102,6 @@ export class Modal{
             <button class="btn modal__close btn_dark btn_min">Отмена</button></div>`;
         }
 
-        // Используем переданный родительский элемент
         const modalParent = this.modalParent;
 
         if (!modalParent) {
@@ -116,11 +113,9 @@ export class Modal{
         modal.append(modalDialog);
         modalParent.append(modal);
 
-        // Добавление прослушивателя событий кнопки подтверждения
         const btnConfirm = modal.querySelector('.modal__confirm');
         if (btnConfirm) {
             btnConfirm.addEventListener('click', () => {
-                // проверка на тип модального окна и реализация функций
                 if (this.typeModal==='insert') {
                     const inputs=modal.querySelectorAll('.modal__input');
                     const arrData=[];
@@ -140,7 +135,7 @@ export class Modal{
                     }
                     bodyReq['row']=data
 
-                    this.funcRow(bodyReq,this.tableName).then(() => {
+                    this.funcRow(bodyReq,this.tableName,this.dbName).then(() => {
                         modal.remove();
                         if(callback) callback(this.tableName,this.rusName);
                     });
@@ -164,7 +159,7 @@ export class Modal{
                     }
                     bodyReq['row']=data
 
-                    this.funcRow(bodyReq,this.tableName).then(() => {
+                    this.funcRow(bodyReq,this.tableName,this.dbName).then(() => {
                         modal.remove();
                         if(callback) callback(this.tableName,this.rusName);
                     });
@@ -197,7 +192,7 @@ export class Modal{
                             }
                         };
 
-                        this.funcRow(data, this.tableName).then(() => {
+                        this.funcRow(data, this.tableName, this.dbName).then(() => {
                             modal.remove();
                             if(callback) callback(this.tableName, this.rusName);
                         });
@@ -223,7 +218,7 @@ export class Modal{
                             }
                         };
 
-                        this.funcRow(data, this.tableName).then(() => {
+                        this.funcRow(data, this.tableName, this.dbName).then(() => {
                             modal.remove();
                             if(callback) callback(this.tableName, this.rusName);
                         });
@@ -234,7 +229,6 @@ export class Modal{
             });
         }
 
-        // Добавление прослушивателя событий кнопки отмены
         const btnClose = modal.querySelector('.modal__close');
         if (btnClose) {
             btnClose.addEventListener('click',() => {
@@ -242,7 +236,6 @@ export class Modal{
             });
         }
 
-        // Добавляем возможность закрытия по клику на фон
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.remove();
