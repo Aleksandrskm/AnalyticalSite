@@ -250,20 +250,57 @@ export function table(){
   function preserveDbSelect(containerContent) {
     const dbSelectContainer = containerContent.querySelector('.db-select-container');
     if (dbSelectContainer) {
+      // Сохраняем текущее значение
+      const currentValue = dbSelectContainer.querySelector('#db-select-tables')?.value || currentDbName;
+
       containerContent.innerHTML = '';
       containerContent.appendChild(dbSelectContainer);
+
       // Обновляем ссылку на селект
       dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
-      // Перепривязываем обработчик
+
+      // Восстанавливаем значение
       if (dbSelectElement) {
+        dbSelectElement.value = currentValue;
+        currentDbName = currentValue;
+
+        // Перепривязываем обработчик
         dbSelectElement.removeEventListener('change', handleDbChange);
         dbSelectElement.addEventListener('change', handleDbChange);
-        // Синхронизируем currentDbName
-        currentDbName = dbSelectElement.value;
       }
       return true;
     }
     return false;
+  }
+
+  // Функция для отображения сообщения об отсутствии таблицы
+  function showTableNotFound(containerContent, tableName) {
+    // Сохраняем селект БД
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
+    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
+
+    containerContent.innerHTML = '';
+
+    // Восстанавливаем селект
+    if (dbSelectContainer) {
+      containerContent.appendChild(dbSelectContainer);
+      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
+      if (dbSelectElement) {
+        dbSelectElement.value = currentValue;
+        currentDbName = currentValue;
+        dbSelectElement.removeEventListener('change', handleDbChange);
+        dbSelectElement.addEventListener('change', handleDbChange);
+      }
+    }
+
+    // Добавляем сообщение
+    const messageDiv = document.createElement('div');
+    messageDiv.style.padding = '20px';
+    messageDiv.style.textAlign = 'center';
+    messageDiv.style.fontSize = '18px';
+    messageDiv.style.color = '#666';
+    messageDiv.innerHTML = `<h3>В данный момент таблица отсутствует</h3>`;
+    containerContent.appendChild(messageDiv);
   }
 
   // Функция для создания компонента фильтрации
@@ -499,10 +536,10 @@ export function table(){
   // функция в которую передается название выбранной таблицы и на его основе создается таблица
   function createTable(engName, rusName) {
     const containerContent = document.querySelector('.container_content');
-    if (containerContent) {
-      // Сохраняем селект БД
-      preserveDbSelect(containerContent);
-    }
+    if (!containerContent) return;
+
+    // Сохраняем текущее значение селекта
+    const currentSelectValue = dbSelectElement?.value || currentDbName;
 
     currentTableData = [];
     currentColumnsInfo = [];
@@ -522,11 +559,12 @@ export function table(){
     postJSON(data, currentDbName).then(result => {
       console.log(result)
       loader.close();
-      if (result === undefined) {
-        if (containerContent) {
-          containerContent.innerHTML += `<h3>В данный момент таблица отсутствует</h3>`;
-          // Восстанавливаем селект БД
-          preserveDbSelect(containerContent);
+      if (result === undefined || result === null) {
+        showTableNotFound(containerContent, engName);
+        // Восстанавливаем значение селекта
+        if (dbSelectElement) {
+          dbSelectElement.value = currentSelectValue;
+          currentDbName = currentSelectValue;
         }
       } else {
         generateTable(result, rusName, engName);
@@ -534,10 +572,11 @@ export function table(){
     }).catch(error => {
       console.error('Ошибка загрузки таблицы:', error);
       loader.close();
-      if (containerContent) {
-        containerContent.innerHTML += `<h3>Ошибка загрузки таблицы: ${error.message}</h3>`;
-        // Восстанавливаем селект БД
-        preserveDbSelect(containerContent);
+      showTableNotFound(containerContent, engName);
+      // Восстанавливаем значение селекта
+      if (dbSelectElement) {
+        dbSelectElement.value = currentSelectValue;
+        currentDbName = currentSelectValue;
       }
     });
   }
@@ -848,7 +887,20 @@ export function table(){
     currentTableData = [];
 
     // Сохраняем селект БД
-    preserveDbSelect(containerContent);
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
+    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
+
+    containerContent.innerHTML = '';
+    if (dbSelectContainer) {
+      containerContent.appendChild(dbSelectContainer);
+      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
+      if (dbSelectElement) {
+        dbSelectElement.value = currentValue;
+        currentDbName = currentValue;
+        dbSelectElement.removeEventListener('change', handleDbChange);
+        dbSelectElement.addEventListener('change', handleDbChange);
+      }
+    }
 
     const name = document.createElement('div');
     const tableWrapper = document.createElement('div');
@@ -950,7 +1002,20 @@ export function table(){
     currentRusName = rusName;
 
     // Сохраняем селект БД
-    preserveDbSelect(containerContent);
+    const dbSelectContainer = containerContent.querySelector('.db-select-container');
+    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
+
+    containerContent.innerHTML = '';
+    if (dbSelectContainer) {
+      containerContent.appendChild(dbSelectContainer);
+      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
+      if (dbSelectElement) {
+        dbSelectElement.value = currentValue;
+        currentDbName = currentValue;
+        dbSelectElement.removeEventListener('change', handleDbChange);
+        dbSelectElement.addEventListener('change', handleDbChange);
+      }
+    }
 
     const name = document.createElement('div');
     name.classList = 'table-name';
