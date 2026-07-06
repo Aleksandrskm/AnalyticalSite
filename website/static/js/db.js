@@ -450,7 +450,7 @@ async function recalculateKas(dbName = 'KA') {
  */
 async function getTableNames(dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/db/structure?db_name=${dbName}`, {
+    const response = await fetch(`http://${URL}/db/structure`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -33,8 +33,6 @@ export function table(){
   let currentFilteredData = null;
   let currentDbName = 'KA';
   let currentTableNamesData = {};
-  let isDbSelectCreated = false;
-  let dbSelectElement = null;
 
   // Обертка для функции generateReportByFormat с передачей loader
   const generateReportByFormat = (tableName, rusName, columnsInfo, allRows, format) => {
@@ -46,254 +44,84 @@ export function table(){
     showReportModal(tableName, rusName, columnsInfo, allRows, loader, generateReportByFormat);
   };
 
-  // ==================== ФУНКЦИЯ ДЛЯ СОЗДАНИЯ СЕЛЕКТА БД (ОДИН РАЗ) ====================
+  // ==================== ФУНКЦИЯ ДЛЯ ПОСТРОЕНИЯ НАВИГАЦИИ ====================
 
-  function createDbSelectOnce() {
-    if (isDbSelectCreated) return;
-
-    const container = document.querySelector('.container_content');
-    if (!container) return;
-
-    const dbSelectContainer = document.createElement('div');
-    dbSelectContainer.className = 'db-select-container';
-    dbSelectContainer.style.marginBottom = '15px';
-    dbSelectContainer.style.padding = '10px';
-    dbSelectContainer.style.backgroundColor = '#f5f5f5';
-    dbSelectContainer.style.borderRadius = '5px';
-    dbSelectContainer.style.display = 'flex';
-    dbSelectContainer.style.alignItems = 'center';
-    dbSelectContainer.style.gap = '10px';
-
-    const label = document.createElement('label');
-    label.textContent = 'Выбор БД:';
-    label.style.fontWeight = 'bold';
-    label.style.fontSize = '14px';
-    dbSelectContainer.appendChild(label);
-
-    const select = document.createElement('select');
-    select.id = 'db-select-tables';
-    select.style.padding = '5px 10px';
-    select.style.borderRadius = '4px';
-    select.style.border = '1px solid #ccc';
-    select.style.fontSize = '14px';
-    select.style.minWidth = '150px';
-    dbSelectContainer.appendChild(select);
-
-    // Вставляем в начало container_content
-    container.prepend(dbSelectContainer);
-
-    dbSelectElement = select;
-    isDbSelectCreated = true;
-  }
-
-  // ==================== ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ ОПЦИЙ СЕЛЕКТА ====================
-
-  function updateDbSelectOptions(dbNames, selectedValue) {
-    if (!dbSelectElement) {
-      createDbSelectOnce();
-    }
-
-    if (!dbSelectElement) return;
-
-    // Запоминаем текущее выбранное значение, если не передано
-    const currentValue = selectedValue || dbSelectElement.value;
-
-    // Заполняем опции
-    dbSelectElement.innerHTML = '';
-
-    dbNames.forEach(dbName => {
-      const option = document.createElement('option');
-      option.value = dbName;
-      option.textContent = dbName;
-      dbSelectElement.appendChild(option);
-    });
-
-    // Восстанавливаем выбранное значение
-    if (currentValue && dbNames.includes(currentValue)) {
-      dbSelectElement.value = currentValue;
-    } else if (dbNames.includes('KA')) {
-      dbSelectElement.value = 'KA';
-    } else if (dbNames.length > 0) {
-      dbSelectElement.value = dbNames[0];
-    }
-
-    // Обновляем currentDbName
-    currentDbName = dbSelectElement.value;
-
-    // Удаляем старый обработчик и добавляем новый
-    dbSelectElement.removeEventListener('change', handleDbChange);
-    dbSelectElement.addEventListener('change', handleDbChange);
-  }
-
-  // Обработчик изменения БД
-  function handleDbChange() {
-    if (!dbSelectElement) return;
-
-    const newDbName = dbSelectElement.value;
-    if (newDbName === currentDbName) return;
-
-    currentDbName = newDbName;
-
-    // Очищаем навигацию
+  function buildNavigation(tableNamesData) {
     const nav = document.querySelector('.container__nav');
-    if (nav) {
-      nav.innerHTML = '';
-    }
+    if (!nav) return;
 
-    // Очищаем контент, но сохраняем селект БД
-    const containerContent = document.querySelector('.container_content');
-    if (containerContent) {
-      const dbSelect = containerContent.querySelector('.db-select-container');
-      containerContent.innerHTML = '';
-      if (dbSelect) {
-        containerContent.appendChild(dbSelect);
-        // Обновляем ссылку на селект
-        dbSelectElement = dbSelect.querySelector('#db-select-tables');
-        // Перепривязываем обработчик
-        if (dbSelectElement) {
-          dbSelectElement.removeEventListener('change', handleDbChange);
-          dbSelectElement.addEventListener('change', handleDbChange);
-        }
+    nav.innerHTML = '';
+
+    // Строим меню - tableNamesData теперь массив объектов с полями section и tables
+    for (const sectionData of tableNamesData) {
+      const filteredTables = sectionData.tables || [];
+
+      if (filteredTables.length === 0) continue;
+
+      const elemSection = document.createElement('div');
+      const nameSection = document.createElement('span');
+      nameSection.classList.add('menu-section');
+      // Используем поле section для заголовка
+      nameSection.innerText = sectionData.section;
+      elemSection.append(nameSection);
+
+      for (const tableInfo of filteredTables) {
+        const nameTable = document.createElement('div');
+        nameTable.classList.add('container__nav__el');
+        nameTable.append(tableInfo.name_rus);
+        nameTable.setAttribute("id", tableInfo.name_eng);
+        // Сохраняем название БД в data-атрибуте
+        nameTable.dataset.dbName = tableInfo.db_name;
+        elemSection.append(nameTable);
       }
-    }
+      nav.append(elemSection);
 
-    // Сбрасываем текущие данные таблицы
-    currentTableData = [];
-    currentColumnsInfo = [];
-    currentTableName = '';
-    currentRusName = '';
-    currentFilteredData = null;
+      elemSection.addEventListener('click', (e) => {
+        const target = e.target.closest('.container__nav__el');
+        if (!target) return;
 
-    // Загружаем таблицы для новой БД
-    loadTables(currentDbName);
-  }
-
-  // ==================== ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СПИСКА БД ====================
-
-  async function loadDbNames() {
-    try {
-      const dbNames = await getDbNames();
-
-      // Создаем селект если еще не создан
-      createDbSelectOnce();
-
-      // Обновляем опции селекта
-      updateDbSelectOptions(dbNames);
-
-      console.log('Загружены БД:', dbNames, 'Текущая:', currentDbName);
-      return dbNames;
-    } catch (error) {
-      console.error('Ошибка загрузки списка БД:', error);
-      return [];
-    }
-  }
-
-  // ==================== ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СПИСКА ТАБЛИЦ ====================
-
-  async function loadTables(dbName) {
-    try {
-      loader.show('Загрузка списка таблиц...');
-
-      const tableNamesData = await getTableNames(dbName);
-      currentTableNamesData = tableNamesData;
-
-      // Очищаем навигацию
-      const nav = document.querySelector('.container__nav');
-      if (!nav) {
-        loader.close();
-        return;
-      }
-      nav.innerHTML = '';
-
-      // Строим меню
-      for (const key in tableNamesData) {
-        const elemSection = document.createElement('div');
-        const dateTablesName = tableNamesData[key];
-        const nameSection = document.createElement('span');
-        nameSection.classList.add('menu-section');
-        nameSection.innerText = key;
-        elemSection.append(nameSection);
-
-        for (const field in dateTablesName) {
-          const nameTable = document.createElement('div');
-          nameTable.classList.add('container__nav__el');
-          nameTable.append(dateTablesName[field]);
-          nameTable.setAttribute("id", field);
-          elemSection.append(nameTable);
-        }
-        nav.append(elemSection);
-
-        elemSection.addEventListener('click', (e) => {
-          const trsNavMenu = document.querySelectorAll('.container__nav__el');
-          trsNavMenu.forEach((trMenu) => {
-            if (trMenu == e.target) {
-              trMenu.style = 'background-color: #B5B8B1';
-              console.log(e.target.id, e.target.innerHTML);
-              createTable(e.target.id, e.target.innerHTML);
-            } else {
-              if (e.target.id) {
-                trMenu.style = '';
-              }
-            }
-          });
+        const trsNavMenu = document.querySelectorAll('.container__nav__el');
+        trsNavMenu.forEach((trMenu) => {
+          if (trMenu === target) {
+            trMenu.style = 'background-color: #B5B8B1';
+            // Получаем название БД из data-атрибута
+            const dbName = target.dataset.dbName || 'KA';
+            console.log(target.id, target.innerHTML, 'DB:', dbName);
+            createTable(target.id, target.innerHTML, dbName);
+          } else {
+            trMenu.style = '';
+          }
         });
-      }
-
-      loader.close();
-    } catch (error) {
-      console.error('Ошибка загрузки таблиц:', error);
-      loader.close();
+      });
     }
   }
 
-  // Функция для сохранения селекта БД при очистке контента
-  function preserveDbSelect(containerContent) {
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    if (dbSelectContainer) {
-      // Сохраняем текущее значение
-      const currentValue = dbSelectContainer.querySelector('#db-select-tables')?.value || currentDbName;
+  // ==================== ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ СТРУКТУРЫ ТАБЛИЦ ====================
 
-      containerContent.innerHTML = '';
-      containerContent.appendChild(dbSelectContainer);
+  async function loadTableStructure() {
+    try {
+      loader.show('Загрузка структуры таблиц...');
 
-      // Обновляем ссылку на селект
-      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
+      const structureData = await getTableNames(); // без параметра db_name
 
-      // Восстанавливаем значение
-      if (dbSelectElement) {
-        dbSelectElement.value = currentValue;
-        currentDbName = currentValue;
+      // Сохраняем полные данные (это массив)
+      currentTableNamesData = structureData;
 
-        // Перепривязываем обработчик
-        dbSelectElement.removeEventListener('change', handleDbChange);
-        dbSelectElement.addEventListener('change', handleDbChange);
-      }
-      return true;
+      // Строим навигацию
+      buildNavigation(structureData);
+
+      console.log('Загружена структура таблиц');
+      loader.close();
+    } catch (error) {
+      console.error('Ошибка загрузки структуры:', error);
+      loader.close();
     }
-    return false;
   }
 
   // Функция для отображения сообщения об отсутствии таблицы
   function showTableNotFound(containerContent, tableName) {
-    // Сохраняем селект БД
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
-
     containerContent.innerHTML = '';
 
-    // Восстанавливаем селект
-    if (dbSelectContainer) {
-      containerContent.appendChild(dbSelectContainer);
-      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
-      if (dbSelectElement) {
-        dbSelectElement.value = currentValue;
-        currentDbName = currentValue;
-        dbSelectElement.removeEventListener('change', handleDbChange);
-        dbSelectElement.addEventListener('change', handleDbChange);
-      }
-    }
-
-    // Добавляем сообщение
     const messageDiv = document.createElement('div');
     messageDiv.style.padding = '20px';
     messageDiv.style.textAlign = 'center';
@@ -534,12 +362,14 @@ export function table(){
   }
 
   // функция в которую передается название выбранной таблицы и на его основе создается таблица
-  function createTable(engName, rusName) {
+  function createTable(engName, rusName, dbName) {
     const containerContent = document.querySelector('.container_content');
     if (!containerContent) return;
 
-    // Сохраняем текущее значение селекта
-    const currentSelectValue = dbSelectElement?.value || currentDbName;
+    // Устанавливаем текущую БД из переданной
+    if (dbName) {
+      currentDbName = dbName;
+    }
 
     currentTableData = [];
     currentColumnsInfo = [];
@@ -561,11 +391,6 @@ export function table(){
       loader.close();
       if (result === undefined || result === null) {
         showTableNotFound(containerContent, engName);
-        // Восстанавливаем значение селекта
-        if (dbSelectElement) {
-          dbSelectElement.value = currentSelectValue;
-          currentDbName = currentSelectValue;
-        }
       } else {
         generateTable(result, rusName, engName);
       }
@@ -573,11 +398,6 @@ export function table(){
       console.error('Ошибка загрузки таблицы:', error);
       loader.close();
       showTableNotFound(containerContent, engName);
-      // Восстанавливаем значение селекта
-      if (dbSelectElement) {
-        dbSelectElement.value = currentSelectValue;
-        currentDbName = currentSelectValue;
-      }
     });
   }
 
@@ -886,21 +706,7 @@ export function table(){
     currentRusName = rusName;
     currentTableData = [];
 
-    // Сохраняем селект БД
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
-
     containerContent.innerHTML = '';
-    if (dbSelectContainer) {
-      containerContent.appendChild(dbSelectContainer);
-      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
-      if (dbSelectElement) {
-        dbSelectElement.value = currentValue;
-        currentDbName = currentValue;
-        dbSelectElement.removeEventListener('change', handleDbChange);
-        dbSelectElement.addEventListener('change', handleDbChange);
-      }
-    }
 
     const name = document.createElement('div');
     const tableWrapper = document.createElement('div');
@@ -983,7 +789,7 @@ export function table(){
     btnInsert.addEventListener('click', () => {
       console.log('Insert button clicked in void table');
       modalInser.createModal(() => {
-        createTable(tableName, rusName);
+        createTable(tableName, rusName, currentDbName);
       });
     });
 
@@ -1001,21 +807,7 @@ export function table(){
     currentTableName = tableName;
     currentRusName = rusName;
 
-    // Сохраняем селект БД
-    const dbSelectContainer = containerContent.querySelector('.db-select-container');
-    const currentValue = dbSelectContainer?.querySelector('#db-select-tables')?.value || currentDbName;
-
     containerContent.innerHTML = '';
-    if (dbSelectContainer) {
-      containerContent.appendChild(dbSelectContainer);
-      dbSelectElement = dbSelectContainer.querySelector('#db-select-tables');
-      if (dbSelectElement) {
-        dbSelectElement.value = currentValue;
-        currentDbName = currentValue;
-        dbSelectElement.removeEventListener('change', handleDbChange);
-        dbSelectElement.addEventListener('change', handleDbChange);
-      }
-    }
 
     const name = document.createElement('div');
     name.classList = 'table-name';
@@ -1077,11 +869,6 @@ export function table(){
 
   // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
-  // Создаем селект один раз и загружаем данные
-  createDbSelectOnce();
-
-  // Загружаем список БД, затем таблицы
-  loadDbNames().then(() => {
-    loadTables(currentDbName);
-  });
+  // Загружаем структуру таблиц
+  loadTableStructure();
 }
