@@ -22,3 +22,7 @@ def function_rating_regions():
 @views.route('/beams')
 def function_beams():
     return render_template('beams.html')
+
+@views.route('/editor-nas-p')
+def function_editor_nas():
+    return render_template('editor-nas-p.html')
