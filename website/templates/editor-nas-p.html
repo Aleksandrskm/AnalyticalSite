@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/city.css') }}">
 <div class="loader-container loader-container--hidden">
     <span class="loader"></span>
     <span class="loader-container__title">Загрузка...</span>
 </div>
-<h2>Населенный пункт</h2>
+<h2 id="locality-title">Населенный пункт</h2>
 
 <main class="container__forms">
     <div class="column__form">
@@ -36,7 +37,7 @@
             <input id="taksphone" name="taksphone" type="text">
             <button class="grid-btn" type="submit">Сохранить </button>
         </form>
-        <button type="button" class="grid-btn"> Выход</button>
+        <button id ="exit-btn " type="button" class="grid-btn"> Выход</button>
     </div>
 
     <div id="myModal" class="modal">
@@ -155,9 +156,9 @@
         </div>
     </div>
 </main>
+<dialog class="mdl-dialog" id="dialog-res"></dialog>
 
 
-
-
+<script src="{{ url_for('static', filename='js/cityEditor.js') }}" type="module"></script>
 {% endblock %}
 

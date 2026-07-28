@@ -1,0 +1,25 @@
+.container__forms {
+    /* max-width: 1200px; */
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 33vw;
+    gap: 20px;
+    background: #d4d4d4;
+    height: calc(100% - 240px);
+    overflow: auto;
+    justify-content: space-around;
+    align-items: baseline;
+}
+h5{
+    font-weight: bold;
+    font-size: 15px;
+}
+.form__rating label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+    margin-top: 6px;
+}
