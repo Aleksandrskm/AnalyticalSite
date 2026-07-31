@@ -30,7 +30,9 @@
                 </div>
                 <div class="form__div__div">
                     <label for="type-connect">Вид связи</label>
-                    <input type="text" id="type-connect" name="type-connect">
+                    <select id="type-connect" name="type-connect">
+                        <option value="all">Все виды связи</option>
+                    </select>
                 </div>
             </div>
 
@@ -169,9 +171,5 @@
             </div>
         </div>
 </main>
-
-
-
-
+<script src="{{ url_for('static', filename='js/cityRatings.js') }}" type="module"></script>
 {% endblock %}
-

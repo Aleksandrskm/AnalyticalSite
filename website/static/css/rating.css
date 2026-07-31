@@ -462,3 +462,38 @@
         width: 100%;
     }
 }
+/* Фиксированная высота для каждой таблицы */
+.table__rating__table {
+    height: 300px; /* Высота таблицы — можно изменить */
+    display: block;
+    overflow-y: auto; /* Скролл внутри таблицы */
+    border-bottom: 2px solid #1a1a1a;
+}
+
+/* Чтобы заголовки оставались на месте при скролле */
+.table__rating__table thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #d0d0d0;
+}
+
+/* Чтобы тело таблицы было таблицей */
+.table__rating__table tbody {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Отступ между таблицами */
+.table__rating__table + .table__rating__table {
+    margin-top: 20px;
+}
+.table__rating__table {
+    height: 25vh;
+    display: block;
+    overflow-y: auto;
+}

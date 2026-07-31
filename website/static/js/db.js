@@ -468,10 +468,219 @@ async function getTableNames(dbName = 'KA') {
   }
 }
 
+async function getResKinds(page = 1,pageSize= 412) {
+  try {
+    const response = await fetch(`http://${URL}/res/kinds?page=${page}&page_size=${pageSize}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
+
+async function getRegions() {
+  try {
+    const response = await fetch(`http://${URL}/territories/regions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
+// ==================== ФУНКЦИИ ДЛЯ ПОТОКОВОГО ПАРСИНГА ====================
+
+/**
+ * Функция для парсинга потокового ответа от сервера (NDJSON)
+ * @param {Response} response - объект Response от fetch
+ * @param {Function} onProgress - колбэк для обновления прогресса (получает {count, total})
+ * @param {AbortSignal} signal - сигнал для отмены
+ * @param {Function} onCancel - колбэк для отмены чтения
+ * @returns {Promise<{data: Array, total: number}>} - объект с данными и общим количеством
+ */
+async function parseStreamResponse(response, onProgress = null, signal = null, onCancel = null) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = ''; // ← буфер для неполных строк
+  const results = [];
+  let count = 0;
+  let total = 0;
+
+  if (signal && signal.aborted) {
+    await reader.cancel();
+    throw new DOMException('Aborted', 'AbortError');
+  }
+
+  let abortListener = null;
+  if (signal) {
+    abortListener = () => {
+      reader.cancel().catch(() => {});
+      if (onCancel) onCancel();
+    };
+    signal.addEventListener('abort', abortListener);
+  }
+
+  try {
+    while (true) {
+      if (signal && signal.aborted) {
+        await reader.cancel();
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk; // ← добавляем в буфер
+
+      // Разбиваем по символу новой строки
+      let lines = buffer.split('\n');
+
+      // Последняя строка может быть неполной — оставляем в буфере
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line);
+          if (data.type === 'metadata') {
+            if (data.total !== undefined) total = data.total;
+            continue;
+          }
+          results.push(data);
+          count++;
+        } catch (e) {
+          console.warn('Ошибка парсинга строки:', line);
+        }
+      }
+
+      if (onProgress) onProgress({ count, total });
+    }
+
+    // После окончания потока обрабатываем остаток в буфере
+    if (buffer.trim()) {
+      try {
+        const data = JSON.parse(buffer);
+        if (data.type !== 'metadata') {
+          results.push(data);
+          count++;
+        }
+      } catch (e) {
+        console.warn('Ошибка парсинга остатка:', buffer);
+      }
+    }
+
+  } finally {
+    if (signal && abortListener) {
+      signal.removeEventListener('abort', abortListener);
+    }
+    try {
+      await reader.cancel();
+    } catch (e) {}
+  }
+
+  return { data: results, total };
+}
+
+/**
+ * Получение населенных пунктов с потоковым парсингом
+ * @param {Object} body - тело запроса
+ * @param {Function} onProgress - колбэк для прогресса (получает {count, total})
+ * @param {AbortSignal} signal - сигнал для отмены
+ * @param {Function} onCancel - колбэк для отмены
+ * @returns {Promise<{data: Array, total: number}>} - объект с данными и общим количеством
+ */
+async function getSettlementsStream(body, onProgress = null, signal = null, onCancel = null) {
+  try {
+    const response = await fetch(`http://${URL}/territories/settlements/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await parseStreamResponse(response, onProgress, signal, onCancel);
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw error;
+    }
+    console.error('Error fetching settlements stream:', error);
+    throw error;
+  }
+}
+
+/**
+ * Получение РЭС с потоковым парсингом
+ * @param {Object} body - тело запроса
+ * @param {Function} onProgress - колбэк для прогресса (получает {count, total})
+ * @param {AbortSignal} signal - сигнал для отмены
+ * @param {Function} onCancel - колбэк для отмены
+ * @returns {Promise<{data: Array, total: number}>} - объект с данными и общим количеством
+ */
+async function getResStream(body, onProgress = null, signal = null, onCancel = null) {
+  try {
+    const response = await fetch(`http://${URL}/res/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await parseStreamResponse(response, onProgress, signal, onCancel);
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw error;
+    }
+    console.error('Error fetching res stream:', error);
+    throw error;
+  }
+}
+
+// Сохраняем старые функции для обратной совместимости, но помечаем как устаревшие
+async function getRes(body) {
+  console.warn('getRes() is deprecated, use getResStream() instead');
+  return getResStream(body);
+}
+
+async function getSettlements(body) {
+  console.warn('getSettlements() is deprecated, use getSettlementsStream() instead');
+  return getSettlementsStream(body);
+}
+
 export {
   editRow, deleteRow, insertRow, postJSON, getRowsTable, changeQuery,
   selectQuery, recalculateKas, recalculateKA, getDistanceBeam,
   updateOrInsert, getActiveSessions, getAllUsers, postUsersActivity,
   getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams,
-  getDbNames, getTableNames
+  getDbNames, getTableNames, getRegions, getRes, getResKinds,
+  getSettlements, getResStream, getSettlementsStream, parseStreamResponse
 };
