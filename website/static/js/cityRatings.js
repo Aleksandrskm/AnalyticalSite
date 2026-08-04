@@ -2,15 +2,36 @@
 'use strict';
 
 import { Loader } from './Loader.js';
-import { getRegions, getResKinds, getSettlementsStream, getResStream } from './db.js';
+import { getRegions, getResKinds, getSettlementsPage, getResPage } from './db.js';
 
 let loader = null;
-let abortControllerSettlements = null;
-let abortControllerRes = null;
-let settlementsData = [];
-let resData = [];
-let isCancelledSettlements = false;
-let isCancelledRes = false;
+
+// Данные для населенных пунктов
+let settlementsData = {
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 10
+};
+
+// Данные для РЭС
+let resData = {
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 10
+};
+
+// Текущий выбранный НП для загрузки РЭС
+let selectedSettlementId = null;
+let selectedSettlementLat = null;
+let selectedSettlementLon = null;
+let selectedSettlementArea = null;
+
+// Текущие фильтры
+let currentRegions = [];
+let currentKinds = [];
+let currentPopRange = { from: 1, to: 17000000 };
 
 function initLoader() {
     if (!loader) {
@@ -170,380 +191,78 @@ function getPopulationRange() {
     const toInput = document.getElementById('numbers-settlements');
 
     if (radioAll && radioAll.checked) {
-        return { from: 0, to: 17000000 };
+        return { from: 1, to: 17000000 };
     }
 
     if (radioRange && radioRange.checked) {
-        const from = parseInt(fromInput?.value) || 0;
+        const from = parseInt(fromInput?.value) || 1;
         const to = parseInt(toInput?.value) || 17000000;
         return { from, to };
     }
 
-    return { from: 0, to: 17000000 };
+    return { from: 1, to: 17000000 };
 }
 
-// Создание модального окна с двумя прогресс-барами
-function createProgressModal() {
-    const existing = document.getElementById('progress-modal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'progress-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    `;
-
-    const modalContent = document.createElement('div');
-    modalContent.style.cssText = `
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        min-width: 400px;
-        max-width: 500px;
-        text-align: center;
-    `;
-
-    const title = document.createElement('h3');
-    title.textContent = 'Загрузка данных';
-    title.style.cssText = `
-        margin: 0 0 20px 0;
-        color: #333;
-        font-size: 18px;
-    `;
-
-    // Прогресс-бар для населенных пунктов
-    const settlementsSection = document.createElement('div');
-    settlementsSection.style.cssText = `margin-bottom: 20px;`;
-
-    const settlementsLabel = document.createElement('div');
-    settlementsLabel.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #666;
-    `;
-
-    const settlementsTitle = document.createElement('span');
-    settlementsTitle.textContent = 'Населенные пункты:';
-
-    const settlementsCount = document.createElement('span');
-    settlementsCount.id = 'settlements-count';
-    settlementsCount.textContent = '0 / 0';
-
-    settlementsLabel.appendChild(settlementsTitle);
-    settlementsLabel.appendChild(settlementsCount);
-
-    const settlementsBar = document.createElement('div');
-    settlementsBar.style.cssText = `
-        width: 100%;
-        height: 20px;
-        background: #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-    `;
-
-    const settlementsFill = document.createElement('div');
-    settlementsFill.id = 'settlements-fill';
-    settlementsFill.style.cssText = `
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #4CAF50, #45a049);
-        transition: width 0.3s ease;
-        border-radius: 10px;
-    `;
-
-    settlementsBar.appendChild(settlementsFill);
-    settlementsSection.appendChild(settlementsLabel);
-    settlementsSection.appendChild(settlementsBar);
-
-    // Прогресс-бар для РЭС
-    const resSection = document.createElement('div');
-    resSection.style.cssText = `margin-bottom: 20px;`;
-
-    const resLabel = document.createElement('div');
-    resLabel.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #666;
-    `;
-
-    const resTitle = document.createElement('span');
-    resTitle.textContent = 'РЭС:';
-
-    const resCount = document.createElement('span');
-    resCount.id = 'res-count';
-    resCount.textContent = '0 / 0';
-
-    resLabel.appendChild(resTitle);
-    resLabel.appendChild(resCount);
-
-    const resBar = document.createElement('div');
-    resBar.style.cssText = `
-        width: 100%;
-        height: 20px;
-        background: #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-    `;
-
-    const resFill = document.createElement('div');
-    resFill.id = 'res-fill';
-    resFill.style.cssText = `
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #2196F3, #1976D2);
-        transition: width 0.3s ease;
-        border-radius: 10px;
-    `;
-
-    resBar.appendChild(resFill);
-    resSection.appendChild(resLabel);
-    resSection.appendChild(resBar);
-
-    // Кнопки отмены
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.style.cssText = `
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-top: 10px;
-    `;
-
-    const cancelSettlementsBtn = document.createElement('button');
-    cancelSettlementsBtn.id = 'cancel-settlements-btn';
-    cancelSettlementsBtn.textContent = 'Отменить загрузку населенных пунктов';
-    cancelSettlementsBtn.style.cssText = `
-        padding: 8px 20px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: background 0.2s;
-    `;
-    cancelSettlementsBtn.addEventListener('mouseover', () => {
-        cancelSettlementsBtn.style.background = '#cc0000';
-    });
-    cancelSettlementsBtn.addEventListener('mouseout', () => {
-        cancelSettlementsBtn.style.background = '#ff4444';
-    });
-    cancelSettlementsBtn.addEventListener('click', cancelSettlementsLoading);
-
-    const cancelResBtn = document.createElement('button');
-    cancelResBtn.id = 'cancel-res-btn';
-    cancelResBtn.textContent = 'Отменить загрузку РЭС';
-    cancelResBtn.style.cssText = `
-        padding: 8px 20px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: background 0.2s;
-    `;
-    cancelResBtn.addEventListener('mouseover', () => {
-        cancelResBtn.style.background = '#cc0000';
-    });
-    cancelResBtn.addEventListener('mouseout', () => {
-        cancelResBtn.style.background = '#ff4444';
-    });
-    cancelResBtn.addEventListener('click', cancelResLoading);
-
-    buttonsContainer.appendChild(cancelSettlementsBtn);
-    buttonsContainer.appendChild(cancelResBtn);
-
-    modalContent.appendChild(title);
-    modalContent.appendChild(settlementsSection);
-    modalContent.appendChild(resSection);
-    modalContent.appendChild(buttonsContainer);
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-
-    return modal;
+// Расчет радиуса НП по формуле из документа (п. 3.1) с округлением до целого
+function calculateRadius(area) {
+    // R = 1.1 * sqrt(S / pi)
+    if (!area || area <= 0) return 1; // если нет площади, радиус 1 км
+    return Math.round(1.1 * Math.sqrt(area / Math.PI));
 }
 
-function updateSettlementsProgress(data) {
-    const fill = document.getElementById('settlements-fill');
-    const countEl = document.getElementById('settlements-count');
-
-    if (fill && data) {
-        let percent = 0;
-        if (data.total > 0) {
-            percent = Math.min((data.count / data.total) * 100, 100);
-        } else {
-            percent = Math.min((data.count / 100) * 100, 90);
-        }
-        fill.style.width = percent + '%';
+// Получение размера страницы для таблицы (из селекта)
+function getPageSize(tableType) {
+    const select = document.querySelector(`.page-size-control[data-table="${tableType}"] .page-size-select`);
+    if (select) {
+        const val = parseInt(select.value);
+        if (!isNaN(val) && val > 0) return val;
     }
-
-    if (countEl && data) {
-        countEl.textContent = `${data.count} / ${data.total || '?'}`;
-    }
+    return 10;
 }
 
-function updateResProgress(data) {
-    const fill = document.getElementById('res-fill');
-    const countEl = document.getElementById('res-count');
+// ==================== ЗАГРУЗКА НАСЕЛЕННЫХ ПУНКТОВ ====================
 
-    if (fill && data) {
-        let percent = 0;
-        if (data.total > 0) {
-            percent = Math.min((data.count / data.total) * 100, 100);
-        } else {
-            percent = Math.min((data.count / 100) * 100, 90);
-        }
-        fill.style.width = percent + '%';
-    }
-
-    if (countEl && data) {
-        countEl.textContent = `${data.count} / ${data.total || '?'}`;
-    }
-}
-
-function completeSettlementsProgress() {
-    const fill = document.getElementById('settlements-fill');
-    if (fill) {
-        fill.style.width = '100%';
-    }
-}
-
-function completeResProgress() {
-    const fill = document.getElementById('res-fill');
-    if (fill) {
-        fill.style.width = '100%';
-    }
-}
-
-function cancelSettlementsLoading() {
-    if (abortControllerSettlements) {
-        isCancelledSettlements = true;
-        abortControllerSettlements.abort();
-        const btn = document.getElementById('cancel-settlements-btn');
-        if (btn) {
-            btn.textContent = 'Отменяется...';
-            btn.disabled = true;
-            btn.style.background = '#999';
-            btn.style.cursor = 'not-allowed';
-        }
-    }
-}
-
-function cancelResLoading() {
-    if (abortControllerRes) {
-        isCancelledRes = true;
-        abortControllerRes.abort();
-        const btn = document.getElementById('cancel-res-btn');
-        if (btn) {
-            btn.textContent = 'Отменяется...';
-            btn.disabled = true;
-            btn.style.background = '#999';
-            btn.style.cursor = 'not-allowed';
-        }
-    }
-}
-
-function closeProgressModal() {
-    const modal = document.getElementById('progress-modal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-async function loadSettlementsData(body) {
-    isCancelledSettlements = false;
-    abortControllerSettlements = new AbortController();
+async function loadSettlements(page = 1, regions, popRange, pageSize) {
+    const loader = initLoader();
+    loader.show('Загрузка населенных пунктов...');
 
     try {
-        const result = await getSettlementsStream(
-            body,
-            updateSettlementsProgress,
-            abortControllerSettlements.signal,
-            () => {
-                isCancelledSettlements = true;
-            }
-        );
-        return result;
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            return null;
+        const body = {
+            regions: regions,
+            population_filters: [
+                {
+                    from: popRange.from,
+                    to: popRange.to
+                }
+            ]
+        };
+
+        const result = await getSettlementsPage(page, pageSize, body);
+
+        loader.close();
+
+        // Преобразуем ответ сервера в ожидаемый формат
+        if (result) {
+            return {
+                items: result.settlements || [],
+                total: result.total || 0
+            };
         }
-        throw error;
-    } finally {
-        abortControllerSettlements = null;
+
+        return { items: [], total: 0 };
+    } catch (error) {
+        loader.close();
+        renderPopup(`Ошибка загрузки населенных пунктов: ${error.message}`, true);
+        console.error('Ошибка загрузки населенных пунктов:', error);
+        return { items: [], total: 0 };
     }
 }
 
-async function loadResData(body) {
-    isCancelledRes = false;
-    abortControllerRes = new AbortController();
+// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ НАСЕЛЕННЫХ ПУНКТОВ ====================
 
-    try {
-        const result = await getResStream(
-            body,
-            updateResProgress,
-            abortControllerRes.signal,
-            () => {
-                isCancelledRes = true;
-            }
-        );
-        return result;
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            return null;
-        }
-        throw error;
-    } finally {
-        abortControllerRes = null;
-    }
-}
-
-function renderSettlementsTable(data) {
-    const rating = document.querySelector('.table__rating');
-    if (!rating) return;
-
-    // Удаляем старый заголовок, если есть
-    const oldTitle = rating.querySelector('.settlements-title');
-    if (oldTitle) oldTitle.remove();
-
-    // Создаём заголовок
-    const title = document.createElement('h3');
-    title.className = 'settlements-title';
-    title.textContent = 'Населенные пункты';
-    title.style.cssText = `
-        text-align: center;
-        font-size: 18px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 0 0 12px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #1a1a1a;
-    `;
-
-    // Находим или создаём таблицу
-    let table = rating.querySelector('.table__rating__table');
-    if (!table) {
-        table = document.createElement('table');
-        table.className = 'table__rating__table';
-        rating.appendChild(table);
-    }
-
-    // Вставляем заголовок перед таблицей
-    rating.insertBefore(title, table);
+function renderSettlementsTable(data, total, page, pageSize) {
+    const table = document.getElementById('settlements-table');
+    if (!table) return;
 
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
@@ -555,19 +274,32 @@ function renderSettlementsTable(data) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 4;
+            cell.colSpan = 10;
             cell.textContent = 'Нет населенных пунктов для отображения';
             cell.style.textAlign = 'center';
             cell.style.padding = '20px';
             row.appendChild(cell);
             tbody.appendChild(row);
         }
+        renderSettlementsPagination(total, page, pageSize);
         return;
     }
 
+    // Заголовки (все поля из ответа сервера)
     if (thead) {
         const headerRow = document.createElement('tr');
-        ['ID', 'Название', 'Координаты', 'Население'].forEach(text => {
+        [
+            'ID',
+            'Название',
+            'Площадь (км²)',
+            'Регион',
+            'Код региона',
+            'Муниципальное образование',
+            'Широта',
+            'Долгота',
+            'Население',
+            'Код ФИАС'
+        ].forEach(text => {
             const th = document.createElement('th');
             th.textContent = text;
             th.style.padding = '8px';
@@ -578,263 +310,526 @@ function renderSettlementsTable(data) {
         thead.appendChild(headerRow);
     }
 
+    // Данные
     if (tbody) {
         data.forEach(item => {
             const row = document.createElement('tr');
+            row.dataset.id = item.id;
+            row.dataset.lat = item.lat;
+            row.dataset.lon = item.lon;
+            row.dataset.area = item.area || 1;
+            row.style.cursor = 'pointer';
 
+            // ID
             const idCell = document.createElement('td');
             idCell.textContent = item.id;
             idCell.style.padding = '6px';
             idCell.style.border = '1px solid #ddd';
             row.appendChild(idCell);
 
+            // Название
             const nameCell = document.createElement('td');
-            nameCell.textContent = item.name;
+            nameCell.textContent = item.name || '-';
             nameCell.style.padding = '6px';
             nameCell.style.border = '1px solid #ddd';
             row.appendChild(nameCell);
 
-            const coordCell = document.createElement('td');
-            coordCell.textContent = `${item.lat.toFixed(4)}, ${item.lon.toFixed(4)}`;
-            coordCell.style.padding = '6px';
-            coordCell.style.border = '1px solid #ddd';
-            row.appendChild(coordCell);
+            // Площадь
+            const areaCell = document.createElement('td');
+            areaCell.textContent = item.area !== null && item.area !== undefined ? item.area : '-';
+            areaCell.style.padding = '6px';
+            areaCell.style.border = '1px solid #ddd';
+            row.appendChild(areaCell);
 
+            // Регион
+            const regionNameCell = document.createElement('td');
+            regionNameCell.textContent = item.region_name || '-';
+            regionNameCell.style.padding = '6px';
+            regionNameCell.style.border = '1px solid #ddd';
+            row.appendChild(regionNameCell);
+
+            // Код региона
+            const regionCodeCell = document.createElement('td');
+            regionCodeCell.textContent = item.region_code || '-';
+            regionCodeCell.style.padding = '6px';
+            regionCodeCell.style.border = '1px solid #ddd';
+            row.appendChild(regionCodeCell);
+
+            // Муниципальное образование
+            const districtCell = document.createElement('td');
+            districtCell.textContent = item.district_name || '-';
+            districtCell.style.padding = '6px';
+            districtCell.style.border = '1px solid #ddd';
+            row.appendChild(districtCell);
+
+            // Широта
+            const latCell = document.createElement('td');
+            latCell.textContent = item.lat !== undefined ? item.lat.toFixed(6) : '-';
+            latCell.style.padding = '6px';
+            latCell.style.border = '1px solid #ddd';
+            row.appendChild(latCell);
+
+            // Долгота
+            const lonCell = document.createElement('td');
+            lonCell.textContent = item.lon !== undefined ? item.lon.toFixed(6) : '-';
+            lonCell.style.padding = '6px';
+            lonCell.style.border = '1px solid #ddd';
+            row.appendChild(lonCell);
+
+            // Население
             const popCell = document.createElement('td');
-            popCell.textContent = item.population;
+            popCell.textContent = item.population || 0;
             popCell.style.padding = '6px';
             popCell.style.border = '1px solid #ddd';
             row.appendChild(popCell);
 
+            // Код ФИАС
+            const fiasCell = document.createElement('td');
+            fiasCell.textContent = item.fias_id || '-';
+            fiasCell.style.padding = '6px';
+            fiasCell.style.border = '1px solid #ddd';
+            row.appendChild(fiasCell);
+
+            // Клик по строке - загружаем РЭС для этого НП
+            row.addEventListener('click', function() {
+                // Снимаем выделение со всех строк
+                document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+                    tr.classList.remove('selected');
+                    tr.style.backgroundColor = '';
+                });
+                // Выделяем текущую строку через класс
+                this.classList.add('selected');
+
+                // Сохраняем данные выбранного НП
+                selectedSettlementId = this.dataset.id;
+                selectedSettlementLat = parseFloat(this.dataset.lat);
+                selectedSettlementLon = parseFloat(this.dataset.lon);
+                selectedSettlementArea = parseFloat(this.dataset.area);
+
+                // Загружаем РЭС для этого НП
+                loadResForSettlement(selectedSettlementId, selectedSettlementLat, selectedSettlementLon, selectedSettlementArea);
+            });
+
             tbody.appendChild(row);
         });
     }
+
+    renderSettlementsPagination(total, page, pageSize);
+
+    // ✅ Автоматически выбираем первый населенный пункт и загружаем РЭС
+    if (data && data.length > 0) {
+        const firstRow = tbody.querySelector('tr');
+        if (firstRow) {
+            // Имитируем клик по первой строке
+            firstRow.click();
+        }
+    }
 }
 
-function renderResTable(data) {
-    const rating = document.querySelector('.table__rating');
-    if (!rating) return;
+// ==================== ПАГИНАЦИЯ С НОМЕРАМИ СТРАНИЦ (всегда видно 1 и последнюю) ====================
 
-    // Находим кнопки
-    const buttons = rating.querySelector('.table_buttons');
+function renderSettlementsPagination(total, currentPage, pageSize) {
+    const container = document.getElementById('settlements-pagination');
+    if (!container) return;
 
-    // Находим первую таблицу (населённые пункты)
-    const firstTable = rating.querySelector('.table__rating__table');
+    const totalPages = Math.ceil(total / pageSize) || 1;
 
-    // Удаляем старый заголовок РЭС, если есть
-    const oldTitle = rating.querySelector('.res-title');
-    if (oldTitle) oldTitle.remove();
-
-    // Удаляем старую таблицу РЭС, если есть
-    const existingResTable = document.getElementById('res-table');
-    if (existingResTable) existingResTable.remove();
-
-    // Создаём заголовок
-    const title = document.createElement('h3');
-    title.className = 'res-title';
-    title.textContent = 'РЭС';
-    title.style.cssText = `
-        text-align: center;
-        font-size: 18px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 10px 0px 12px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #1a1a1a;
+    let html = `
+        <div class="pagination-info">
+            Страница ${currentPage} из ${totalPages} (всего: ${total})
+        </div>
+        <div class="pagination-buttons">
+            <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
     `;
 
-    // Создаём новую таблицу для РЭС
-    const resTable = document.createElement('table');
-    resTable.id = 'res-table';
-    resTable.className = 'table__rating__table';
+    // Всегда показываем первую страницу
+    if (currentPage > 1) {
+        html += `<button class="pagination-btn" data-page="1">1</button>`;
+    } else {
+        html += `<button class="pagination-btn active" data-page="1">1</button>`;
+    }
 
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    resTable.appendChild(thead);
-    resTable.appendChild(tbody);
+    // Если между 1 и текущей страницей есть пропуск — показываем троеточие
+    if (currentPage > 3) {
+        html += `<span class="pagination-ellipsis">…</span>`;
+    }
 
-    if (!data || data.length === 0) {
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 3;
-        cell.textContent = 'Нет РЭС для отображения';
-        cell.style.textAlign = 'center';
-        cell.style.padding = '20px';
-        row.appendChild(cell);
-        tbody.appendChild(row);
+    // Показываем страницы вокруг текущей (кроме 1 и последней, если они уже показаны)
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
 
-        // Вставляем заголовок и таблицу ПЕРЕД кнопками, ПОСЛЕ первой таблицы
-        if (firstTable && buttons) {
-            rating.insertBefore(title, buttons);
-            rating.insertBefore(resTable, buttons);
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === 1 || i === totalPages) continue; // уже показаны
+        const isActive = i === currentPage;
+        html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+
+    // Если между текущей и последней страницей есть пропуск — показываем троеточие
+    if (currentPage < totalPages - 2) {
+        html += `<span class="pagination-ellipsis">…</span>`;
+    }
+
+    // Всегда показываем последнюю страницу (если она не равна 1)
+    if (totalPages > 1) {
+        if (currentPage === totalPages) {
+            html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
         } else {
-            rating.appendChild(title);
-            rating.appendChild(resTable);
+            html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
         }
+    }
+
+    html += `
+            <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
+        </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Обработчики кликов
+    container.querySelectorAll('.pagination-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const page = btn.dataset.page;
+            let newPage = currentPage;
+
+            if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
+            else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
+            else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
+
+            if (newPage !== currentPage) {
+                const pageSize = getPageSize('settlements');
+                const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSize);
+                if (result) {
+                    settlementsData.items = result.items || [];
+                    settlementsData.total = result.total || 0;
+                    settlementsData.page = newPage;
+                    settlementsData.pageSize = pageSize;
+                    renderSettlementsTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+                }
+            }
+        });
+    });
+}
+
+// ==================== ЗАГРУЗКА РЭС ДЛЯ ВЫБРАННОГО НП ====================
+
+async function loadResForSettlement(settlementId, lat, lon, area) {
+    if (!settlementId || lat === undefined || lon === undefined) {
+        renderPopup('Выберите населенный пункт для загрузки РЭС', true);
         return;
     }
 
-    // Заголовки таблицы
-    const headerRow = document.createElement('tr');
-    ['ID', 'Широта', 'Долгота'].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.padding = '8px';
-        th.style.border = '1px solid #ddd';
-        th.style.backgroundColor = '#f2f2f2';
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
+    const loader = initLoader();
+    loader.show('Загрузка РЭС...');
 
-    // Данные
-    data.forEach(item => {
-        const row = document.createElement('tr');
+    try {
+        // Рассчитываем радиус НП по формуле (округляем до целого)
+        const radius = calculateRadius(area);
 
-        const idCell = document.createElement('td');
-        idCell.textContent = item.id || '-';
-        idCell.style.padding = '6px';
-        idCell.style.border = '1px solid #ddd';
-        row.appendChild(idCell);
+        // Формируем body для getResPage
+        const body = {
+            regions: currentRegions,
+            kinds: currentKinds,
+            area: {
+                lat: lat,
+                lon: lon,
+                radius: radius
+            }
+        };
 
-        const latCell = document.createElement('td');
-        latCell.textContent = item.lat !== undefined ? item.lat.toFixed(6) : '-';
-        latCell.style.padding = '6px';
-        latCell.style.border = '1px solid #ddd';
-        row.appendChild(latCell);
+        const pageSize = getPageSize('res');
+        const result = await getResPage(1, pageSize, body);
 
-        const lonCell = document.createElement('td');
-        lonCell.textContent = item.lon !== undefined ? item.lon.toFixed(6) : '-';
-        lonCell.style.padding = '6px';
-        lonCell.style.border = '1px solid #ddd';
-        row.appendChild(lonCell);
+        if (result) {
+            resData.items = result.res || [];
+            resData.total = result.total || 0;
+            resData.page = 1;
+            resData.pageSize = pageSize;
 
-        tbody.appendChild(row);
-    });
+            renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
+            renderPopup(`Загружено ${resData.total} РЭС для НП ID ${settlementId}`);
+        } else {
+            renderResTable([], 0, 1, pageSize);
+            renderPopup('Нет РЭС для выбранного населенного пункта');
+        }
 
-    // Вставляем заголовок и таблицу ПЕРЕД кнопками, ПОСЛЕ первой таблицы
-    if (firstTable && buttons) {
-        rating.insertBefore(title, buttons);
-        rating.insertBefore(resTable, buttons);
-    } else {
-        rating.appendChild(title);
-        rating.appendChild(resTable);
+        loader.close();
+    } catch (error) {
+        loader.close();
+        renderPopup(`Ошибка загрузки РЭС: ${error.message}`, true);
+        console.error('Ошибка загрузки РЭС:', error);
     }
 }
 
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    event.stopPropagation();
+// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ РЭС ====================
 
-    const regions = getSelectedRegions();
-    const kinds = getSelectedKinds();
-    const popRange = getPopulationRange();
+function renderResTable(data, total, page, pageSize) {
+    const table = document.getElementById('res-table');
+    if (!table) return;
 
-    console.log('Фильтры:', {
-        regions,
-        kinds,
-        popRange
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+
+    if (thead) thead.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        if (tbody) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 9;
+            cell.textContent = 'Нет РЭС для отображения';
+            cell.style.textAlign = 'center';
+            cell.style.padding = '20px';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+        renderResPagination(total, page, pageSize);
+        return;
+    }
+
+    // Заголовки (все поля из ответа сервера)
+    if (thead) {
+        const headerRow = document.createElement('tr');
+        [
+            'ID',
+            'Тип ID',
+            'Вид ID',
+            'Название',
+            'Оператор',
+            'Местоположение',
+            'Регион ID',
+            'Широта (строка)',
+            'Долгота (строка)'
+        ].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.style.padding = '8px';
+            th.style.border = '1px solid #ddd';
+            th.style.backgroundColor = '#f2f2f2';
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+    }
+
+    // Данные
+    if (tbody) {
+        data.forEach(item => {
+            const row = document.createElement('tr');
+
+            // ID
+            const idCell = document.createElement('td');
+            idCell.textContent = item.id || '-';
+            idCell.style.padding = '6px';
+            idCell.style.border = '1px solid #ddd';
+            row.appendChild(idCell);
+
+            // type_id
+            const typeIdCell = document.createElement('td');
+            typeIdCell.textContent = item.type_id || '-';
+            typeIdCell.style.padding = '6px';
+            typeIdCell.style.border = '1px solid #ddd';
+            row.appendChild(typeIdCell);
+
+            // kind_id
+            const kindIdCell = document.createElement('td');
+            kindIdCell.textContent = item.kind_id || '-';
+            kindIdCell.style.padding = '6px';
+            kindIdCell.style.border = '1px solid #ddd';
+            row.appendChild(kindIdCell);
+
+            // name
+            const nameCell = document.createElement('td');
+            nameCell.textContent = item.name || '-';
+            nameCell.style.padding = '6px';
+            nameCell.style.border = '1px solid #ddd';
+            row.appendChild(nameCell);
+
+            // operator
+            const operatorCell = document.createElement('td');
+            operatorCell.textContent = item.operator || '-';
+            operatorCell.style.padding = '6px';
+            operatorCell.style.border = '1px solid #ddd';
+            row.appendChild(operatorCell);
+
+            // location
+            const locationCell = document.createElement('td');
+            locationCell.textContent = item.location || '-';
+            locationCell.style.padding = '6px';
+            locationCell.style.border = '1px solid #ddd';
+            row.appendChild(locationCell);
+
+            // region_id
+            const regionIdCell = document.createElement('td');
+            regionIdCell.textContent = item.region_id || '-';
+            regionIdCell.style.padding = '6px';
+            regionIdCell.style.border = '1px solid #ddd';
+            row.appendChild(regionIdCell);
+
+            // lat_str
+            const latStrCell = document.createElement('td');
+            latStrCell.textContent = item.lat_str || '-';
+            latStrCell.style.padding = '6px';
+            latStrCell.style.border = '1px solid #ddd';
+            row.appendChild(latStrCell);
+
+            // lon_str
+            const lonStrCell = document.createElement('td');
+            lonStrCell.textContent = item.lon_str || '-';
+            lonStrCell.style.padding = '6px';
+            lonStrCell.style.border = '1px solid #ddd';
+            row.appendChild(lonStrCell);
+
+            tbody.appendChild(row);
+        });
+    }
+
+    renderResPagination(total, page, pageSize);
+}
+
+// ==================== ПАГИНАЦИЯ РЭС С НОМЕРАМИ СТРАНИЦ ====================
+
+function renderResPagination(total, currentPage, pageSize) {
+    const container = document.getElementById('res-pagination');
+    if (!container) return;
+
+    const totalPages = Math.ceil(total / pageSize) || 1;
+
+    let html = `
+        <div class="pagination-info">
+            Страница ${currentPage} из ${totalPages} (всего: ${total})
+        </div>
+        <div class="pagination-buttons">
+            <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
+    `;
+
+    // Всегда показываем первую страницу
+    if (currentPage > 1) {
+        html += `<button class="pagination-btn" data-page="1">1</button>`;
+    } else {
+        html += `<button class="pagination-btn active" data-page="1">1</button>`;
+    }
+
+    // Если между 1 и текущей страницей есть пропуск — показываем троеточие
+    if (currentPage > 3) {
+        html += `<span class="pagination-ellipsis">…</span>`;
+    }
+
+    // Показываем страницы вокруг текущей (кроме 1 и последней)
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === 1 || i === totalPages) continue;
+        const isActive = i === currentPage;
+        html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+
+    // Если между текущей и последней страницей есть пропуск — показываем троеточие
+    if (currentPage < totalPages - 2) {
+        html += `<span class="pagination-ellipsis">…</span>`;
+    }
+
+    // Всегда показываем последнюю страницу
+    if (totalPages > 1) {
+        if (currentPage === totalPages) {
+            html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
+        } else {
+            html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
+        }
+    }
+
+    html += `
+            <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
+        </div>
+    `;
+
+    container.innerHTML = html;
+
+    container.querySelectorAll('.pagination-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const page = btn.dataset.page;
+            let newPage = currentPage;
+
+            if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
+            else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
+            else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
+
+            if (newPage !== currentPage) {
+                const pageSize = getPageSize('res');
+                const body = {
+                    regions: currentRegions,
+                    kinds: currentKinds,
+                    area: {
+                        lat: selectedSettlementLat,
+                        lon: selectedSettlementLon,
+                        radius: calculateRadius(selectedSettlementArea)
+                    }
+                };
+                const result = await getResPage(newPage, pageSize, body);
+                if (result) {
+                    resData.items = result.res || [];
+                    resData.total = result.total || 0;
+                    resData.page = newPage;
+                    resData.pageSize = pageSize;
+                    renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
+                }
+            }
+        });
     });
+}
+
+// ==================== ОБРАБОТЧИКИ КНОПОК ====================
+
+// Кнопка "Таблица населенных пунктов"
+async function handleSettlementsButton() {
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    currentKinds = getSelectedKinds();
 
     if (regions.length === 0) {
         renderPopup('Выберите хотя бы один регион', true);
         return;
     }
 
-    isCancelledSettlements = false;
-    isCancelledRes = false;
-    settlementsData = [];
-    resData = [];
+    currentRegions = regions;
+    currentPopRange = popRange;
 
-    if (abortControllerSettlements) {
-        abortControllerSettlements.abort();
-        abortControllerSettlements = null;
-    }
-    if (abortControllerRes) {
-        abortControllerRes.abort();
-        abortControllerRes = null;
-    }
+    const pageSize = getPageSize('settlements');
+    const result = await loadSettlements(1, regions, popRange, pageSize);
 
-    createProgressModal();
+    if (result) {
+        settlementsData.items = result.items || [];
+        settlementsData.total = result.total || 0;
+        settlementsData.page = 1;
+        settlementsData.pageSize = pageSize;
+        renderSettlementsTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
 
-    const settlementsBody = {
-        regions: regions,
-        population_filters: [
-            {
-                from: popRange.from,
-                to: popRange.to
-            }
-        ]
-    };
+        // Сбрасываем таблицу РЭС
+        renderResTable([], 0, 1, getPageSize('res'));
+        selectedSettlementId = null;
+        selectedSettlementLat = null;
+        selectedSettlementLon = null;
+        selectedSettlementArea = null;
 
-    const resBody = {
-        regions: regions,
-        kinds: kinds
-    };
+        // Активируем кнопку рейтинга
+        document.getElementById('btn-rating').disabled = false;
 
-    try {
-        // Загружаем населенные пункты
-        const settlementsResult = await loadSettlementsData(settlementsBody);
-
-        if (isCancelledSettlements) {
-            if (settlementsResult && settlementsResult.data.length > 0) {
-                renderSettlementsTable(settlementsResult.data);
-                renderPopup(`Загружено ${settlementsResult.data.length} населенных пунктов (загрузка отменена)`);
-            }
-        } else if (settlementsResult) {
-            settlementsData = settlementsResult.data;
-
-            // ✅ ОТРИСОВКА ТОЛЬКО ПОСЛЕ ПОЛНОЙ ЗАГРУЗКИ
-            renderSettlementsTable(settlementsData);
-
-            // ✅ Ставим 100% и показываем точное количество
-            completeSettlementsProgress();
-            const settlementsCountEl = document.getElementById('settlements-count');
-            if (settlementsCountEl) {
-                settlementsCountEl.textContent = `${settlementsData.length} / ${settlementsData.length}`;
-            }
-        }
-
-        // Загружаем РЭС (всегда, независимо от отмены населенных пунктов)
-        const resResult = await loadResData(resBody);
-
-        if (isCancelledRes) {
-            if (resResult && resResult.data.length > 0) {
-                renderResTable(resResult.data);
-                renderPopup(`Загружено ${resResult.data.length} РЭС (загрузка отменена)`);
-            }
-            closeProgressModal();
-            return;
-        }
-
-        if (resResult) {
-            resData = resResult.data;
-
-            // ✅ ОТРИСОВКА ТОЛЬКО ПОСЛЕ ПОЛНОЙ ЗАГРУЗКИ
-            renderResTable(resData);
-
-            // ✅ Ставим 100% и показываем точное количество
-            completeResProgress();
-            const resCountEl = document.getElementById('res-count');
-            if (resCountEl) {
-                resCountEl.textContent = `${resData.length} / ${resData.length}`;
-            }
-        }
-
-        setTimeout(() => {
-            closeProgressModal();
-            const totalSettlementsCount = settlementsData.length;
-            const totalResCount = resData.length;
-            renderPopup(`Загружено: ${totalSettlementsCount} населенных пунктов, ${totalResCount} РЭС`);
-        }, 500);
-
-    } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
-        if (error.name !== 'AbortError') {
-            renderPopup(`Ошибка: ${error.message}`, true);
-        }
-        closeProgressModal();
+        renderPopup(`Загружено ${settlementsData.total} населенных пунктов`);
     }
 }
+
+// Кнопка "Таблица рейтингов НП" (пока заглушка)
+async function handleRatingButton() {
+    renderPopup('Функция "Таблица рейтингов НП" в разработке');
+}
+
+// Кнопка "Рассчитать рейтинг НП" (выполняет обе функции)
+async function handleBothButton() {
+    await handleSettlementsButton();
+    // Здесь можно будет вызвать handleRatingButton() когда она будет готова
+}
+
+// ==================== ОЧИСТКА ====================
 
 function handleClear() {
     const form = document.querySelector('.form__rating');
@@ -850,60 +845,96 @@ function handleClear() {
         }
     }
 
-    // Очищаем основную таблицу
-    const table = document.querySelector('.table__rating__table');
-    if (table) {
-        const thead = table.querySelector('thead');
-        const tbody = table.querySelector('tbody');
+    // Очищаем таблицы
+    const settlementsTable = document.getElementById('settlements-table');
+    if (settlementsTable) {
+        const thead = settlementsTable.querySelector('thead');
+        const tbody = settlementsTable.querySelector('tbody');
         if (thead) thead.innerHTML = '';
         if (tbody) tbody.innerHTML = '';
     }
 
-    // Удаляем таблицу РЭС
     const resTable = document.getElementById('res-table');
-    if (resTable) resTable.remove();
+    if (resTable) {
+        const thead = resTable.querySelector('thead');
+        const tbody = resTable.querySelector('tbody');
+        if (thead) thead.innerHTML = '';
+        if (tbody) tbody.innerHTML = '';
+    }
 
-    // Удаляем заголовки таблиц
-    const settlementsTitle = document.querySelector('.settlements-title');
-    if (settlementsTitle) settlementsTitle.remove();
-
-    const resTitle = document.querySelector('.res-title');
-    if (resTitle) resTitle.remove();
+    // Очищаем пагинацию
+    document.getElementById('settlements-pagination').innerHTML = '';
+    document.getElementById('res-pagination').innerHTML = '';
 
     // Очищаем данные
-    settlementsData = [];
-    resData = [];
+    settlementsData = { items: [], total: 0, page: 1, pageSize: 10 };
+    resData = { items: [], total: 0, page: 1, pageSize: 10 };
+    selectedSettlementId = null;
+    selectedSettlementLat = null;
+    selectedSettlementLon = null;
+    selectedSettlementArea = null;
 
-    // Закрываем модальное окно если открыто
-    closeProgressModal();
+    // Деактивируем кнопку рейтинга
+    document.getElementById('btn-rating').disabled = true;
 
     renderPopup('Фильтры сброшены');
 }
+
+
+
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
 document.addEventListener('DOMContentLoaded', function() {
     initLoader();
     loadRegions();
     loadResKindsSelect();
 
-    const form = document.querySelector('.form__rating');
-    if (form) {
-        form.addEventListener('submit', handleFormSubmit);
-    }
+    // Привязка кнопок
+    document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
+    document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
+    document.getElementById('btn-both').addEventListener('click', handleBothButton);
 
+    // Привязка очистки
     const clearBtn = document.querySelector('.form__rating + button.grid-btn') ||
         document.querySelector('button.grid-btn:not([type="submit"])');
     if (clearBtn) {
         clearBtn.addEventListener('click', handleClear);
     }
 
-    const exitBtn = document.getElementById('exit');
-    if (exitBtn) {
-        exitBtn.addEventListener('click', function(e) {
+    // Привязка кнопки "Закрыть"
+    const closeBtn = document.getElementById('close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            window.close();
+            window.close(); // закрываем вкладку
+            // Если окно не закрылось (например, открыто не через window.open), то запасной вариант:
             setTimeout(() => {
-                window.location.href = '/';
+                if (!window.closed) {
+                    window.location.href = '/';
+                }
             }, 100);
         });
     }
+
+    // Слушатели изменения размера страницы (селекты)
+    document.querySelectorAll('.page-size-control .page-size-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const tableType = this.closest('.page-size-control').dataset.table;
+            const newSize = parseInt(this.value);
+
+            if (tableType === 'settlements' && settlementsData.total > 0) {
+                settlementsData.pageSize = newSize;
+                handleSettlementsButton();
+            }
+            else if (tableType === 'res' && selectedSettlementId) {
+                resData.pageSize = newSize;
+                loadResForSettlement(
+                    selectedSettlementId,
+                    selectedSettlementLat,
+                    selectedSettlementLon,
+                    selectedSettlementArea
+                );
+            }
+        });
+    });
 });
