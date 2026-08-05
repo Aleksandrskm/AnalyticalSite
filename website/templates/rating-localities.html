@@ -9,19 +9,21 @@
 
 <main class="container__forms">
     <div class="column__form">
-        <form class="form__rating">
+        <form class="form__rating" id="ratingForm">
             <label for="region">Выбор регионов</label>
             <select name="region" id="region">
                 <option>Выберите регионы</option>
             </select>
-            <div> Численность населенных пунктов</div>
+            <div>Выбор населенных пунктов</div>
             <div class="form__div">
                 <div class="form__div__div">
                     <input type="radio" id="number-settlements" name="number-settlements" value="0" checked>
                     <label for="number-settlements">все</label>
+                    <h5 class="h5-label">Численность</h5>
                 </div>
+
                 <div class="form__div__div">
-                    <input type="radio" id="number-settlement" name="number-settlements"  value="1">
+                    <input type="radio" id="number-settlement" name="number-settlements" value="1">
                     <label for="number-settlement"></label>
                     <label for="numbers-settlement">от</label>
                     <input type="number" id="numbers-settlement" name="numbers-settlement" step="1">
@@ -36,43 +38,93 @@
                 </div>
             </div>
 
-            <button class="grid-btn" type="submit">Рассчитать </button>
+            <div class="form__buttons">
+                <button class="grid-btn" type="button" id="btn-settlements">Таблица населенных пунктов</button>
+                <button class="grid-btn" type="button" id="btn-rating" disabled>Таблица рейтингов НП</button>
+                <button class="grid-btn" type="button" id="btn-both">Рассчитать рейтинг НП</button>
+            </div>
         </form>
-        <button type="button" class="grid-btn"> Очистить</button>
+        <button type="button" class="grid-btn" id="clear-btn">Очистить</button>
     </div>
+
     <div class="table__rating">
-        <table class="table__rating__table">
-            <thead>
+        <!-- Управление размером страницы для НП -->
+        <div class="page-size-control" data-table="settlements">
+            <label>Размер страницы НП:</label>
+            <select class="page-size-select">
+                <option value="1">1</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
 
-            </thead>
-            <tbody>
-
-            </tbody>
+        <!-- Таблица НП -->
+        <table class="table__rating__table" id="settlements-table">
+            <thead></thead>
+            <tbody></tbody>
         </table>
+
+        <!-- Пагинация НП -->
+        <div class="pagination-controls" id="settlements-pagination"></div>
+
+        <hr>
+
+        <!-- Управление размером страницы для РЭС -->
+        <div class="page-size-control" data-table="res">
+            <label>Размер страницы РЭС:</label>
+            <select class="page-size-select">
+                <option value="1">1</option>
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+
+        <!-- Таблица РЭС -->
+        <table class="table__rating__table" id="res-table">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+
+        <!-- Пагинация РЭС -->
+        <div class="pagination-controls" id="res-pagination"></div>
+
+        <!-- Кнопки внизу -->
         <div class="table_buttons">
-            <button type="button" id="print__btn" class="grid-btn">
-                Печать
-            </button>
-            <a href="/" id="exit-home"> <button class="grid-btn" id="exit">Выйти</button></a>
+            <button type="button" id="print__btn" class="grid-btn">Печать</button>
+            <button class="grid-btn" id="close-btn">Закрыть</button>
         </div>
     </div>
+
     <div id="myModal" class="modal">
         <div class="modal__dialog">
-
             <div class="modal-content">
-                <div class="modal-actions-menu"><div id="timer-settings"></div><div class="modal-buttons-container"><button class="modal-resize-btn" title="Закрыть">[x]</button></div></div>
+                <div class="modal-actions-menu">
+                    <div id="timer-settings"></div>
+                    <div class="modal-buttons-container">
+                        <button class="modal-resize-btn" title="Закрыть">[x]</button>
+                    </div>
+                </div>
                 <h4 class="modal-header">Настройки</h4>
                 <div class="modal_wrapper">
                     <div class="wrapper-column">
-
                         <h4>Параметры отображения</h4>
                         <div>
                             <div class="task-parameter">
-                                <label for="color-ka-select-stand">Цвет рамки стандартного района  <span></span> :</label>
-                                <select id="color-ka-select-stand" name="color-ka-select" class="parameter-select" onchange="">
+                                <label for="color-ka-select-stand">Цвет рамки стандартного района <span></span> :</label>
+                                <select id="color-ka-select-stand" name="color-ka-select" class="parameter-select">
                                     <option value="#0000ff">Синий</option>
-                                    <option value="#00bfff">Голубой</option><option value="#0400b0">
-                                    Тёмно-синий</option>
+                                    <option value="#00bfff">Голубой</option>
+                                    <option value="#0400b0">Тёмно-синий</option>
                                     <option value="#000000">Чёрный</option>
                                     <option value="#ff0000">Красный</option>
                                     <option value="#00FF00">Зеленый</option>
@@ -82,94 +134,88 @@
                                 </select>
                             </div>
                             <div class="task-parameter">
-                                <label for="color-ka-select-big">Цвет рамки большого района  <span></span> :</label>
-                                <select id="color-ka-select-big" name="color-ka-select" class="parameter-select" onchange="">
+                                <label for="color-ka-select-big">Цвет рамки большого района <span></span> :</label>
+                                <select id="color-ka-select-big" name="color-ka-select" class="parameter-select">
                                     <option value="#f4a900">Оранжевый</option>
                                     <option value="#0000ff">Синий</option>
-                                    <option value="#00bfff">Голубой</option><option value="#0400b0">
-                                    Тёмно-синий</option>
+                                    <option value="#00bfff">Голубой</option>
+                                    <option value="#0400b0">Тёмно-синий</option>
                                     <option value="#000000">Чёрный</option>
                                     <option value="#ff0000">Красный</option>
                                     <option value="#00FF00">Зеленый</option>
                                     <option value="#7b6ac4">Фиолетовый</option>
-
                                     <option value="#42f5ce">Бирюзовый</option>
                                 </select>
                             </div>
                             <div class="task-parameter">
-                                <label for="color-ka-select-short">Цвет рамки малого района  <span></span> :</label>
-                                <select id="color-ka-select-short" name="color-ka-select" class="parameter-select" onchange="">
+                                <label for="color-ka-select-short">Цвет рамки малого района <span></span> :</label>
+                                <select id="color-ka-select-short" name="color-ka-select" class="parameter-select">
                                     <option value="#00FF00">Зеленый</option>
                                     <option value="#f4a900">Оранжевый</option>
                                     <option value="#0000ff">Синий</option>
-                                    <option value="#00bfff">Голубой</option><option value="#0400b0">
-                                    Тёмно-синий</option>
+                                    <option value="#00bfff">Голубой</option>
+                                    <option value="#0400b0">Тёмно-синий</option>
                                     <option value="#000000">Чёрный</option>
                                     <option value="#ff0000">Красный</option>
-
                                     <option value="#7b6ac4">Фиолетовый</option>
-
                                     <option value="#42f5ce">Бирюзовый</option>
                                 </select>
                             </div>
                             <div class="task-parameter">
-                                <label for="color-ka-select-zapr">Цвет рамки запрещенного района  <span></span> :</label>
-                                <select id="color-ka-select-zapr" name="color-ka-select" class="parameter-select" onchange="">
+                                <label for="color-ka-select-zapr">Цвет рамки запрещенного района <span></span> :</label>
+                                <select id="color-ka-select-zapr" name="color-ka-select" class="parameter-select">
                                     <option value="#ff0000">Красный</option>
                                     <option value="#00FF00">Зеленый</option>
                                     <option value="#f4a900">Оранжевый</option>
                                     <option value="#0000ff">Синий</option>
-                                    <option value="#00bfff">Голубой</option><option value="#0400b0">
-                                    Тёмно-синий</option>
+                                    <option value="#00bfff">Голубой</option>
+                                    <option value="#0400b0">Тёмно-синий</option>
                                     <option value="#000000">Чёрный</option>
-
-
                                     <option value="#7b6ac4">Фиолетовый</option>
-
                                     <option value="#42f5ce">Бирюзовый</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div class="wrapper-column">
-
                         <h4>Настройки карты</h4>
                         <div>
                             <span>Проекция:</span>
                             <select class="default-list" id="projectionSelect">
                                 <option value="EPSG:3857">EPSG:3857</option>
-                                <option value="EPSG:4326" selected="">EPSG:4326</option>
+                                <option value="EPSG:4326" selected>EPSG:4326</option>
                             </select>
                         </div>
                         <div class="task-parameter" style="display: flex; flex-direction: column; align-items: center; justify-items: end; gap: 10px; width: 100%; margin-top: 20px;">
-                            <button style="width: 100%;" class="default-button parameter-input btn-load-settings" disabled="">Загрузить сохраненные настройки</button>
-                            <button style="width: 100%;" class="default-button parameter-input btn-save-settings" disabled="">Сохранить текущие настройки</button>
+                            <button style="width: 100%;" class="default-button parameter-input btn-load-settings" disabled>Загрузить сохраненные настройки</button>
+                            <button style="width: 100%;" class="default-button parameter-input btn-save-settings" disabled>Сохранить текущие настройки</button>
                             <button style="width: 100%;" class="default-button parameter-input btn-reset-settings" disabled>Загрузить настройки по умолчанию</button>
                         </div>
-
                         <div style="display: none">
                             <span>Тип зоны действия:</span>
-                            <select class="default-list" id="typeZonaCircle" onchange="changeTypeZonaCircle(this.value)">
+                            <select class="default-list" id="typeZonaCircle">
                                 <option value="circle">в виде круга</option>
-                                <option value="polygon" selected="">в виде полигона</option>
+                                <option value="polygon" selected>в виде полигона</option>
                             </select>
                         </div>
                         <div style="display: none">
-                            <input type="checkbox" id="multiWorldCheckbox" name="scales" onchange="changeMultiWorld(this.checked)">
+                            <input type="checkbox" id="multiWorldCheckbox" name="scales">
                             <label for="scales">Убрать ограничения на движения</label>
                         </div>
                         <div style="display: none">
-                            <input type="checkbox" id="wrapX" name="scales" onchange="changeWrapX(this.checked)" checked="">
+                            <input type="checkbox" id="wrapX" name="scales" checked>
                             <label for="scales">Включить повтор слева и справа</label>
                         </div>
                     </div>
                 </div>
-
                 <div class="closes">
                     <button class="close">Закрыть</button>
                 </div>
             </div>
         </div>
+    </div>
 </main>
+
 <script src="{{ url_for('static', filename='js/cityRatings.js') }}" type="module"></script>
+
 {% endblock %}

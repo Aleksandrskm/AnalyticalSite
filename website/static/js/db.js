@@ -486,7 +486,44 @@ async function getResKinds(page = 1,pageSize= 412) {
     throw error;
   }
 }
-
+async function getResPage(page = 1,pageSize= 10,body) {
+  try {
+    const response = await fetch(`http://${URL}/res?page=${page}&page_size=${pageSize}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
+async function getSettlementsPage(page = 1,pageSize= 10,body) {
+  try {
+    const response = await fetch(`http://${URL}/territories/settlements?page=${page}&page_size=${pageSize}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
 async function getRegions() {
   try {
     const response = await fetch(`http://${URL}/territories/regions`, {
@@ -682,5 +719,5 @@ export {
   updateOrInsert, getActiveSessions, getAllUsers, postUsersActivity,
   getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams,
   getDbNames, getTableNames, getRegions, getRes, getResKinds,
-  getSettlements, getResStream, getSettlementsStream, parseStreamResponse
+  getSettlements, getResStream, getSettlementsStream, parseStreamResponse,getSettlementsPage,getResPage
 };
