@@ -264,6 +264,16 @@ function renderSettlementsTable(data, total, page, pageSize) {
     const table = document.getElementById('settlements-table');
     if (!table) return;
 
+    // ===== ДОБАВЛЕНО: ЗАГОЛОВОК ТАБЛИЦЫ =====
+    const oldSettlementsTitle = document.querySelector('.settlements-title');
+    if (oldSettlementsTitle) oldSettlementsTitle.remove();
+
+    const settlementsTitle = document.createElement('h3');
+    settlementsTitle.className = 'settlements-title';
+    settlementsTitle.textContent = 'Населенные пункты';
+    table.parentNode.insertBefore(settlementsTitle, table);
+
+    // ===== ДАЛЬШЕ ВАШ КОД БЕЗ ИЗМЕНЕНИЙ =====
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
 
@@ -566,6 +576,16 @@ function renderResTable(data, total, page, pageSize) {
     const table = document.getElementById('res-table');
     if (!table) return;
 
+    // ===== ДОБАВЛЕНО: ЗАГОЛОВОК ТАБЛИЦЫ =====
+    const oldResTitle = document.querySelector('.res-title');
+    if (oldResTitle) oldResTitle.remove();
+
+    const resTitle = document.createElement('h3');
+    resTitle.className = 'res-title';
+    resTitle.textContent = 'РЭС';
+    table.parentNode.insertBefore(resTitle, table);
+
+    // ===== ДАЛЬШЕ ВАШ КОД БЕЗ ИЗМЕНЕНИЙ =====
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
 
@@ -865,6 +885,13 @@ function handleClear() {
     // Очищаем пагинацию
     document.getElementById('settlements-pagination').innerHTML = '';
     document.getElementById('res-pagination').innerHTML = '';
+
+    // ===== ДОБАВЛЕНО: УДАЛЯЕМ ЗАГОЛОВКИ ТАБЛИЦ =====
+    const settlementsTitle = document.querySelector('.settlements-title');
+    if (settlementsTitle) settlementsTitle.remove();
+
+    const resTitle = document.querySelector('.res-title');
+    if (resTitle) resTitle.remove();
 
     // Очищаем данные
     settlementsData = { items: [], total: 0, page: 1, pageSize: 10 };
