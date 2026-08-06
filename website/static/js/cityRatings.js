@@ -824,7 +824,7 @@ function renderRatingTable(data) {
     const existingRatingTitle = document.querySelector('.rating-title');
     if (existingRatingTitle) existingRatingTitle.remove();
 
-    // Создаём заголовок ВСЕГДА (даже если данных нет)
+    // Создаём заголовок БЕЗ ИКОНКИ
     const ratingTitle = document.createElement('h3');
     ratingTitle.className = 'rating-title';
     ratingTitle.textContent = 'Рейтинг НП';
@@ -992,8 +992,10 @@ async function handleRatingButton() {
     }
 
     console.log('▶ Загружаем рейтинг для НП', selectedSettlementId);
-    const loader = initLoader();
-    loader.show('Загрузка рейтинга для НП ' + selectedSettlementId + '...');
+
+    // ===== ЛОАДЕР ДЛЯ ПЕРВОГО GET =====
+    const loader1 = initLoader();
+    loader1.show('Загрузка рейтинга...');
 
     try {
         let ratingData = await getRatingSett(selectedSettlementId);
@@ -1001,19 +1003,25 @@ async function handleRatingButton() {
 
         if (ratingData === null) {
             console.log('▶ Рейтинг не найден, вызываем POST');
+            loader1.close();
 
-            // Закрываем текущий лоадер и показываем новый для POST
-            loader.close();
-
-            const postLoader = initLoader();
-            postLoader.show('Создание рейтинга для НП ' + selectedSettlementId + '...');
+            // ===== ЛОАДЕР ДЛЯ POST =====
+            const loader2 = initLoader();
+            loader2.show('Создание рейтинга...');
 
             await postRatingSett(selectedSettlementId);
 
-            postLoader.close();
+            loader2.close();
 
-            // Снова пытаемся получить рейтинг
+            // ===== ЛОАДЕР ДЛЯ ПОВТОРНОГО GET =====
+            const loader3 = initLoader();
+            loader3.show('Обновление данных рейтинга...');
+
             ratingData = await getRatingSett(selectedSettlementId);
+
+            loader3.close();
+        } else {
+            loader1.close();
         }
 
         if (ratingData) {
@@ -1022,10 +1030,8 @@ async function handleRatingButton() {
         } else {
             renderPopup('Не удалось получить рейтинг для НП ' + selectedSettlementId, true);
         }
-
-        loader.close();
     } catch (error) {
-        loader.close();
+        loader1.close();
         renderPopup(`Ошибка загрузки рейтинга: ${error.message}`, true);
         console.error('Ошибка загрузки рейтинга:', error);
     }
