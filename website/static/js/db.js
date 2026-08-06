@@ -505,6 +505,51 @@ async function getResPage(page = 1,pageSize= 10,body) {
     throw error;
   }
 }
+async function getRatingSett(settlementID = 1) {
+  try {
+    const response = await fetch(`http://${URL}/communication_rating/settlements/${settlementID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Если статус 404 — возвращаем null (это не ошибка, а отсутствие данных)
+    if (response.status === 404) {
+      console.log('▶ getRatingSett: 404 — рейтинг не найден, возвращаем null');
+      return null;
+    }
+
+    // Любая другая ошибка (500, 403 и т.д.) — выбрасываем исключение
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('▶ Ошибка в getRatingSett:', error);
+    throw error;
+  }
+}
+async function postRatingSett(settlementID = 1) {
+  try {
+    const response = await fetch(`http://${URL}/communication_rating/settlements/${settlementID}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching table names:', error);
+    throw error;
+  }
+}
 async function getSettlementsPage(page = 1,pageSize= 10,body) {
   try {
     const response = await fetch(`http://${URL}/territories/settlements?page=${page}&page_size=${pageSize}`, {
@@ -719,5 +764,5 @@ export {
   updateOrInsert, getActiveSessions, getAllUsers, postUsersActivity,
   getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams,
   getDbNames, getTableNames, getRegions, getRes, getResKinds,
-  getSettlements, getResStream, getSettlementsStream, parseStreamResponse,getSettlementsPage,getResPage
+  getSettlements, getResStream, getSettlementsStream, parseStreamResponse,getSettlementsPage,getResPage,getRatingSett,postRatingSett
 };

@@ -2,7 +2,14 @@
 'use strict';
 
 import { Loader } from './Loader.js';
-import { getRegions, getResKinds, getSettlementsPage, getResPage } from './db.js';
+import {
+    getRegions,
+    getResKinds,
+    getSettlementsPage,
+    getResPage,
+    getRatingSett,
+    postRatingSett
+} from './db.js';
 
 let loader = null;
 
@@ -418,6 +425,12 @@ function renderSettlementsTable(data, total, page, pageSize) {
 
                 // Загружаем РЭС для этого НП
                 loadResForSettlement(selectedSettlementId, selectedSettlementLat, selectedSettlementLon, selectedSettlementArea);
+
+                // ✅ ДОБАВЛЕНО: обновляем таблицу рейтинга, если она уже была открыта
+                const existingRatingTable = document.getElementById('rating-table');
+                if (existingRatingTable) {
+                    handleRatingButton();
+                }
             });
 
             tbody.appendChild(row);
@@ -798,6 +811,111 @@ function renderResPagination(total, currentPage, pageSize) {
     });
 }
 
+// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ РЕЙТИНГА ====================
+
+function renderRatingTable(data) {
+    const tableContainer = document.querySelector('.table__rating');
+    if (!tableContainer) return;
+
+    // Удаляем старую таблицу рейтинга и заголовок, если есть
+    const existingRatingTable = document.getElementById('rating-table');
+    if (existingRatingTable) existingRatingTable.remove();
+
+    const existingRatingTitle = document.querySelector('.rating-title');
+    if (existingRatingTitle) existingRatingTitle.remove();
+
+    // Создаём заголовок ВСЕГДА (даже если данных нет)
+    const ratingTitle = document.createElement('h3');
+    ratingTitle.className = 'rating-title';
+    ratingTitle.textContent = 'Рейтинг НП';
+    ratingTitle.style.cssText = `
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 15px 0 10px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #1a1a1a;
+    `;
+
+    // Создаём таблицу ВСЕГДА
+    const ratingTable = document.createElement('table');
+    ratingTable.id = 'rating-table';
+    ratingTable.className = 'table__rating__table';
+
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+    ratingTable.appendChild(thead);
+    ratingTable.appendChild(tbody);
+
+    // Вставляем заголовок и таблицу в конец .table__rating (перед кнопками)
+    const buttons = tableContainer.querySelector('.table_buttons');
+    if (buttons) {
+        tableContainer.insertBefore(ratingTitle, buttons);
+        tableContainer.insertBefore(ratingTable, buttons);
+    } else {
+        tableContainer.appendChild(ratingTitle);
+        tableContainer.appendChild(ratingTable);
+    }
+
+    // Если данных нет — показываем сообщение и выходим
+    if (!data || Object.keys(data).length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 2;
+        cell.textContent = 'Нет данных рейтинга для отображения';
+        cell.style.textAlign = 'center';
+        cell.style.padding = '20px';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+
+    // Заголовки таблицы
+    const headerRow = document.createElement('tr');
+    ['Показатель', 'Значение'].forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        th.style.padding = '8px';
+        th.style.border = '1px solid #ddd';
+        th.style.backgroundColor = '#f2f2f2';
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    // Данные
+    const fields = [
+        { key: 'id', label: 'ID НП' },
+        { key: 'count_res', label: 'Всего РЭС' },
+        { key: 'count_res_tv', label: 'РЭС ТВ' },
+        { key: 'count_res_rv', label: 'РЭС РВ' },
+        { key: 'count_res_lte', label: 'РЭС LTE' },
+        { key: 'count_res_gsm', label: 'РЭС GSM' },
+        { key: 'count_res_5g', label: 'РЭС 5G' },
+        { key: 'count_res_wifi', label: 'РЭС Wi-Fi' },
+        { key: 'count_res_tetra', label: 'РЭС TETRA' }
+    ];
+
+    fields.forEach(field => {
+        const row = document.createElement('tr');
+
+        const labelCell = document.createElement('td');
+        labelCell.textContent = field.label;
+        labelCell.style.padding = '6px';
+        labelCell.style.border = '1px solid #ddd';
+        labelCell.style.fontWeight = 'bold';
+        row.appendChild(labelCell);
+
+        const valueCell = document.createElement('td');
+        valueCell.textContent = data[field.key] !== undefined ? data[field.key] : '-';
+        valueCell.style.padding = '6px';
+        valueCell.style.border = '1px solid #ddd';
+        row.appendChild(valueCell);
+
+        tbody.appendChild(row);
+    });
+}
+
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
 
 // Кнопка "Таблица населенных пунктов"
@@ -831,22 +949,92 @@ async function handleSettlementsButton() {
         selectedSettlementLon = null;
         selectedSettlementArea = null;
 
-        // Активируем кнопку рейтинга
-        document.getElementById('btn-rating').disabled = false;
-
         renderPopup(`Загружено ${settlementsData.total} населенных пунктов`);
     }
 }
 
-// Кнопка "Таблица рейтингов НП" (пока заглушка)
+// Кнопка "Таблица рейтингов НП"
 async function handleRatingButton() {
-    renderPopup('Функция "Таблица рейтингов НП" в разработке');
+    console.log('▶ handleRatingButton: НАЧАЛО');
+
+    // Получаем текущие фильтры из формы
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    const kinds = getSelectedKinds();
+
+    // Если фильтры изменились — сбрасываем выбранный НП и перезагружаем таблицу НП
+    const regionsChanged = JSON.stringify(regions) !== JSON.stringify(currentRegions);
+    const popRangeChanged = popRange.from !== currentPopRange.from || popRange.to !== currentPopRange.to;
+    const kindsChanged = JSON.stringify(kinds) !== JSON.stringify(currentKinds);
+
+    if (regionsChanged || popRangeChanged || kindsChanged) {
+        console.log('▶ Фильтры изменились, перезагружаем таблицу НП...');
+        selectedSettlementId = null;
+        currentRegions = regions;
+        currentPopRange = popRange;
+        currentKinds = kinds;
+        await handleSettlementsButton();
+    }
+
+    // Если нет выбранного НП — выбираем первый
+    if (!selectedSettlementId) {
+        console.log('▶ Нет выбранного НП, выбираем первый...');
+        const firstRow = document.querySelector('#settlements-table tbody tr');
+        if (firstRow) {
+            firstRow.click();
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        if (!selectedSettlementId) {
+            renderPopup('Не удалось выбрать населенный пункт', true);
+            return;
+        }
+    }
+
+    console.log('▶ Загружаем рейтинг для НП', selectedSettlementId);
+    const loader = initLoader();
+    loader.show('Загрузка рейтинга для НП ' + selectedSettlementId + '...');
+
+    try {
+        let ratingData = await getRatingSett(selectedSettlementId);
+        console.log('▶ ratingData после getRatingSett:', ratingData);
+
+        if (ratingData === null) {
+            console.log('▶ Рейтинг не найден, вызываем POST');
+
+            // Закрываем текущий лоадер и показываем новый для POST
+            loader.close();
+
+            const postLoader = initLoader();
+            postLoader.show('Создание рейтинга для НП ' + selectedSettlementId + '...');
+
+            await postRatingSett(selectedSettlementId);
+
+            postLoader.close();
+
+            // Снова пытаемся получить рейтинг
+            ratingData = await getRatingSett(selectedSettlementId);
+        }
+
+        if (ratingData) {
+            renderRatingTable(ratingData);
+            renderPopup('Рейтинг для НП ' + selectedSettlementId + ' загружен');
+        } else {
+            renderPopup('Не удалось получить рейтинг для НП ' + selectedSettlementId, true);
+        }
+
+        loader.close();
+    } catch (error) {
+        loader.close();
+        renderPopup(`Ошибка загрузки рейтинга: ${error.message}`, true);
+        console.error('Ошибка загрузки рейтинга:', error);
+    }
 }
 
-// Кнопка "Рассчитать рейтинг НП" (выполняет обе функции)
+// Кнопка "Рассчитать рейтинг НП" (выполняет обе функции последовательно)
 async function handleBothButton() {
     await handleSettlementsButton();
-    // Здесь можно будет вызвать handleRatingButton() когда она будет готова
+    await handleRatingButton();
 }
 
 // ==================== ОЧИСТКА ====================
@@ -886,12 +1074,19 @@ function handleClear() {
     document.getElementById('settlements-pagination').innerHTML = '';
     document.getElementById('res-pagination').innerHTML = '';
 
-    // ===== ДОБАВЛЕНО: УДАЛЯЕМ ЗАГОЛОВКИ ТАБЛИЦ =====
+    // Удаляем заголовки таблиц НП и РЭС
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
     const resTitle = document.querySelector('.res-title');
     if (resTitle) resTitle.remove();
+
+    // Удаляем таблицу рейтинга и её заголовок
+    const ratingTable = document.getElementById('rating-table');
+    if (ratingTable) ratingTable.remove();
+
+    const ratingTitle = document.querySelector('.rating-title');
+    if (ratingTitle) ratingTitle.remove();
 
     // Очищаем данные
     settlementsData = { items: [], total: 0, page: 1, pageSize: 10 };
@@ -901,13 +1096,8 @@ function handleClear() {
     selectedSettlementLon = null;
     selectedSettlementArea = null;
 
-    // Деактивируем кнопку рейтинга
-    document.getElementById('btn-rating').disabled = true;
-
     renderPopup('Фильтры сброшены');
 }
-
-
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
