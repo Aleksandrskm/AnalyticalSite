@@ -482,6 +482,8 @@ async function loadRatingsForSettlements(items, allowPost = false) {
 
 // ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
 
+// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
+
 function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
     if (!table) return;
@@ -634,7 +636,7 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            // Фильтруем исходные данные
+            // Фильтруем исходные данные и показываем на 1 странице
             const filtered = filterData(originalDataForFilter, field, value, exactMatch);
             renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
         }
@@ -650,8 +652,9 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         currentFilterValue = '';
         currentFilterExact = false;
 
-        // Показываем исходные данные
-        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+        // Показываем исходные данные на ТЕКУЩЕЙ странице
+        const currentPage = settlementsData.page || 1;
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
@@ -974,7 +977,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            // Фильтруем данные с учетом рейтингов
+            // Фильтруем данные с учетом рейтингов и показываем на 1 странице
             const filtered = filterDataWithRatings(originalDataForFilter, allRatings, field, value, exactMatch);
             renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
         }
@@ -990,8 +993,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         currentFilterValue = '';
         currentFilterExact = false;
 
-        // Показываем исходные данные
-        renderCombinedTable(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+        // Показываем исходные данные на ТЕКУЩЕЙ странице
+        const currentPage = settlementsData.page || 1;
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
