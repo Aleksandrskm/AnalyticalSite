@@ -21,7 +21,7 @@ let settlementsData = {
     pageSize: 10
 };
 
-// Данные для РЭС
+// Данные для РЭС (для модального окна)
 let resData = {
     items: [],
     total: 0,
@@ -29,11 +29,12 @@ let resData = {
     pageSize: 10
 };
 
-// Текущий выбранный НП для загрузки РЭС и рейтинга
+// Текущий выбранный НП
 let selectedSettlementId = null;
 let selectedSettlementLat = null;
 let selectedSettlementLon = null;
 let selectedSettlementArea = null;
+let selectedSettlementName = null;
 
 // Текущие фильтры
 let currentRegions = [];
@@ -43,8 +44,30 @@ let currentPopRange = { from: 1, to: 17000000 };
 // Флаг отмены массового расчёта
 let isCancelled = false;
 
-// Массив всех полученных рейтингов
-let allRatings = [];
+// Массив всех полученных рейтингов (ключ — id НП)
+let allRatings = {};
+
+// Переменные для сортировки в таблице
+let currentSortField = null;
+let currentSortOrder = 'asc';
+let currentSettlementsFiltered = [];
+
+// Переменные для фильтрации
+let currentFilterField = '';
+let currentFilterValue = '';
+let currentFilterExact = false;
+
+// Флаг: показывать ли рейтинги в таблице
+let showRatings = false;
+
+// Сохраненные значения фильтра для восстановления
+let savedFilterField = '';
+let savedFilterValue = '';
+let savedFilterExact = false;
+
+// Сохраняем исходные данные для фильтрации
+let originalDataForFilter = [];
+let originalTotalForFilter = 0;
 
 function initLoader() {
     if (!loader) {
@@ -84,7 +107,78 @@ const allowedResKinds = [
     21, 112, 103, 92
 ];
 
-// Загрузка регионов в select
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+function showResPageSize() {
+    const el = document.getElementById('res-page-size');
+    if (el) el.style.display = 'flex';
+}
+
+function hideResPageSize() {
+    const el = document.getElementById('res-page-size');
+    if (el) el.style.display = 'none';
+}
+
+function hideAutoRating() {
+    const el = document.querySelector('.form__rating .checkbox-container');
+    if (el) el.style.display = 'none';
+}
+
+function createResButton() {
+    let existing = document.getElementById('res-action-btn');
+    if (existing) existing.remove();
+
+    const btn = document.createElement('button');
+    btn.id = 'res-action-btn';
+    btn.className = 'grid-btn res-action-btn';
+    btn.textContent = 'РЭС';
+    btn.addEventListener('click', handleResButton);
+    return btn;
+}
+
+function createWiredButton() {
+    let existing = document.getElementById('wired-action-btn');
+    if (existing) existing.remove();
+
+    const btn = document.createElement('button');
+    btn.id = 'wired-action-btn';
+    btn.className = 'grid-btn wired-action-btn';
+    btn.textContent = 'Проводные УС';
+    btn.addEventListener('click', handleWiredButton);
+    return btn;
+}
+
+function showSettlementButtons() {
+    const container = document.querySelector('.table_buttons');
+    if (!container) return;
+
+    const oldRes = document.getElementById('res-action-btn');
+    if (oldRes) oldRes.remove();
+    const oldWired = document.getElementById('wired-action-btn');
+    if (oldWired) oldWired.remove();
+
+    const resBtn = createResButton();
+    const wiredBtn = createWiredButton();
+
+    const firstBtn = container.querySelector('.grid-btn');
+    if (firstBtn) {
+        container.insertBefore(resBtn, firstBtn);
+        container.insertBefore(wiredBtn, firstBtn);
+    } else {
+        container.appendChild(resBtn);
+        container.appendChild(wiredBtn);
+    }
+}
+
+function hideSettlementButtons() {
+    const resBtn = document.getElementById('res-action-btn');
+    if (resBtn) resBtn.remove();
+    const wiredBtn = document.getElementById('wired-action-btn');
+    if (wiredBtn) wiredBtn.remove();
+}
+
+// ==================== ЗАГРУЗКА РЕГИОНОВ И ВИДОВ СВЯЗИ ====================
+
 async function loadRegions() {
     const loader = initLoader();
     loader.show('Загрузка регионов...');
@@ -118,7 +212,6 @@ async function loadRegions() {
     }
 }
 
-// Загрузка видов РЭС в select
 async function loadResKindsSelect() {
     const loader = initLoader();
     loader.show('Загрузка видов связи...');
@@ -218,12 +311,10 @@ function getPopulationRange() {
 
 // Расчет радиуса НП по формуле из документа (п. 3.1) с округлением до целого
 function calculateRadius(area) {
-    // R = 1.1 * sqrt(S / pi)
-    if (!area || area <= 0) return 1; // если нет площади, радиус 1 км
+    if (!area || area <= 0) return 1;
     return Math.round(1.1 * Math.sqrt(area / Math.PI));
 }
 
-// Получение размера страницы для таблицы (из селекта)
 function getPageSize(tableType) {
     const select = document.querySelector(`.page-size-control[data-table="${tableType}"] .page-size-select`);
     if (select) {
@@ -231,6 +322,61 @@ function getPageSize(tableType) {
         if (!isNaN(val) && val > 0) return val;
     }
     return 10;
+}
+
+// ==================== ФИЛЬТРАЦИЯ ДАННЫХ ====================
+
+function filterData(data, field, value, exactMatch = false) {
+    if (!value || !field) return data;
+
+    return data.filter(row => {
+        const cellValue = row[field];
+        if (cellValue === null || cellValue === undefined) return false;
+
+        const strValue = String(cellValue);
+        const strSearch = String(value);
+
+        if (exactMatch) {
+            return strValue.toLowerCase() === strSearch.toLowerCase();
+        } else {
+            return strValue.toLowerCase().includes(strSearch.toLowerCase());
+        }
+    });
+}
+
+// ==================== ФИЛЬТРАЦИЯ ДАННЫХ С УЧЕТОМ РЕЙТИНГОВ ====================
+
+function filterDataWithRatings(data, ratings, field, value, exactMatch = false) {
+    if (!value || !field) return data;
+
+    const ratingFields = ['count_res', 'count_res_tv', 'count_res_rv',
+        'count_res_lte', 'count_res_gsm', 'count_res_5g',
+        'count_res_wifi', 'count_res_tetra'];
+
+    return data.filter(row => {
+        let cellValue;
+
+        // Проверяем, является ли поле рейтинговым
+        if (ratingFields.includes(field)) {
+            // Получаем значение из рейтинга
+            const rating = ratings[row.id] || {};
+            cellValue = rating[field];
+        } else {
+            // Получаем значение из данных НП
+            cellValue = row[field];
+        }
+
+        if (cellValue === null || cellValue === undefined) return false;
+
+        const strValue = String(cellValue);
+        const strSearch = String(value);
+
+        if (exactMatch) {
+            return strValue.toLowerCase() === strSearch.toLowerCase();
+        } else {
+            return strValue.toLowerCase().includes(strSearch.toLowerCase());
+        }
+    });
 }
 
 // ==================== ЗАГРУЗКА НАСЕЛЕННЫХ ПУНКТОВ ====================
@@ -270,9 +416,9 @@ async function loadSettlements(page = 1, regions, popRange, pageSize) {
     }
 }
 
-// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ НАСЕЛЕННЫХ ПУНКТОВ ====================
+// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
 
-function renderSettlementsTable(data, total, page, pageSize) {
+function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
     if (!table) return;
 
@@ -296,8 +442,7 @@ function renderSettlementsTable(data, total, page, pageSize) {
             const cell = document.createElement('td');
             cell.colSpan = 10;
             cell.textContent = 'Нет населенных пунктов для отображения';
-            cell.style.textAlign = 'center';
-            cell.style.padding = '20px';
+            cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
         }
@@ -305,125 +450,275 @@ function renderSettlementsTable(data, total, page, pageSize) {
         return;
     }
 
+    currentSettlementsFiltered = data;
+
+    // Удаляем старый фильтр
+    const oldFilter = document.querySelector('.filter-container');
+    if (oldFilter) oldFilter.remove();
+
+    // Создаем фильтр
+    const tableContainer = document.querySelector('.table__rating');
+
+    const filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container';
+
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'filter-field-group';
+    const fieldLabel = document.createElement('label');
+    fieldLabel.textContent = 'Поле для фильтрации';
+    fieldLabel.className = 'filter-label';
+    const fieldSelect = document.createElement('select');
+    fieldSelect.className = 'filter-field-select';
+
+    const optionNone = document.createElement('option');
+    optionNone.value = '';
+    optionNone.textContent = '-- Выберите поле --';
+    fieldSelect.appendChild(optionNone);
+
+    const labels = {
+        'id': 'ID',
+        'name': 'Название',
+        'area': 'Площадь (км²)',
+        'region_name': 'Регион',
+        'region_code': 'Код региона',
+        'district_name': 'Муниципальное образование',
+        'lat': 'Широта',
+        'lon': 'Долгота',
+        'population': 'Население',
+        'fias_id': 'Код ФИАС'
+    };
+
+    if (data && data.length > 0) {
+        Object.keys(data[0]).forEach(key => {
+            if (labels[key]) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = labels[key] || key;
+                fieldSelect.appendChild(opt);
+            }
+        });
+    }
+
+    // Восстанавливаем сохраненное значение поля, если keepFilter = true
+    if (keepFilter && savedFilterField) {
+        fieldSelect.value = savedFilterField;
+    }
+
+    fieldDiv.appendChild(fieldLabel);
+    fieldDiv.appendChild(fieldSelect);
+    filterContainer.appendChild(fieldDiv);
+
+    const valueDiv = document.createElement('div');
+    valueDiv.className = 'filter-value-group';
+    const valueLabel = document.createElement('label');
+    valueLabel.textContent = 'Значение';
+    valueLabel.className = 'filter-label';
+    const valueInput = document.createElement('input');
+    valueInput.className = 'filter-value-input';
+    valueInput.type = 'text';
+    valueInput.placeholder = 'Введите значение...';
+
+    // Восстанавливаем сохраненное значение, если keepFilter = true
+    if (keepFilter && savedFilterValue) {
+        valueInput.value = savedFilterValue;
+    }
+
+    valueDiv.appendChild(valueLabel);
+    valueDiv.appendChild(valueInput);
+    filterContainer.appendChild(valueDiv);
+
+    const exactDiv = document.createElement('div');
+    exactDiv.className = 'filter-exact-group';
+    const exactCheckbox = document.createElement('input');
+    exactCheckbox.type = 'checkbox';
+    exactCheckbox.className = 'filter-exact-checkbox';
+    const exactLabel = document.createElement('label');
+    exactLabel.textContent = 'Точное совпадение';
+    exactDiv.appendChild(exactCheckbox);
+    exactDiv.appendChild(exactLabel);
+    filterContainer.appendChild(exactDiv);
+
+    // Восстанавливаем сохраненное состояние чекбокса, если keepFilter = true
+    if (keepFilter && savedFilterExact) {
+        exactCheckbox.checked = true;
+    }
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'filter-buttons-group';
+    const applyBtn = document.createElement('button');
+    applyBtn.textContent = 'Применить';
+    applyBtn.className = 'filter-apply-btn';
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Сбросить';
+    resetBtn.className = 'filter-reset-btn';
+
+    buttonsDiv.appendChild(applyBtn);
+    buttonsDiv.appendChild(resetBtn);
+    filterContainer.appendChild(buttonsDiv);
+
+    applyBtn.addEventListener('click', () => {
+        const field = fieldSelect.value;
+        const value = valueInput.value;
+        const exactMatch = exactCheckbox.checked;
+        if (field && value) {
+            // Сохраняем значения
+            savedFilterField = field;
+            savedFilterValue = value;
+            savedFilterExact = exactMatch;
+
+            currentFilterField = field;
+            currentFilterValue = value;
+            currentFilterExact = exactMatch;
+
+            // Фильтруем исходные данные
+            const filtered = filterData(originalDataForFilter, field, value, exactMatch);
+            renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        // Очищаем сохраненные значения
+        savedFilterField = '';
+        savedFilterValue = '';
+        savedFilterExact = false;
+
+        currentFilterField = '';
+        currentFilterValue = '';
+        currentFilterExact = false;
+
+        // Показываем исходные данные
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+    });
+
+    tableContainer.prepend(filterContainer);
+
     if (thead) {
         const headerRow = document.createElement('tr');
-        [
-            'ID',
-            'Название',
-            'Площадь (км²)',
-            'Регион',
-            'Код региона',
-            'Муниципальное образование',
-            'Широта',
-            'Долгота',
-            'Население',
-            'Код ФИАС'
-        ].forEach(text => {
+        const headers = [
+            { key: 'id', label: 'ID' },
+            { key: 'name', label: 'Название' },
+            { key: 'area', label: 'Площадь (км²)' },
+            { key: 'region_name', label: 'Регион' },
+            { key: 'region_code', label: 'Код региона' },
+            { key: 'district_name', label: 'Муниципальное образование' },
+            { key: 'lat', label: 'Широта' },
+            { key: 'lon', label: 'Долгота' },
+            { key: 'population', label: 'Население' },
+            { key: 'fias_id', label: 'Код ФИАС' }
+        ];
+
+        headers.forEach(h => {
             const th = document.createElement('th');
-            th.textContent = text;
-            th.style.padding = '8px';
-            th.style.border = '1px solid #ddd';
-            th.style.backgroundColor = '#f2f2f2';
+            th.textContent = h.label;
+            th.className = 'sortable-header';
+            th.dataset.key = h.key;
+
+            const icon = document.createElement('span');
+            icon.className = 'sort-icon';
+            if (currentSortField === h.key) {
+                icon.textContent = currentSortOrder === 'asc' ? '▲' : '▼';
+            } else {
+                icon.textContent = '▲';
+            }
+            th.appendChild(icon);
+
+            th.addEventListener('click', () => {
+                if (currentSortField === h.key) {
+                    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortField = h.key;
+                    currentSortOrder = 'asc';
+                }
+                renderSettlementsTableOnly(data, total, page, pageSize, true);
+            });
+
             headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
     }
 
+    let displayData = [...data];
+    if (currentSortField) {
+        displayData.sort((a, b) => {
+            let valA = a[currentSortField] !== undefined ? a[currentSortField] : '';
+            let valB = b[currentSortField] !== undefined ? b[currentSortField] : '';
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return currentSortOrder === 'asc' ? valA - valB : valB - valA;
+            }
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            if (currentSortOrder === 'asc') {
+                return valA.localeCompare(valB);
+            } else {
+                return valB.localeCompare(valA);
+            }
+        });
+    }
+
     if (tbody) {
-        data.forEach(item => {
+        displayData.forEach(item => {
             const row = document.createElement('tr');
             row.dataset.id = item.id;
             row.dataset.lat = item.lat;
             row.dataset.lon = item.lon;
             row.dataset.area = item.area || 1;
-            row.style.cursor = 'pointer';
+            row.dataset.name = item.name || '';
+            row.className = 'clickable-row';
 
             const idCell = document.createElement('td');
             idCell.textContent = item.id;
-            idCell.style.padding = '6px';
-            idCell.style.border = '1px solid #ddd';
             row.appendChild(idCell);
 
             const nameCell = document.createElement('td');
             nameCell.textContent = item.name || '-';
-            nameCell.style.padding = '6px';
-            nameCell.style.border = '1px solid #ddd';
             row.appendChild(nameCell);
 
             const areaCell = document.createElement('td');
             areaCell.textContent = item.area !== null && item.area !== undefined ? item.area : '-';
-            areaCell.style.padding = '6px';
-            areaCell.style.border = '1px solid #ddd';
             row.appendChild(areaCell);
 
             const regionNameCell = document.createElement('td');
             regionNameCell.textContent = item.region_name || '-';
-            regionNameCell.style.padding = '6px';
-            regionNameCell.style.border = '1px solid #ddd';
             row.appendChild(regionNameCell);
 
             const regionCodeCell = document.createElement('td');
             regionCodeCell.textContent = item.region_code || '-';
-            regionCodeCell.style.padding = '6px';
-            regionCodeCell.style.border = '1px solid #ddd';
             row.appendChild(regionCodeCell);
 
             const districtCell = document.createElement('td');
             districtCell.textContent = item.district_name || '-';
-            districtCell.style.padding = '6px';
-            districtCell.style.border = '1px solid #ddd';
             row.appendChild(districtCell);
 
             const latCell = document.createElement('td');
             latCell.textContent = item.lat !== undefined ? item.lat.toFixed(6) : '-';
-            latCell.style.padding = '6px';
-            latCell.style.border = '1px solid #ddd';
             row.appendChild(latCell);
 
             const lonCell = document.createElement('td');
             lonCell.textContent = item.lon !== undefined ? item.lon.toFixed(6) : '-';
-            lonCell.style.padding = '6px';
-            lonCell.style.border = '1px solid #ddd';
             row.appendChild(lonCell);
 
             const popCell = document.createElement('td');
             popCell.textContent = item.population || 0;
-            popCell.style.padding = '6px';
-            popCell.style.border = '1px solid #ddd';
             row.appendChild(popCell);
 
             const fiasCell = document.createElement('td');
             fiasCell.textContent = item.fias_id || '-';
-            fiasCell.style.padding = '6px';
-            fiasCell.style.border = '1px solid #ddd';
             row.appendChild(fiasCell);
 
-            // КЛИК ПО СТРОКЕ: обновляем selectedSettlementId и загружаем РЭС
             row.addEventListener('click', function() {
-                // Снимаем выделение
                 document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
                     tr.classList.remove('selected');
-                    tr.style.backgroundColor = '';
                 });
-                // Выделяем текущую
                 this.classList.add('selected');
 
-                // Сохраняем данные
                 selectedSettlementId = this.dataset.id;
                 selectedSettlementLat = parseFloat(this.dataset.lat);
                 selectedSettlementLon = parseFloat(this.dataset.lon);
                 selectedSettlementArea = parseFloat(this.dataset.area);
+                selectedSettlementName = this.dataset.name;
 
-                console.log('▶ Клик по НП: ID =', selectedSettlementId);
-
-                // Загружаем РЭС
-                loadResForSettlement(selectedSettlementId, selectedSettlementLat, selectedSettlementLon, selectedSettlementArea);
-
-                // Если рейтинг уже открыт — обновляем его
-                const existingRatingTable = document.getElementById('rating-table');
-                if (existingRatingTable) {
-                    handleRatingButton();
-                }
+                console.log('▶ Выбран НП:', selectedSettlementId, selectedSettlementName);
+                showResPageSize();
             });
 
             tbody.appendChild(row);
@@ -432,7 +727,6 @@ function renderSettlementsTable(data, total, page, pageSize) {
 
     renderSettlementsPagination(total, page, pageSize);
 
-    // Автовыбор первого НП
     if (data && data.length > 0) {
         const firstRow = tbody.querySelector('tr');
         if (firstRow) {
@@ -441,7 +735,389 @@ function renderSettlementsTable(data, total, page, pageSize) {
     }
 }
 
-// ==================== ПАГИНАЦИЯ С НОМЕРАМИ СТРАНИЦ (всегда видно 1 и последнюю) ====================
+// ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ (НП + рейтинги) ====================
+
+function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
+    const table = document.getElementById('settlements-table');
+    if (!table) return;
+
+    const oldSettlementsTitle = document.querySelector('.settlements-title');
+    if (oldSettlementsTitle) oldSettlementsTitle.remove();
+
+    const settlementsTitle = document.createElement('h3');
+    settlementsTitle.className = 'settlements-title';
+    settlementsTitle.textContent = 'Рейтинг населенных пунктов';
+    table.parentNode.insertBefore(settlementsTitle, table);
+
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+
+    if (thead) thead.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        if (tbody) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 18;
+            cell.textContent = 'Нет населенных пунктов для отображения';
+            cell.className = 'empty-message';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+        renderSettlementsPagination(total, page, pageSize);
+        return;
+    }
+
+    currentSettlementsFiltered = data;
+
+    // Удаляем старый фильтр
+    const oldFilter = document.querySelector('.filter-container');
+    if (oldFilter) oldFilter.remove();
+
+    // Создаем фильтр для комбинированной таблицы
+    const tableContainer = document.querySelector('.table__rating');
+
+    const filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container';
+
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'filter-field-group';
+    const fieldLabel = document.createElement('label');
+    fieldLabel.textContent = 'Поле для фильтрации';
+    fieldLabel.className = 'filter-label';
+    const fieldSelect = document.createElement('select');
+    fieldSelect.className = 'filter-field-select';
+
+    const optionNone = document.createElement('option');
+    optionNone.value = '';
+    optionNone.textContent = '-- Выберите поле --';
+    fieldSelect.appendChild(optionNone);
+
+    const labels = {
+        'id': 'ID',
+        'name': 'Название',
+        'area': 'Площадь (км²)',
+        'region_name': 'Регион',
+        'region_code': 'Код региона',
+        'district_name': 'Муниципальное образование',
+        'lat': 'Широта',
+        'lon': 'Долгота',
+        'population': 'Население',
+        'fias_id': 'Код ФИАС',
+        'count_res': 'Всего РЭС',
+        'count_res_tv': 'РЭС ТВ',
+        'count_res_rv': 'РЭС РВ',
+        'count_res_lte': 'РЭС LTE',
+        'count_res_gsm': 'РЭС GSM',
+        'count_res_5g': 'РЭС 5G',
+        'count_res_wifi': 'РЭС Wi-Fi',
+        'count_res_tetra': 'РЭС TETRA'
+    };
+
+    const ratingFieldKeys = [
+        'count_res', 'count_res_tv', 'count_res_rv',
+        'count_res_lte', 'count_res_gsm', 'count_res_5g',
+        'count_res_wifi', 'count_res_tetra'
+    ];
+
+    // Добавляем поля из данных НП
+    Object.keys(data[0]).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = labels[key] || key;
+        fieldSelect.appendChild(opt);
+    });
+
+    // Добавляем поля рейтинга (даже если их нет в data)
+    ratingFieldKeys.forEach(key => {
+        if (!Object.keys(data[0]).includes(key)) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = labels[key] || key;
+            fieldSelect.appendChild(opt);
+        }
+    });
+
+    // Восстанавливаем сохраненное значение поля, если keepFilter = true
+    if (keepFilter && savedFilterField) {
+        fieldSelect.value = savedFilterField;
+    }
+
+    fieldDiv.appendChild(fieldLabel);
+    fieldDiv.appendChild(fieldSelect);
+    filterContainer.appendChild(fieldDiv);
+
+    const valueDiv = document.createElement('div');
+    valueDiv.className = 'filter-value-group';
+    const valueLabel = document.createElement('label');
+    valueLabel.textContent = 'Значение';
+    valueLabel.className = 'filter-label';
+    const valueInput = document.createElement('input');
+    valueInput.className = 'filter-value-input';
+    valueInput.type = 'text';
+    valueInput.placeholder = 'Введите значение...';
+
+    // Восстанавливаем сохраненное значение, если keepFilter = true
+    if (keepFilter && savedFilterValue) {
+        valueInput.value = savedFilterValue;
+    }
+
+    valueDiv.appendChild(valueLabel);
+    valueDiv.appendChild(valueInput);
+    filterContainer.appendChild(valueDiv);
+
+    const exactDiv = document.createElement('div');
+    exactDiv.className = 'filter-exact-group';
+    const exactCheckbox = document.createElement('input');
+    exactCheckbox.type = 'checkbox';
+    exactCheckbox.className = 'filter-exact-checkbox';
+    const exactLabel = document.createElement('label');
+    exactLabel.textContent = 'Точное совпадение';
+    exactDiv.appendChild(exactCheckbox);
+    exactDiv.appendChild(exactLabel);
+    filterContainer.appendChild(exactDiv);
+
+    // Восстанавливаем сохраненное состояние чекбокса, если keepFilter = true
+    if (keepFilter && savedFilterExact) {
+        exactCheckbox.checked = true;
+    }
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'filter-buttons-group';
+    const applyBtn = document.createElement('button');
+    applyBtn.textContent = 'Применить';
+    applyBtn.className = 'filter-apply-btn';
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Сбросить';
+    resetBtn.className = 'filter-reset-btn';
+
+    buttonsDiv.appendChild(applyBtn);
+    buttonsDiv.appendChild(resetBtn);
+    filterContainer.appendChild(buttonsDiv);
+
+    applyBtn.addEventListener('click', () => {
+        const field = fieldSelect.value;
+        const value = valueInput.value;
+        const exactMatch = exactCheckbox.checked;
+        if (field && value) {
+            // Сохраняем значения
+            savedFilterField = field;
+            savedFilterValue = value;
+            savedFilterExact = exactMatch;
+
+            currentFilterField = field;
+            currentFilterValue = value;
+            currentFilterExact = exactMatch;
+
+            // Фильтруем данные с учетом рейтингов
+            const filtered = filterDataWithRatings(originalDataForFilter, allRatings, field, value, exactMatch);
+            renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        // Очищаем сохраненные значения
+        savedFilterField = '';
+        savedFilterValue = '';
+        savedFilterExact = false;
+
+        currentFilterField = '';
+        currentFilterValue = '';
+        currentFilterExact = false;
+
+        // Показываем исходные данные
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+    });
+
+    tableContainer.prepend(filterContainer);
+
+    if (thead) {
+        const headerRow = document.createElement('tr');
+        const headers = [
+            { key: 'id', label: 'ID' },
+            { key: 'name', label: 'Название' },
+            { key: 'area', label: 'Площадь (км²)' },
+            { key: 'region_name', label: 'Регион' },
+            { key: 'region_code', label: 'Код региона' },
+            { key: 'district_name', label: 'Муниципальное образование' },
+            { key: 'lat', label: 'Широта' },
+            { key: 'lon', label: 'Долгота' },
+            { key: 'population', label: 'Население' },
+            { key: 'fias_id', label: 'Код ФИАС' },
+            { key: 'count_res', label: 'Всего РЭС' },
+            { key: 'count_res_tv', label: 'РЭС ТВ' },
+            { key: 'count_res_rv', label: 'РЭС РВ' },
+            { key: 'count_res_lte', label: 'РЭС LTE' },
+            { key: 'count_res_gsm', label: 'РЭС GSM' },
+            { key: 'count_res_5g', label: 'РЭС 5G' },
+            { key: 'count_res_wifi', label: 'РЭС Wi-Fi' },
+            { key: 'count_res_tetra', label: 'РЭС TETRA' }
+        ];
+
+        headers.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h.label;
+            th.className = 'sortable-header';
+            th.dataset.key = h.key;
+
+            const icon = document.createElement('span');
+            icon.className = 'sort-icon';
+            if (currentSortField === h.key) {
+                icon.textContent = currentSortOrder === 'asc' ? '▲' : '▼';
+            } else {
+                icon.textContent = '▲';
+            }
+            th.appendChild(icon);
+
+            th.addEventListener('click', () => {
+                if (currentSortField === h.key) {
+                    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortField = h.key;
+                    currentSortOrder = 'asc';
+                }
+                renderCombinedTable(data, total, page, pageSize, true);
+            });
+
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+    }
+
+    let displayData = [...data];
+    if (currentSortField) {
+        displayData.sort((a, b) => {
+            let valA = a[currentSortField] !== undefined ? a[currentSortField] : '';
+            let valB = b[currentSortField] !== undefined ? b[currentSortField] : '';
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return currentSortOrder === 'asc' ? valA - valB : valB - valA;
+            }
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            if (currentSortOrder === 'asc') {
+                return valA.localeCompare(valB);
+            } else {
+                return valB.localeCompare(valA);
+            }
+        });
+    }
+
+    if (tbody) {
+        displayData.forEach(item => {
+            const row = document.createElement('tr');
+            row.dataset.id = item.id;
+            row.dataset.lat = item.lat;
+            row.dataset.lon = item.lon;
+            row.dataset.area = item.area || 1;
+            row.dataset.name = item.name || '';
+            row.className = 'clickable-row';
+
+            const idCell = document.createElement('td');
+            idCell.textContent = item.id;
+            row.appendChild(idCell);
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = item.name || '-';
+            row.appendChild(nameCell);
+
+            const areaCell = document.createElement('td');
+            areaCell.textContent = item.area !== null && item.area !== undefined ? item.area : '-';
+            row.appendChild(areaCell);
+
+            const regionNameCell = document.createElement('td');
+            regionNameCell.textContent = item.region_name || '-';
+            row.appendChild(regionNameCell);
+
+            const regionCodeCell = document.createElement('td');
+            regionCodeCell.textContent = item.region_code || '-';
+            row.appendChild(regionCodeCell);
+
+            const districtCell = document.createElement('td');
+            districtCell.textContent = item.district_name || '-';
+            row.appendChild(districtCell);
+
+            const latCell = document.createElement('td');
+            latCell.textContent = item.lat !== undefined ? item.lat.toFixed(6) : '-';
+            row.appendChild(latCell);
+
+            const lonCell = document.createElement('td');
+            lonCell.textContent = item.lon !== undefined ? item.lon.toFixed(6) : '-';
+            row.appendChild(lonCell);
+
+            const popCell = document.createElement('td');
+            popCell.textContent = item.population || 0;
+            row.appendChild(popCell);
+
+            const fiasCell = document.createElement('td');
+            fiasCell.textContent = item.fias_id || '-';
+            row.appendChild(fiasCell);
+
+            const rating = allRatings[item.id] || {};
+
+            const countResCell = document.createElement('td');
+            countResCell.textContent = rating.count_res !== undefined ? rating.count_res : '-';
+            row.appendChild(countResCell);
+
+            const countResTvCell = document.createElement('td');
+            countResTvCell.textContent = rating.count_res_tv !== undefined ? rating.count_res_tv : '-';
+            row.appendChild(countResTvCell);
+
+            const countResRvCell = document.createElement('td');
+            countResRvCell.textContent = rating.count_res_rv !== undefined ? rating.count_res_rv : '-';
+            row.appendChild(countResRvCell);
+
+            const countResLteCell = document.createElement('td');
+            countResLteCell.textContent = rating.count_res_lte !== undefined ? rating.count_res_lte : '-';
+            row.appendChild(countResLteCell);
+
+            const countResGsmCell = document.createElement('td');
+            countResGsmCell.textContent = rating.count_res_gsm !== undefined ? rating.count_res_gsm : '-';
+            row.appendChild(countResGsmCell);
+
+            const countRes5gCell = document.createElement('td');
+            countRes5gCell.textContent = rating.count_res_5g !== undefined ? rating.count_res_5g : '-';
+            row.appendChild(countRes5gCell);
+
+            const countResWifiCell = document.createElement('td');
+            countResWifiCell.textContent = rating.count_res_wifi !== undefined ? rating.count_res_wifi : '-';
+            row.appendChild(countResWifiCell);
+
+            const countResTetraCell = document.createElement('td');
+            countResTetraCell.textContent = rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-';
+            row.appendChild(countResTetraCell);
+
+            row.addEventListener('click', function() {
+                document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+                    tr.classList.remove('selected');
+                });
+                this.classList.add('selected');
+
+                selectedSettlementId = this.dataset.id;
+                selectedSettlementLat = parseFloat(this.dataset.lat);
+                selectedSettlementLon = parseFloat(this.dataset.lon);
+                selectedSettlementArea = parseFloat(this.dataset.area);
+                selectedSettlementName = this.dataset.name;
+
+                console.log('▶ Выбран НП:', selectedSettlementId, selectedSettlementName);
+                showResPageSize();
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+
+    renderSettlementsPagination(total, page, pageSize);
+
+    if (data && data.length > 0) {
+        const firstRow = tbody.querySelector('tr');
+        if (firstRow) {
+            firstRow.click();
+        }
+    }
+}
+
+// ==================== ПАГИНАЦИЯ ====================
 
 function renderSettlementsPagination(total, currentPage, pageSize) {
     const container = document.getElementById('settlements-pagination');
@@ -451,7 +1127,7 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
 
     let html = `
         <div class="pagination-info">
-            Страница ${currentPage} из ${totalPages} (всего: ${total})
+            Страница ${currentPage} из ${totalPages} (всего НП: ${total})
         </div>
         <div class="pagination-buttons">
             <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
@@ -508,22 +1184,44 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
                 const pageSize = getPageSize('settlements');
                 const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSize);
                 if (result) {
+                    // Сохраняем новые данные как исходные
+                    originalDataForFilter = result.items || [];
+                    originalTotalForFilter = result.total || 0;
+
                     settlementsData.items = result.items || [];
                     settlementsData.total = result.total || 0;
                     settlementsData.page = newPage;
                     settlementsData.pageSize = pageSize;
-                    renderSettlementsTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+
+                    // Если есть активный фильтр, применяем его к новым данным
+                    if (savedFilterField && savedFilterValue) {
+                        if (showRatings) {
+                            const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+                            renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+                        } else {
+                            const filtered = filterData(originalDataForFilter, savedFilterField, savedFilterValue, savedFilterExact);
+                            renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
+                        }
+                    } else {
+                        currentSortField = null;
+                        currentSortOrder = 'asc';
+                        if (showRatings) {
+                            renderCombinedTable(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+                        } else {
+                            renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+                        }
+                    }
                 }
             }
         });
     });
 }
 
-// ==================== ЗАГРУЗКА РЭС ДЛЯ ВЫБРАННОГО НП ====================
+// ==================== ЗАГРУЗКА РЭС (для модального окна) ====================
 
-async function loadResForSettlement(settlementId, lat, lon, area) {
+async function loadResForModal(settlementId, lat, lon, area) {
     if (!settlementId || lat === undefined || lon === undefined) {
-        renderPopup('Выберите населенный пункт для загрузки РЭС', true);
+        renderPopup('Выберите населенный пункт в таблице', true);
         return;
     }
 
@@ -552,10 +1250,8 @@ async function loadResForSettlement(settlementId, lat, lon, area) {
             resData.page = 1;
             resData.pageSize = pageSize;
 
-            renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
-            renderPopup(`Загружено ${resData.total} РЭС для НП ID ${settlementId}`);
+            openResModal(resData.items, settlementId);
         } else {
-            renderResTable([], 0, 1, pageSize);
             renderPopup('Нет РЭС для выбранного населенного пункта');
         }
 
@@ -567,415 +1263,166 @@ async function loadResForSettlement(settlementId, lat, lon, area) {
     }
 }
 
-// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ РЭС ====================
+// ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
 
-function renderResTable(data, total, page, pageSize) {
-    const table = document.getElementById('res-table');
-    if (!table) return;
+function openResModal(data, settlementId) {
+    const existing = document.getElementById('res-modal');
+    if (existing) existing.remove();
 
-    const oldResTitle = document.querySelector('.res-title');
-    if (oldResTitle) oldResTitle.remove();
+    const modal = document.createElement('div');
+    modal.id = 'res-modal';
+    modal.className = 'res-modal-overlay';
 
-    const resTitle = document.createElement('h3');
-    resTitle.className = 'res-title';
-    resTitle.textContent = 'РЭС';
-    table.parentNode.insertBefore(resTitle, table);
+    const content = document.createElement('div');
+    content.className = 'res-modal-content';
 
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
+    const title = document.createElement('h3');
+    title.textContent = `РЭС для НП: ${selectedSettlementName || settlementId}`;
+    title.className = 'res-modal-title';
 
-    if (thead) thead.innerHTML = '';
-    if (tbody) tbody.innerHTML = '';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Закрыть';
+    closeBtn.className = 'res-modal-close-btn';
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+    });
 
-    if (!data || data.length === 0) {
-        if (tbody) {
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'res-table-wrapper';
+
+    const table = document.createElement('table');
+    table.className = 'res-modal-table';
+
+    const thead = document.createElement('thead');
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+
+    content.appendChild(title);
+    content.appendChild(tableWrapper);
+    content.appendChild(closeBtn);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    function renderResTable(data) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 9;
             cell.textContent = 'Нет РЭС для отображения';
-            cell.style.textAlign = 'center';
-            cell.style.padding = '20px';
+            cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
+            return;
         }
-        renderResPagination(total, page, pageSize);
-        return;
-    }
 
-    if (thead) {
         const headerRow = document.createElement('tr');
-        [
-            'ID',
-            'Тип ID',
-            'Вид ID',
-            'Название',
-            'Оператор',
-            'Местоположение',
-            'Регион ID',
-            'Широта (строка)',
-            'Долгота (строка)'
-        ].forEach(text => {
+        const headers = [
+            'ID', 'Тип ID', 'Вид ID', 'Название', 'Оператор',
+            'Местоположение', 'Регион ID', 'Широта', 'Долгота'
+        ];
+        headers.forEach(label => {
             const th = document.createElement('th');
-            th.textContent = text;
-            th.style.padding = '8px';
-            th.style.border = '1px solid #ddd';
-            th.style.backgroundColor = '#f2f2f2';
+            th.textContent = label;
             headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
-    }
 
-    if (tbody) {
         data.forEach(item => {
             const row = document.createElement('tr');
 
             const idCell = document.createElement('td');
             idCell.textContent = item.id || '-';
-            idCell.style.padding = '6px';
-            idCell.style.border = '1px solid #ddd';
             row.appendChild(idCell);
 
             const typeIdCell = document.createElement('td');
             typeIdCell.textContent = item.type_id || '-';
-            typeIdCell.style.padding = '6px';
-            typeIdCell.style.border = '1px solid #ddd';
             row.appendChild(typeIdCell);
 
             const kindIdCell = document.createElement('td');
             kindIdCell.textContent = item.kind_id || '-';
-            kindIdCell.style.padding = '6px';
-            kindIdCell.style.border = '1px solid #ddd';
             row.appendChild(kindIdCell);
 
             const nameCell = document.createElement('td');
             nameCell.textContent = item.name || '-';
-            nameCell.style.padding = '6px';
-            nameCell.style.border = '1px solid #ddd';
             row.appendChild(nameCell);
 
             const operatorCell = document.createElement('td');
             operatorCell.textContent = item.operator || '-';
-            operatorCell.style.padding = '6px';
-            operatorCell.style.border = '1px solid #ddd';
             row.appendChild(operatorCell);
 
             const locationCell = document.createElement('td');
             locationCell.textContent = item.location || '-';
-            locationCell.style.padding = '6px';
-            locationCell.style.border = '1px solid #ddd';
             row.appendChild(locationCell);
 
             const regionIdCell = document.createElement('td');
             regionIdCell.textContent = item.region_id || '-';
-            regionIdCell.style.padding = '6px';
-            regionIdCell.style.border = '1px solid #ddd';
             row.appendChild(regionIdCell);
 
             const latStrCell = document.createElement('td');
             latStrCell.textContent = item.lat_str || '-';
-            latStrCell.style.padding = '6px';
-            latStrCell.style.border = '1px solid #ddd';
             row.appendChild(latStrCell);
 
             const lonStrCell = document.createElement('td');
             lonStrCell.textContent = item.lon_str || '-';
-            lonStrCell.style.padding = '6px';
-            lonStrCell.style.border = '1px solid #ddd';
             row.appendChild(lonStrCell);
 
             tbody.appendChild(row);
         });
     }
 
-    renderResPagination(total, page, pageSize);
+    tableWrapper.appendChild(table);
+    renderResTable(data);
 }
 
-// ==================== ПАГИНАЦИЯ РЭС С НОМЕРАМИ СТРАНИЦ ====================
+// ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ (GET + POST) ====================
 
-function renderResPagination(total, currentPage, pageSize) {
-    const container = document.getElementById('res-pagination');
-    if (!container) return;
-
-    const totalPages = Math.ceil(total / pageSize) || 1;
-
-    let html = `
-        <div class="pagination-info">
-            Страница ${currentPage} из ${totalPages} (всего: ${total})
-        </div>
-        <div class="pagination-buttons">
-            <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
-    `;
-
-    if (currentPage > 1) {
-        html += `<button class="pagination-btn" data-page="1">1</button>`;
-    } else {
-        html += `<button class="pagination-btn active" data-page="1">1</button>`;
-    }
-
-    if (currentPage > 3) {
-        html += `<span class="pagination-ellipsis">…</span>`;
-    }
-
-    let startPage = Math.max(2, currentPage - 1);
-    let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-    for (let i = startPage; i <= endPage; i++) {
-        if (i === 1 || i === totalPages) continue;
-        const isActive = i === currentPage;
-        html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
-    }
-
-    if (currentPage < totalPages - 2) {
-        html += `<span class="pagination-ellipsis">…</span>`;
-    }
-
-    if (totalPages > 1) {
-        if (currentPage === totalPages) {
-            html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
-        } else {
-            html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
-        }
-    }
-
-    html += `
-            <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
-        </div>
-    `;
-
-    container.innerHTML = html;
-
-    container.querySelectorAll('.pagination-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const page = btn.dataset.page;
-            let newPage = currentPage;
-
-            if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
-            else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
-            else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
-
-            if (newPage !== currentPage) {
-                const pageSize = getPageSize('res');
-                const body = {
-                    regions: currentRegions,
-                    kinds: currentKinds,
-                    area: {
-                        lat: selectedSettlementLat,
-                        lon: selectedSettlementLon,
-                        radius: calculateRadius(selectedSettlementArea)
-                    }
-                };
-                const result = await getResPage(newPage, pageSize, body);
-                if (result) {
-                    resData.items = result.res || [];
-                    resData.total = result.total || 0;
-                    resData.page = newPage;
-                    resData.pageSize = pageSize;
-                    renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
-                }
-            }
-        });
-    });
-}
-
-// ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ РЕЙТИНГА (для одного НП) ====================
-
-function renderRatingTableSingle(data) {
-    const tableContainer = document.querySelector('.table__rating');
-    if (!tableContainer) return;
-
-    // Удаляем старую таблицу рейтинга
-    const existingRatingTable = document.getElementById('rating-table');
-    if (existingRatingTable) existingRatingTable.remove();
-
-    const existingRatingTitle = document.querySelector('.rating-title');
-    if (existingRatingTitle) existingRatingTitle.remove();
-
-    const ratingTitle = document.createElement('h3');
-    ratingTitle.className = 'rating-title';
-    ratingTitle.textContent = 'Рейтинг НП (выбранный)';
-    ratingTitle.style.cssText = `
-        text-align: center;
-        font-size: 18px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 15px 0 10px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #1a1a1a;
-    `;
-
-    const ratingTable = document.createElement('table');
-    ratingTable.id = 'rating-table';
-    ratingTable.className = 'table__rating__table';
-
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    ratingTable.appendChild(thead);
-    ratingTable.appendChild(tbody);
-
-    if (!data || Object.keys(data).length === 0) {
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 2;
-        cell.textContent = 'Нет данных рейтинга для отображения';
-        cell.style.textAlign = 'center';
-        cell.style.padding = '20px';
-        row.appendChild(cell);
-        tbody.appendChild(row);
-
-        const buttons = tableContainer.querySelector('.table_buttons');
-        if (buttons) {
-            tableContainer.insertBefore(ratingTitle, buttons);
-            tableContainer.insertBefore(ratingTable, buttons);
-        } else {
-            tableContainer.appendChild(ratingTitle);
-            tableContainer.appendChild(ratingTable);
-        }
-        return;
-    }
-
-    // Маппинг полей для одного НП (русские названия)
-    const fieldMap = {
-        'id': 'ID НП',
-        'count_res': 'Всего РЭС',
-        'count_res_tv': 'РЭС ТВ',
-        'count_res_rv': 'РЭС РВ',
-        'count_res_lte': 'РЭС LTE',
-        'count_res_gsm': 'РЭС GSM',
-        'count_res_5g': 'РЭС 5G',
-        'count_res_wifi': 'РЭС Wi-Fi',
-        'count_res_tetra': 'РЭС TETRA'
-    };
-
-    // Заголовки
-    const headerRow = document.createElement('tr');
-    ['Показатель', 'Значение'].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.padding = '8px';
-        th.style.border = '1px solid #ddd';
-        th.style.backgroundColor = '#f2f2f2';
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-
-    // Данные
-    const fields = [
-        { key: 'id', label: 'ID НП' },
-        { key: 'count_res', label: 'Всего РЭС' },
-        { key: 'count_res_tv', label: 'РЭС ТВ' },
-        { key: 'count_res_rv', label: 'РЭС РВ' },
-        { key: 'count_res_lte', label: 'РЭС LTE' },
-        { key: 'count_res_gsm', label: 'РЭС GSM' },
-        { key: 'count_res_5g', label: 'РЭС 5G' },
-        { key: 'count_res_wifi', label: 'РЭС Wi-Fi' },
-        { key: 'count_res_tetra', label: 'РЭС TETRA' }
-    ];
-
-    fields.forEach(field => {
-        const row = document.createElement('tr');
-
-        const labelCell = document.createElement('td');
-        labelCell.textContent = field.label;
-        labelCell.style.padding = '6px';
-        labelCell.style.border = '1px solid #ddd';
-        labelCell.style.fontWeight = 'bold';
-        row.appendChild(labelCell);
-
-        const valueCell = document.createElement('td');
-        valueCell.textContent = data[field.key] !== undefined ? data[field.key] : '-';
-        valueCell.style.padding = '6px';
-        valueCell.style.border = '1px solid #ddd';
-        row.appendChild(valueCell);
-
-        tbody.appendChild(row);
-    });
-
-    const buttons = tableContainer.querySelector('.table_buttons');
-    if (buttons) {
-        tableContainer.insertBefore(ratingTitle, buttons);
-        tableContainer.insertBefore(ratingTable, buttons);
-    } else {
-        tableContainer.appendChild(ratingTitle);
-        tableContainer.appendChild(ratingTable);
-    }
-}
-
-// ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ ====================
-
-/**
- * Создаёт модальное окно с прогрессом для массового расчёта.
- */
 function createProgressModal(total) {
     const existing = document.getElementById('rating-progress-modal');
     if (existing) existing.remove();
 
     const modal = document.createElement('div');
     modal.id = 'rating-progress-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 99999;
-    `;
+    modal.className = 'progress-modal-overlay';
 
     const content = document.createElement('div');
-    content.style.cssText = `
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        min-width: 400px;
-        max-width: 500px;
-        text-align: center;
-    `;
+    content.className = 'progress-modal-content';
 
     const title = document.createElement('h3');
     title.textContent = 'Расчет рейтингов НП';
-    title.style.cssText = 'margin: 0 0 20px 0; font-size: 18px;';
+    title.className = 'progress-modal-title';
 
     const progressInfo = document.createElement('div');
-    progressInfo.style.cssText = 'margin-bottom: 15px; font-size: 14px; color: #333;';
+    progressInfo.className = 'progress-info';
     progressInfo.id = 'rating-progress-info';
     progressInfo.textContent = `Обработано: 0 / ${total}`;
 
     const progressBarWrap = document.createElement('div');
-    progressBarWrap.style.cssText = 'width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 10px;';
+    progressBarWrap.className = 'progress-bar-wrap';
 
     const progressFill = document.createElement('div');
     progressFill.id = 'rating-progress-fill';
-    progressFill.style.cssText = 'height: 100%; width: 0%; background: #4CAF50; transition: width 0.3s;';
+    progressFill.className = 'progress-bar-fill';
 
     progressBarWrap.appendChild(progressFill);
 
     const statusInfo = document.createElement('div');
+    statusInfo.className = 'status-info';
     statusInfo.id = 'rating-status-info';
-    statusInfo.style.cssText = 'margin-bottom: 15px; font-size: 13px; color: #666;';
     statusInfo.textContent = 'Получено рейтингов: 0';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.id = 'rating-cancel-btn';
     cancelBtn.textContent = 'Отмена';
-    cancelBtn.style.cssText = `
-        padding: 8px 24px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.2s;
-    `;
+    cancelBtn.className = 'progress-cancel-btn';
     cancelBtn.addEventListener('click', () => {
         isCancelled = true;
         cancelBtn.textContent = 'Отменяется...';
         cancelBtn.disabled = true;
-        cancelBtn.style.background = '#999';
+        cancelBtn.className = 'progress-cancel-btn disabled';
     });
 
     content.appendChild(title);
@@ -1011,34 +1458,52 @@ function closeProgressModal() {
     if (modal) modal.remove();
 }
 
-/**
- * Массовый расчёт для всех НП.
- */
-/**
- * Массовый расчёт рейтингов для всех НП из текущей таблицы.
- * processed увеличивается только при успешном ответе 200 от GET или POST.
- */
-async function calculateRatingsForAllSettlements() {
-    // Проверяем галочку
-    const isAuto = document.getElementById('auto-rating').checked;
-    if (!isAuto) {
-        renderPopup('Галочка "Автоматический расчет" не стоит. Выберите НП и нажмите "Таблица рейтингов НП"', true);
+// ==================== РАБОТА С РЕЙТИНГАМИ ДЛЯ ПЕРЕДАННЫХ ДАННЫХ ====================
+
+async function getRatingsOnlyForData(items) {
+    const total = items.length;
+    if (total === 0) {
+        renderPopup('Нет населенных пунктов для получения рейтингов', true);
         return;
     }
 
-    // Собираем все НП из текущей таблицы (только видимые в DOM)
-    const rows = document.querySelectorAll('#settlements-table tbody tr');
-    const settlements = [];
-    rows.forEach(row => {
-        if (row.dataset.id && row.dataset.lat && row.dataset.lon && row.dataset.area) {
-            settlements.push({
-                id: row.dataset.id,
-                lat: parseFloat(row.dataset.lat),
-                lon: parseFloat(row.dataset.lon),
-                area: parseFloat(row.dataset.area)
-            });
+    const loader = initLoader();
+    loader.show('Загрузка рейтингов...');
+
+    let successCount = 0;
+
+    for (const settlement of items) {
+        try {
+            const ratingData = await getRatingSett(settlement.id);
+            if (ratingData !== null && ratingData !== undefined) {
+                allRatings[settlement.id] = ratingData;
+                successCount++;
+                console.log(`▶ НП ${settlement.id}: рейтинг получен`);
+            } else {
+                console.warn(`▶ НП ${settlement.id}: рейтинг не найден (GET вернул null)`);
+            }
+        } catch (err) {
+            console.warn(`▶ НП ${settlement.id}: ошибка GET`, err);
         }
-    });
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    loader.close();
+
+    renderPopup(`Загружено ${successCount} рейтингов из ${total}`, false);
+    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+}
+
+async function calculateRatingsForData(items) {
+    isCancelled = false;
+    allRatings = {};
+
+    const settlements = items.map(item => ({
+        id: item.id,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+        area: parseFloat(item.area) || 1
+    }));
 
     const total = settlements.length;
     if (total === 0) {
@@ -1046,11 +1511,6 @@ async function calculateRatingsForAllSettlements() {
         return;
     }
 
-    // Сбрасываем флаг отмены и массив результатов
-    isCancelled = false;
-    allRatings = [];
-
-    // Показываем модальное окно
     const modal = createProgressModal(total);
 
     let processed = 0;
@@ -1065,7 +1525,6 @@ async function calculateRatingsForAllSettlements() {
             let ratingData = null;
             let status200 = false;
 
-            // 1. GET запрос
             try {
                 ratingData = await getRatingSett(settlement.id);
                 if (ratingData !== null && ratingData !== undefined) {
@@ -1078,12 +1537,10 @@ async function calculateRatingsForAllSettlements() {
                 console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
             }
 
-            // 2. Если GET не дал данных — POST
             if (!status200) {
                 console.log(`▶ НП ${settlement.id}: отправляем POST...`);
                 try {
                     await postRatingSett(settlement.id);
-                    // После POST снова GET
                     ratingData = await getRatingSett(settlement.id);
                     if (ratingData !== null && ratingData !== undefined) {
                         status200 = true;
@@ -1094,32 +1551,23 @@ async function calculateRatingsForAllSettlements() {
                 }
             }
 
-            // 3. Если получили данные — сохраняем и увеличиваем счётчики
             if (status200 && ratingData) {
-                allRatings.push(ratingData);
+                allRatings[settlement.id] = ratingData;
                 processed++;
                 successCount++;
                 console.log(`▶ НП ${settlement.id}: успешно обработан. Всего успешно: ${successCount}`);
             } else {
                 console.warn(`▶ НП ${settlement.id}: не удалось получить данные, пропускаем`);
-                // Не увеличиваем processed
             }
 
-            // Обновляем прогресс-бар только если НП был успешно обработан
-            if (status200) {
-                updateProgress(processed, total, successCount);
-            }
-
-            // Небольшая задержка, чтобы не перегружать сервер
-            await new Promise(resolve => setTimeout(resolve, 100));
+            updateProgress(processed, total, successCount);
+            await new Promise(resolve => setTimeout(resolve, 300));
 
         } catch (error) {
             console.error(`▶ НП ${settlement.id}: критическая ошибка`, error);
-            // Не увеличиваем processed
         }
     }
 
-    // Закрываем модальное окно
     closeProgressModal();
 
     if (isCancelled) {
@@ -1128,143 +1576,23 @@ async function calculateRatingsForAllSettlements() {
         renderPopup(`Расчёт завершён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
     }
 
-    // Отображаем все полученные рейтинги в одной таблице
-    if (allRatings.length > 0) {
-        renderAllRatingsTable(allRatings);
-    } else {
-        renderPopup('Не удалось получить ни одного рейтинга', true);
-    }
-}
-
-/**
- * Отображает все полученные рейтинги в одной таблице с русскими названиями.
- */
-function renderAllRatingsTable(data) {
-    const tableContainer = document.querySelector('.table__rating');
-    if (!tableContainer) return;
-
-    const existingRatingTable = document.getElementById('rating-table');
-    if (existingRatingTable) existingRatingTable.remove();
-
-    const existingRatingTitle = document.querySelector('.rating-title');
-    if (existingRatingTitle) existingRatingTitle.remove();
-
-    const ratingTitle = document.createElement('h3');
-    ratingTitle.className = 'rating-title';
-    ratingTitle.textContent = 'Рейтинг НП (все)';
-    ratingTitle.style.cssText = `
-        text-align: center;
-        font-size: 18px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 15px 0 10px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #1a1a1a;
-    `;
-
-    const ratingTable = document.createElement('table');
-    ratingTable.id = 'rating-table';
-    ratingTable.className = 'table__rating__table';
-
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    ratingTable.appendChild(thead);
-    ratingTable.appendChild(tbody);
-
-    if (!data || data.length === 0) {
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 2;
-        cell.textContent = 'Нет данных рейтинга для отображения';
-        cell.style.textAlign = 'center';
-        cell.style.padding = '20px';
-        row.appendChild(cell);
-        tbody.appendChild(row);
-
-        const buttons = tableContainer.querySelector('.table_buttons');
-        if (buttons) {
-            tableContainer.insertBefore(ratingTitle, buttons);
-            tableContainer.insertBefore(ratingTable, buttons);
-        } else {
-            tableContainer.appendChild(ratingTitle);
-            tableContainer.appendChild(ratingTable);
-        }
-        return;
-    }
-
-    const fieldMap = {
-        'id': 'ID НП',
-        'count_res': 'Всего РЭС',
-        'count_res_tv': 'РЭС ТВ',
-        'count_res_rv': 'РЭС РВ',
-        'count_res_lte': 'РЭС LTE',
-        'count_res_gsm': 'РЭС GSM',
-        'count_res_5g': 'РЭС 5G',
-        'count_res_wifi': 'РЭС Wi-Fi',
-        'count_res_tetra': 'РЭС TETRA'
-    };
-
-    const allKeys = new Set();
-    data.forEach(item => {
-        Object.keys(item).forEach(key => allKeys.add(key));
-    });
-    const fields = Array.from(allKeys).filter(key => key !== 'id');
-
-    const headerRow = document.createElement('tr');
-    const idTh = document.createElement('th');
-    idTh.textContent = 'ID НП';
-    idTh.style.padding = '8px';
-    idTh.style.border = '1px solid #ddd';
-    idTh.style.backgroundColor = '#f2f2f2';
-    headerRow.appendChild(idTh);
-
-    fields.forEach(key => {
-        const th = document.createElement('th');
-        th.textContent = fieldMap[key] || key;
-        th.style.padding = '8px';
-        th.style.border = '1px solid #ddd';
-        th.style.backgroundColor = '#f2f2f2';
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-
-    data.forEach(item => {
-        const row = document.createElement('tr');
-
-        const idCell = document.createElement('td');
-        idCell.textContent = item.id || '-';
-        idCell.style.padding = '6px';
-        idCell.style.border = '1px solid #ddd';
-        row.appendChild(idCell);
-
-        fields.forEach(key => {
-            const cell = document.createElement('td');
-            cell.textContent = item[key] !== undefined ? item[key] : '-';
-            cell.style.padding = '6px';
-            cell.style.border = '1px solid #ddd';
-            row.appendChild(cell);
-        });
-
-        tbody.appendChild(row);
-    });
-
-    const buttons = tableContainer.querySelector('.table_buttons');
-    if (buttons) {
-        tableContainer.insertBefore(ratingTitle, buttons);
-        tableContainer.insertBefore(ratingTable, buttons);
-    } else {
-        tableContainer.appendChild(ratingTitle);
-        tableContainer.appendChild(ratingTable);
-    }
+    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
 }
 
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
 
-// Кнопка "Таблица населенных пунктов"
 async function handleSettlementsButton() {
+    // Сбрасываем сохраненные значения фильтра при новом запросе
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
+
+    showResPageSize();
+    showSettlementButtons();
+
     const regions = getSelectedRegions();
     const popRange = getPopulationRange();
-    currentKinds = getSelectedKinds();
+    const kinds = getSelectedKinds();
 
     if (regions.length === 0) {
         renderPopup('Выберите хотя бы один регион', true);
@@ -1273,99 +1601,146 @@ async function handleSettlementsButton() {
 
     currentRegions = regions;
     currentPopRange = popRange;
+    currentKinds = kinds;
 
     const pageSize = getPageSize('settlements');
     const result = await loadSettlements(1, regions, popRange, pageSize);
 
     if (result) {
+        // Сохраняем исходные данные для фильтрации
+        originalDataForFilter = result.items || [];
+        originalTotalForFilter = result.total || 0;
+
         settlementsData.items = result.items || [];
         settlementsData.total = result.total || 0;
         settlementsData.page = 1;
         settlementsData.pageSize = pageSize;
-        renderSettlementsTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
-
-        renderResTable([], 0, 1, getPageSize('res'));
-        selectedSettlementId = null;
-        selectedSettlementLat = null;
-        selectedSettlementLon = null;
-        selectedSettlementArea = null;
-        allRatings = [];
+        currentSortField = null;
+        currentSortOrder = 'asc';
+        currentFilterField = '';
+        currentFilterValue = '';
+        currentFilterExact = false;
+        showRatings = false;
+        allRatings = {};
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
 
         renderPopup(`Загружено ${settlementsData.total} населенных пунктов`);
     }
 }
 
-// Кнопка "Таблица рейтингов НП"
 async function handleRatingButton() {
-    console.log('▶ handleRatingButton: НАЧАЛО');
+    // Сбрасываем сохраненные значения фильтра при новом запросе
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
 
-    const rows = document.querySelectorAll('#settlements-table tbody tr');
-    if (rows.length === 0) {
-        renderPopup('Сначала загрузите населенные пункты', true);
+    hideResPageSize();
+    hideSettlementButtons();
+
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    const kinds = getSelectedKinds();
+
+    if (regions.length === 0) {
+        renderPopup('Выберите хотя бы один регион', true);
         return;
     }
 
-    const autoCheckbox = document.getElementById('auto-rating');
-    const isAuto = autoCheckbox ? autoCheckbox.checked : false;
-    console.log('▶ Галочка "Автоматический расчет":', isAuto ? 'ВКЛ' : 'ВЫКЛ');
+    currentRegions = regions;
+    currentPopRange = popRange;
+    currentKinds = kinds;
 
-    if (isAuto) {
-        console.log('▶ Запускаем МАССОВЫЙ расчёт для всех НП');
-        await calculateRatingsForAllSettlements();
-    } else {
-        console.log('▶ Запускаем РУЧНОЙ расчёт для выбранного НП');
+    const pageSize = getPageSize('settlements');
+    const result = await loadSettlements(1, regions, popRange, pageSize);
 
-        // Если НП не выбран — принудительно выбираем первый
-        if (!selectedSettlementId) {
-            console.log('▶ selectedSettlementId = null, выбираем первый НП...');
-            const firstRow = document.querySelector('#settlements-table tbody tr');
-            if (firstRow) {
-                firstRow.click();
-                await new Promise(resolve => setTimeout(resolve, 300));
-            }
-        }
-
-        if (!selectedSettlementId) {
-            renderPopup('Выберите населенный пункт в таблице', true);
-            return;
-        }
-
-        console.log('▶ Начинаем загрузку рейтинга для НП', selectedSettlementId);
-        const loader = initLoader();
-        loader.show('Загрузка рейтинга для НП ' + selectedSettlementId + '...');
-
-        try {
-            console.log('▶ Вызываем getRatingSett для ID', selectedSettlementId);
-            let ratingData = await getRatingSett(selectedSettlementId);
-            console.log('▶ ratingData после getRatingSett:', ratingData);
-
-            if (ratingData === null) {
-                console.log('▶ Рейтинг не найден, вызываем postRatingSett');
-                await postRatingSett(selectedSettlementId);
-                ratingData = await getRatingSett(selectedSettlementId);
-                console.log('▶ ratingData после повторного getRatingSett:', ratingData);
-            }
-
-            if (ratingData) {
-                renderRatingTableSingle(ratingData);
-                renderPopup('Рейтинг для НП ' + selectedSettlementId + ' загружен');
-            } else {
-                renderPopup('Не удалось получить рейтинг для НП ' + selectedSettlementId, true);
-            }
-            loader.close();
-        } catch (error) {
-            loader.close();
-            renderPopup(`Ошибка загрузки рейтинга: ${error.message}`, true);
-            console.error('Ошибка загрузки рейтинга:', error);
-        }
+    if (!result || result.items.length === 0) {
+        renderPopup('Нет населенных пунктов для выбранных фильтров', true);
+        return;
     }
+
+    // Сохраняем исходные данные для фильтрации
+    originalDataForFilter = result.items || [];
+    originalTotalForFilter = result.total || 0;
+
+    settlementsData.items = result.items || [];
+    settlementsData.total = result.total || 0;
+    settlementsData.page = 1;
+    settlementsData.pageSize = pageSize;
+    currentSortField = null;
+    currentSortOrder = 'asc';
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
+
+    showRatings = true;
+    allRatings = {};
+
+    await getRatingsOnlyForData(settlementsData.items);
 }
 
-// Кнопка "Рассчитать рейтинг НП"
 async function handleBothButton() {
-    await handleSettlementsButton();
-    await handleRatingButton();
+    // Сбрасываем сохраненные значения фильтра при новом запросе
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
+
+    hideResPageSize();
+    hideSettlementButtons();
+
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    const kinds = getSelectedKinds();
+
+    if (regions.length === 0) {
+        renderPopup('Выберите хотя бы один регион', true);
+        return;
+    }
+
+    currentRegions = regions;
+    currentPopRange = popRange;
+    currentKinds = kinds;
+
+    const pageSize = getPageSize('settlements');
+    const result = await loadSettlements(1, regions, popRange, pageSize);
+
+    if (!result || result.items.length === 0) {
+        renderPopup('Нет населенных пунктов для выбранных фильтров', true);
+        return;
+    }
+
+    // Сохраняем исходные данные для фильтрации
+    originalDataForFilter = result.items || [];
+    originalTotalForFilter = result.total || 0;
+
+    settlementsData.items = result.items || [];
+    settlementsData.total = result.total || 0;
+    settlementsData.page = 1;
+    settlementsData.pageSize = pageSize;
+    currentSortField = null;
+    currentSortOrder = 'asc';
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
+
+    showRatings = true;
+    allRatings = {};
+
+    await calculateRatingsForData(settlementsData.items);
 }
+
+async function handleResButton() {
+    if (!selectedSettlementId) {
+        renderPopup('Выберите населенный пункт в таблице', true);
+        return;
+    }
+    await loadResForModal(selectedSettlementId, selectedSettlementLat, selectedSettlementLon, selectedSettlementArea);
+}
+
+async function handleWiredButton() {
+    renderPopup('Функция "Проводные УС" в разработке');
+}
+
+// ==================== ОЧИСТКА ====================
 
 // ==================== ОЧИСТКА ====================
 
@@ -1383,6 +1758,22 @@ function handleClear() {
         }
     }
 
+    // Сбрасываем сохраненные значения фильтра
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
+    originalDataForFilter = [];
+    originalTotalForFilter = 0;
+
+    // Очищаем поле поиска (фильтр)
+    clearFilterInputs();
+
+    hideResPageSize();
+    hideSettlementButtons();
+
+    const resModal = document.getElementById('res-modal');
+    if (resModal) resModal.remove();
+
     const settlementsTable = document.getElementById('settlements-table');
     if (settlementsTable) {
         const thead = settlementsTable.querySelector('thead');
@@ -1391,41 +1782,46 @@ function handleClear() {
         if (tbody) tbody.innerHTML = '';
     }
 
-    const resTable = document.getElementById('res-table');
-    if (resTable) {
-        const thead = resTable.querySelector('thead');
-        const tbody = resTable.querySelector('tbody');
-        if (thead) thead.innerHTML = '';
-        if (tbody) tbody.innerHTML = '';
-    }
-
     document.getElementById('settlements-pagination').innerHTML = '';
-    document.getElementById('res-pagination').innerHTML = '';
 
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
-    const resTitle = document.querySelector('.res-title');
-    if (resTitle) resTitle.remove();
-
-    const ratingTable = document.getElementById('rating-table');
-    if (ratingTable) ratingTable.remove();
-
-    const ratingTitle = document.querySelector('.rating-title');
-    if (ratingTitle) ratingTitle.remove();
-
     settlementsData = { items: [], total: 0, page: 1, pageSize: 10 };
-    resData = { items: [], total: 0, page: 1, pageSize: 10 };
     selectedSettlementId = null;
     selectedSettlementLat = null;
     selectedSettlementLon = null;
     selectedSettlementArea = null;
-    allRatings = [];
+    selectedSettlementName = null;
+    currentSortField = null;
+    currentSortOrder = 'asc';
+    currentSettlementsFiltered = [];
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
     isCancelled = false;
-
-    closeProgressModal();
+    allRatings = {};
+    showRatings = false;
 
     renderPopup('Фильтры сброшены');
+}
+
+// ==================== ОЧИСТКА ПОЛЯ ПОИСКА ====================
+
+function clearFilterInputs() {
+    // Удаляем контейнер фильтра
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterContainer) {
+        filterContainer.remove();
+    }
+
+    // Также очищаем значения в сохраненных переменных
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
@@ -1434,6 +1830,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initLoader();
     loadRegions();
     loadResKindsSelect();
+
+    hideResPageSize();
+    hideAutoRating();
 
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
     document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
@@ -1465,16 +1864,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (tableType === 'settlements' && settlementsData.total > 0) {
                 settlementsData.pageSize = newSize;
-                handleSettlementsButton();
-            }
-            else if (tableType === 'res' && selectedSettlementId) {
-                resData.pageSize = newSize;
-                loadResForSettlement(
-                    selectedSettlementId,
-                    selectedSettlementLat,
-                    selectedSettlementLon,
-                    selectedSettlementArea
-                );
+                if (showRatings) {
+                    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+                } else {
+                    renderSettlementsTableOnly(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+                }
             }
         });
     });

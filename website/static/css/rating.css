@@ -8,23 +8,12 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /*background: #d4d4d4;*/
 }
 
 /* ===== ЗАГОЛОВОК (header из base.html) ===== */
 header {
     flex-shrink: 0;
 }
-
-/* ===== ЗАГОЛОВОК h2 ===== */
-/*h2 {*/
-/*    margin: 10px 0 10px 0;*/
-/*    text-align: center;*/
-/*    font-size: 22px;*/
-/*    font-weight: 600;*/
-/*    color: #1a1a1a;*/
-/*    flex-shrink: 0;*/
-/*}*/
 
 /* ===== ГЛАВНЫЙ КОНТЕЙНЕР ===== */
 .container__forms {
@@ -203,7 +192,6 @@ header {
     display: table;
     width: 100%;
     table-layout: fixed;
-    background: #d0d0d0;
     border-bottom: 1px solid #1a1a1a;
 }
 
@@ -213,32 +201,65 @@ header {
     table-layout: fixed;
 }
 
-/* ===== ЯЧЕЙКИ ===== */
+/* ===== ФИКСИРОВАННАЯ ШИРИНА ДЛЯ ВСЕХ КОЛОНОК ===== */
+
+/* Общие стили для всех ячеек и заголовков - ФИКСИРОВАННАЯ ШИРИНА 115px */
 .table__rating__table th,
 .table__rating__table td {
     border: 1px solid #1a1a1a !important;
     padding: 8px 10px;
     vertical-align: middle;
-    min-width: 80px;
-    max-width: 250px;
+    width: 115px;
+    min-width: 115px;
+    max-width: 115px;
     word-break: break-word;
     white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Специальные стили для заголовков - без фона */
 .table__rating__table th {
     text-align: left;
     font-weight: 700;
     color: #1a1a1a;
-    background: #d0d0d0;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 10px;
 }
 
+/* Сортировка */
+.sort-icon {
+    margin-left: 5px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* Ячейки данных */
 .table__rating__table td {
     color: #2a2a2a;
-    /*background: #fff;*/
 }
 
 .table__rating__table tbody tr:hover {
     background: #e0e0e0;
+}
+
+/* Кликабельные строки */
+.clickable-row {
+    cursor: pointer;
+}
+
+.clickable-row:hover {
+    background: #e0e0e0;
+}
+
+/* Пустое сообщение - занимает всю ширину */
+.empty-message {
+    text-align: center;
+    padding: 20px !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* ===== ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ===== */
@@ -353,7 +374,7 @@ header {
     margin-top: 0;
 }
 
-/* ===== МОДАЛЬНОЕ ОКНО (без изменений) ===== */
+/* ===== МОДАЛЬНОЕ ОКНО ===== */
 .modal {
     display: none;
     position: fixed;
@@ -526,7 +547,276 @@ header {
     background: #1a1a1a;
 }
 
+/* === ВЫДЕЛЕНИЕ ВЫБРАННОГО НАСЕЛЁННОГО ПУНКТА === */
+#settlements-table tbody tr.selected {
+    background-color: #80808094 !important;
+}
+
+#settlements-table tbody tr.selected td {
+    border-color: #1a1a1a !important;
+    color: #000 !important;
+}
+
+/* === ФИЛЬТР === */
+.filter-container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    border: 1.2px solid black;
+}
+
+.filter-field-group,
+.filter-value-group {
+    flex: 2;
+    min-width: 180px;
+}
+
+.filter-exact-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-bottom: 2px;
+}
+
+.filter-buttons-group {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.filter-field-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid black;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.filter-value-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid black;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.filter-apply-btn {
+    padding: 8px 20px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.filter-apply-btn:hover {
+    background: #45a049;
+}
+
+.filter-reset-btn {
+    padding: 8px 20px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.filter-reset-btn:hover {
+    background: #da190b;
+}
+
+/* === МОДАЛЬНОЕ ОКНО РЭС === */
+.res-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.res-modal-content {
+    background: white;
+    padding: 20px 30px 30px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.res-modal-title {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+}
+
+.res-table-wrapper {
+    flex: 1;
+    overflow: auto;
+    max-height: 60vh;
+}
+
+.res-modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.res-modal-table th,
+.res-modal-table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    min-width: 100px;
+}
+
+.res-modal-table th {
+    min-width: 100px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.res-modal-close-btn {
+    margin-top: 15px;
+    padding: 8px 24px;
+    background: #2a2a2a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    align-self: flex-end;
+}
+
+.res-modal-close-btn:hover {
+    background: #1a1a1a;
+}
+
+/* === ПРОГРЕСС МОДАЛЬНОЕ ОКНО === */
+.progress-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.progress-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 500px;
+    text-align: center;
+}
+
+.progress-modal-title {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+}
+
+.progress-info {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.progress-bar-wrap {
+    width: 100%;
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #4CAF50;
+    transition: width 0.3s;
+}
+
+.status-info {
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #666;
+}
+
+.progress-cancel-btn {
+    padding: 8px 24px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.progress-cancel-btn:hover:not(.disabled) {
+    background: #cc0000;
+}
+
+.progress-cancel-btn.disabled {
+    background: #999;
+    cursor: default;
+}
+
+/* === КНОПКИ ДЕЙСТВИЙ === */
+.res-action-btn {
+    margin-right: 10px;
+    width: auto !important;
+}
+
+.wired-action-btn {
+    width: auto !important;
+}
+
 /* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 1200px) {
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+}
+
 @media (max-width: 900px) {
     .container__forms {
         grid-template-columns: 1fr;
@@ -553,6 +843,35 @@ header {
         height: auto;
         overflow: visible;
     }
+
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 70px;
+        min-width: 70px;
+        max-width: 70px;
+        padding: 5px 6px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-buttons-group {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 600px) {
@@ -577,16 +896,13 @@ header {
     .task-parameter select {
         width: 100%;
     }
-}
-/* === ВЫДЕЛЕНИЕ ВЫБРАННОГО НАСЕЛЁННОГО ПУНКТА === */
 
-#settlements-table tbody tr.selected {
-    background-color: #80808094 !important;
-    /*outline: 2px solid #1a1a1a;*/
-    /*outline-offset: -2px;*/
-}
-
-#settlements-table tbody tr.selected td {
-    border-color: #1a1a1a !important;
-    color: #000 !important;
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        padding: 3px 4px;
+        font-size: 10px;
+    }
 }
