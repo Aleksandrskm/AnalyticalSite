@@ -1336,7 +1336,7 @@ function createProgressModalForPagination(total) {
     content.className = 'progress-modal-content';
 
     const title = document.createElement('h3');
-    title.textContent = `Загрузка рейтингов (страница ${settlementsData.page + 1})`;
+    title.textContent = `Загрузка рейтингов`;
     title.className = 'progress-modal-title';
 
     const progressInfo = document.createElement('div');
@@ -1502,7 +1502,7 @@ async function calculateRatingsForDataWithProgress(items, pageSize) {
     // Обновляем заголовок для пагинации
     const titleEl = modal.querySelector('.progress-modal-title');
     if (titleEl) {
-        titleEl.textContent = `Загрузка рейтингов (страница ${settlementsData.page})`;
+        titleEl.textContent = `Загрузка рейтингов`;
     }
 
     let processed = 0;
