@@ -44,6 +44,9 @@ let currentPopRange = { from: 1, to: 17000000 };
 // Флаг отмены массового расчёта
 let isCancelled = false;
 
+// Флаг: был ли запущен расчет (POST разрешен)
+let isCalculateMode = false;
+
 // Массив всех полученных рейтингов (ключ — id НП)
 let allRatings = {};
 
@@ -414,6 +417,67 @@ async function loadSettlements(page = 1, regions, popRange, pageSize) {
         console.error('Ошибка загрузки населенных пунктов:', error);
         return { items: [], total: 0 };
     }
+}
+
+// ==================== ЗАГРУЗКА РЕЙТИНГОВ ДЛЯ НАСЕЛЕННЫХ ПУНКТОВ ====================
+
+async function loadRatingsForSettlements(items, allowPost = false) {
+    const loader = initLoader();
+    loader.show('Загрузка рейтингов...');
+
+    let successCount = 0;
+    let postCount = 0;
+
+    for (const settlement of items) {
+        try {
+            // Проверяем, есть ли уже рейтинг для этого НП
+            if (!allRatings[settlement.id]) {
+                let ratingData = null;
+                let status200 = false;
+
+                // Сначала пробуем GET
+                try {
+                    ratingData = await getRatingSett(settlement.id);
+                    if (ratingData !== null && ratingData !== undefined) {
+                        allRatings[settlement.id] = ratingData;
+                        successCount++;
+                        status200 = true;
+                        console.log(`▶ НП ${settlement.id}: рейтинг получен через GET`);
+                    } else {
+                        console.log(`▶ НП ${settlement.id}: GET вернул null`);
+                    }
+                } catch (err) {
+                    console.warn(`▶ НП ${settlement.id}: ошибка GET`, err);
+                }
+
+                // Если GET не дал результат и разрешен POST (режим расчета)
+                if (!status200 && allowPost) {
+                    try {
+                        console.log(`▶ НП ${settlement.id}: отправляем POST...`);
+                        await postRatingSett(settlement.id);
+                        ratingData = await getRatingSett(settlement.id);
+                        if (ratingData !== null && ratingData !== undefined) {
+                            allRatings[settlement.id] = ratingData;
+                            successCount++;
+                            postCount++;
+                            console.log(`▶ НП ${settlement.id}: рейтинг создан через POST`);
+                        }
+                    } catch (postErr) {
+                        console.warn(`▶ НП ${settlement.id}: ошибка POST`, postErr);
+                    }
+                }
+            } else {
+                console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
+            }
+        } catch (err) {
+            console.warn(`▶ НП ${settlement.id}: ошибка обработки`, err);
+        }
+        // Небольшая задержка, чтобы не перегружать сервер
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    loader.close();
+    console.log(`▶ Загружено ${successCount} рейтингов (из них создано через POST: ${postCount})`);
 }
 
 // ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
@@ -1119,6 +1183,10 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
 // ==================== ПАГИНАЦИЯ ====================
 
+// ==================== ПАГИНАЦИЯ ====================
+
+// ==================== ПАГИНАЦИЯ ====================
+
 function renderSettlementsPagination(total, currentPage, pageSize) {
     const container = document.getElementById('settlements-pagination');
     if (!container) return;
@@ -1181,40 +1249,347 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
             else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
 
             if (newPage !== currentPage) {
-                const pageSize = getPageSize('settlements');
-                const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSize);
-                if (result) {
-                    // Сохраняем новые данные как исходные
-                    originalDataForFilter = result.items || [];
-                    originalTotalForFilter = result.total || 0;
+                // Если режим расчета и есть рейтинги - показываем модалку
+                if (showRatings && isCalculateMode) {
+                    // Создаем модалку перед загрузкой
+                    const modal = createProgressModalForPagination(total);
 
-                    settlementsData.items = result.items || [];
-                    settlementsData.total = result.total || 0;
-                    settlementsData.page = newPage;
-                    settlementsData.pageSize = pageSize;
+                    try {
+                        const pageSizeVal = getPageSize('settlements');
+                        const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSizeVal);
 
-                    // Если есть активный фильтр, применяем его к новым данным
-                    if (savedFilterField && savedFilterValue) {
-                        if (showRatings) {
-                            const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-                            renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+                        if (result && result.items) {
+                            // Сохраняем новые данные как исходные
+                            originalDataForFilter = result.items || [];
+                            originalTotalForFilter = result.total || 0;
+
+                            settlementsData.items = result.items || [];
+                            settlementsData.total = result.total || 0;
+                            settlementsData.page = newPage;
+                            settlementsData.pageSize = pageSizeVal;
+
+                            // Загружаем рейтинги с прогрессом
+                            await loadRatingsWithProgress(settlementsData.items, pageSizeVal, modal);
                         } else {
-                            const filtered = filterData(originalDataForFilter, savedFilterField, savedFilterValue, savedFilterExact);
-                            renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
+                            closeProgressModal();
+                            renderPopup('Нет данных для отображения на этой странице', true);
+                        }
+                    } catch (error) {
+                        closeProgressModal();
+                        renderPopup(`Ошибка загрузки: ${error.message}`, true);
+                    }
+                } else {
+                    // Обычная загрузка без модалки
+                    const pageSizeVal = getPageSize('settlements');
+                    const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSizeVal);
+
+                    if (result && result.items) {
+                        originalDataForFilter = result.items || [];
+                        originalTotalForFilter = result.total || 0;
+
+                        settlementsData.items = result.items || [];
+                        settlementsData.total = result.total || 0;
+                        settlementsData.page = newPage;
+                        settlementsData.pageSize = pageSizeVal;
+
+                        if (showRatings) {
+                            await loadRatingsForSettlements(settlementsData.items, false);
+
+                            if (savedFilterField && savedFilterValue) {
+                                const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+                                renderCombinedTable(filtered, filtered.length, 1, pageSizeVal, true);
+                            } else {
+                                currentSortField = null;
+                                currentSortOrder = 'asc';
+                                renderCombinedTable(originalDataForFilter, originalTotalForFilter, newPage, pageSizeVal, false);
+                            }
+                        } else {
+                            if (savedFilterField && savedFilterValue) {
+                                const filtered = filterData(originalDataForFilter, savedFilterField, savedFilterValue, savedFilterExact);
+                                renderSettlementsTableOnly(filtered, filtered.length, 1, pageSizeVal, true);
+                            } else {
+                                currentSortField = null;
+                                currentSortOrder = 'asc';
+                                renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, newPage, pageSizeVal, false);
+                            }
                         }
                     } else {
-                        currentSortField = null;
-                        currentSortOrder = 'asc';
-                        if (showRatings) {
-                            renderCombinedTable(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
-                        } else {
-                            renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
-                        }
+                        renderPopup('Нет данных для отображения на этой странице', true);
                     }
                 }
             }
         });
     });
+}
+
+// ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПАГИНАЦИИ ====================
+
+function createProgressModalForPagination(total) {
+    const existing = document.getElementById('rating-progress-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'rating-progress-modal';
+    modal.className = 'progress-modal-overlay';
+
+    const content = document.createElement('div');
+    content.className = 'progress-modal-content';
+
+    const title = document.createElement('h3');
+    title.textContent = `Загрузка рейтингов (страница ${settlementsData.page + 1})`;
+    title.className = 'progress-modal-title';
+
+    const progressInfo = document.createElement('div');
+    progressInfo.className = 'progress-info';
+    progressInfo.id = 'rating-progress-info';
+    progressInfo.textContent = `Обработано: 0 / ${total}`;
+
+    const progressBarWrap = document.createElement('div');
+    progressBarWrap.className = 'progress-bar-wrap';
+
+    const progressFill = document.createElement('div');
+    progressFill.id = 'rating-progress-fill';
+    progressFill.className = 'progress-bar-fill';
+
+    progressBarWrap.appendChild(progressFill);
+
+    const statusInfo = document.createElement('div');
+    statusInfo.className = 'status-info';
+    statusInfo.id = 'rating-status-info';
+    statusInfo.textContent = 'Получено рейтингов: 0';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.id = 'rating-cancel-btn';
+    cancelBtn.textContent = 'Отмена';
+    cancelBtn.className = 'progress-cancel-btn';
+    cancelBtn.addEventListener('click', () => {
+        isCancelled = true;
+        cancelBtn.textContent = 'Отменяется...';
+        cancelBtn.disabled = true;
+        cancelBtn.className = 'progress-cancel-btn disabled';
+    });
+
+    content.appendChild(title);
+    content.appendChild(progressInfo);
+    content.appendChild(progressBarWrap);
+    content.appendChild(statusInfo);
+    content.appendChild(cancelBtn);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    return modal;
+}
+
+// ==================== ЗАГРУЗКА РЕЙТИНГОВ С ПРОГРЕССОМ ====================
+
+async function loadRatingsWithProgress(items, pageSize, modal) {
+    isCancelled = false;
+
+    const total = items.length;
+    if (total === 0) {
+        closeProgressModal();
+        renderPopup('Нет населенных пунктов для загрузки рейтингов', true);
+        return;
+    }
+
+    let processed = 0;
+    let successCount = 0;
+
+    for (const settlement of items) {
+        if (isCancelled) break;
+
+        console.log(`▶ Обработка НП ID ${settlement.id}...`);
+
+        try {
+            let ratingData = null;
+            let status200 = false;
+
+            // Проверяем, есть ли уже рейтинг в кеше
+            if (allRatings[settlement.id]) {
+                console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
+                processed++;
+                successCount++;
+                updateProgress(processed, total, successCount);
+                continue;
+            }
+
+            // GET запрос
+            try {
+                ratingData = await getRatingSett(settlement.id);
+                if (ratingData !== null && ratingData !== undefined) {
+                    status200 = true;
+                    console.log(`▶ НП ${settlement.id}: данные получены через GET`);
+                } else {
+                    console.log(`▶ НП ${settlement.id}: GET вернул null, пробуем POST`);
+                }
+            } catch (err) {
+                console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
+            }
+
+            // Если GET не дал данных — POST (только в режиме расчета)
+            if (!status200 && isCalculateMode) {
+                console.log(`▶ НП ${settlement.id}: отправляем POST...`);
+                try {
+                    await postRatingSett(settlement.id);
+                    ratingData = await getRatingSett(settlement.id);
+                    if (ratingData !== null && ratingData !== undefined) {
+                        status200 = true;
+                        console.log(`▶ НП ${settlement.id}: данные получены после POST`);
+                    }
+                } catch (postErr) {
+                    console.warn(`▶ НП ${settlement.id}: POST ошибка`, postErr);
+                }
+            }
+
+            if (status200 && ratingData) {
+                allRatings[settlement.id] = ratingData;
+                processed++;
+                successCount++;
+                console.log(`▶ НП ${settlement.id}: успешно обработан. Всего успешно: ${successCount}`);
+            } else {
+                console.warn(`▶ НП ${settlement.id}: не удалось получить данные, пропускаем`);
+                processed++;
+            }
+
+            updateProgress(processed, total, successCount);
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+        } catch (error) {
+            console.error(`▶ НП ${settlement.id}: критическая ошибка`, error);
+            processed++;
+        }
+    }
+
+    closeProgressModal();
+
+    if (isCancelled) {
+        renderPopup(`Загрузка рейтингов отменена. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    } else {
+        renderPopup(`Загрузка рейтингов завершена. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    }
+
+    // После загрузки рейтингов отображаем таблицу
+    if (savedFilterField && savedFilterValue) {
+        const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+        renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+    } else {
+        currentSortField = null;
+        currentSortOrder = 'asc';
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, settlementsData.page, pageSize, false);
+    }
+}
+
+// ==================== РАСЧЕТ РЕЙТИНГОВ С ПРОГРЕССОМ (для пагинации) ====================
+
+async function calculateRatingsForDataWithProgress(items, pageSize) {
+    isCancelled = false;
+
+    const settlements = items.map(item => ({
+        id: item.id,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+        area: parseFloat(item.area) || 1
+    }));
+
+    const total = settlements.length;
+    if (total === 0) {
+        renderPopup('Нет населенных пунктов для расчёта', true);
+        return;
+    }
+
+    // Создаем модальное окно прогресса
+    const modal = createProgressModal(total);
+    // Обновляем заголовок для пагинации
+    const titleEl = modal.querySelector('.progress-modal-title');
+    if (titleEl) {
+        titleEl.textContent = `Загрузка рейтингов (страница ${settlementsData.page})`;
+    }
+
+    let processed = 0;
+    let successCount = 0;
+
+    for (const settlement of settlements) {
+        if (isCancelled) break;
+
+        console.log(`▶ Обработка НП ID ${settlement.id}...`);
+
+        try {
+            let ratingData = null;
+            let status200 = false;
+
+            // Проверяем, есть ли уже рейтинг в кеше
+            if (allRatings[settlement.id]) {
+                console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
+                processed++;
+                successCount++;
+                updateProgress(processed, total, successCount);
+                continue;
+            }
+
+            // GET запрос
+            try {
+                ratingData = await getRatingSett(settlement.id);
+                if (ratingData !== null && ratingData !== undefined) {
+                    status200 = true;
+                    console.log(`▶ НП ${settlement.id}: данные получены через GET`);
+                } else {
+                    console.log(`▶ НП ${settlement.id}: GET вернул null, пробуем POST`);
+                }
+            } catch (err) {
+                console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
+            }
+
+            // Если GET не дал данных — POST
+            if (!status200) {
+                console.log(`▶ НП ${settlement.id}: отправляем POST...`);
+                try {
+                    await postRatingSett(settlement.id);
+                    ratingData = await getRatingSett(settlement.id);
+                    if (ratingData !== null && ratingData !== undefined) {
+                        status200 = true;
+                        console.log(`▶ НП ${settlement.id}: данные получены после POST`);
+                    }
+                } catch (postErr) {
+                    console.warn(`▶ НП ${settlement.id}: POST ошибка`, postErr);
+                }
+            }
+
+            if (status200 && ratingData) {
+                allRatings[settlement.id] = ratingData;
+                processed++;
+                successCount++;
+                console.log(`▶ НП ${settlement.id}: успешно обработан. Всего успешно: ${successCount}`);
+            } else {
+                console.warn(`▶ НП ${settlement.id}: не удалось получить данные, пропускаем`);
+                processed++;
+            }
+
+            updateProgress(processed, total, successCount);
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+        } catch (error) {
+            console.error(`▶ НП ${settlement.id}: критическая ошибка`, error);
+            processed++;
+        }
+    }
+
+    closeProgressModal();
+
+    if (isCancelled) {
+        renderPopup(`Загрузка рейтингов отменена. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    } else {
+        renderPopup(`Загрузка рейтингов завершена. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    }
+
+    // После загрузки рейтингов отображаем таблицу
+    if (savedFilterField && savedFilterValue) {
+        const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+        renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+    } else {
+        currentSortField = null;
+        currentSortOrder = 'asc';
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, settlementsData.page, pageSize, false);
+    }
 }
 
 // ==================== ЗАГРУЗКА РЭС (для модального окна) ====================
@@ -1467,36 +1842,17 @@ async function getRatingsOnlyForData(items) {
         return;
     }
 
-    const loader = initLoader();
-    loader.show('Загрузка рейтингов...');
+    // Загружаем рейтинги для всех НП (только GET, без POST)
+    await loadRatingsForSettlements(items, false);
 
-    let successCount = 0;
-
-    for (const settlement of items) {
-        try {
-            const ratingData = await getRatingSett(settlement.id);
-            if (ratingData !== null && ratingData !== undefined) {
-                allRatings[settlement.id] = ratingData;
-                successCount++;
-                console.log(`▶ НП ${settlement.id}: рейтинг получен`);
-            } else {
-                console.warn(`▶ НП ${settlement.id}: рейтинг не найден (GET вернул null)`);
-            }
-        } catch (err) {
-            console.warn(`▶ НП ${settlement.id}: ошибка GET`, err);
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    loader.close();
-
-    renderPopup(`Загружено ${successCount} рейтингов из ${total}`, false);
+    renderPopup(`Загружено рейтингов для ${total} населенных пунктов`, false);
     renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
 }
 
 async function calculateRatingsForData(items) {
+    // Включаем режим расчета (POST разрешен)
+    isCalculateMode = true;
     isCancelled = false;
-    allRatings = {};
 
     const settlements = items.map(item => ({
         id: item.id,
@@ -1525,6 +1881,16 @@ async function calculateRatingsForData(items) {
             let ratingData = null;
             let status200 = false;
 
+            // Проверяем, есть ли уже рейтинг в кеше
+            if (allRatings[settlement.id]) {
+                console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
+                processed++;
+                successCount++;
+                updateProgress(processed, total, successCount);
+                continue;
+            }
+
+            // GET запрос
             try {
                 ratingData = await getRatingSett(settlement.id);
                 if (ratingData !== null && ratingData !== undefined) {
@@ -1537,6 +1903,7 @@ async function calculateRatingsForData(items) {
                 console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
             }
 
+            // Если GET не дал данных — POST
             if (!status200) {
                 console.log(`▶ НП ${settlement.id}: отправляем POST...`);
                 try {
@@ -1558,6 +1925,7 @@ async function calculateRatingsForData(items) {
                 console.log(`▶ НП ${settlement.id}: успешно обработан. Всего успешно: ${successCount}`);
             } else {
                 console.warn(`▶ НП ${settlement.id}: не удалось получить данные, пропускаем`);
+                processed++;
             }
 
             updateProgress(processed, total, successCount);
@@ -1565,6 +1933,7 @@ async function calculateRatingsForData(items) {
 
         } catch (error) {
             console.error(`▶ НП ${settlement.id}: критическая ошибка`, error);
+            processed++;
         }
     }
 
@@ -1582,6 +1951,9 @@ async function calculateRatingsForData(items) {
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
 
 async function handleSettlementsButton() {
+    // Сбрасываем режим расчета
+    isCalculateMode = false;
+
     // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
@@ -1629,6 +2001,9 @@ async function handleSettlementsButton() {
 }
 
 async function handleRatingButton() {
+    // Сбрасываем режим расчета (только GET)
+    isCalculateMode = false;
+
     // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
@@ -1679,6 +2054,9 @@ async function handleRatingButton() {
 }
 
 async function handleBothButton() {
+    // Включаем режим расчета (POST разрешен)
+    isCalculateMode = true;
+
     // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
@@ -1725,7 +2103,8 @@ async function handleBothButton() {
     showRatings = true;
     allRatings = {};
 
-    await calculateRatingsForData(settlementsData.items);
+    // Используем функцию с прогрессом для первой загрузки
+    await calculateRatingsForDataWithProgress(settlementsData.items, pageSize);
 }
 
 async function handleResButton() {
@@ -1742,8 +2121,6 @@ async function handleWiredButton() {
 
 // ==================== ОЧИСТКА ====================
 
-// ==================== ОЧИСТКА ====================
-
 function handleClear() {
     const form = document.querySelector('.form__rating');
     if (form) {
@@ -1757,6 +2134,9 @@ function handleClear() {
             typeConnectSelect.value = 'all';
         }
     }
+
+    // Сбрасываем режим расчета
+    isCalculateMode = false;
 
     // Сбрасываем сохраненные значения фильтра
     savedFilterField = '';
