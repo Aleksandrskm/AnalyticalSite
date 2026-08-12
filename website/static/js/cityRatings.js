@@ -1000,6 +1000,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     tableContainer.prepend(filterContainer);
 
+    // ===== ЗАГОЛОВКИ =====
     if (thead) {
         const headerRow = document.createElement('tr');
         const headers = [
@@ -1045,6 +1046,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
                     currentSortField = h.key;
                     currentSortOrder = 'asc';
                 }
+                // Перерисовываем с новой сортировкой
                 renderCombinedTable(data, total, page, pageSize, true);
             });
 
@@ -1053,14 +1055,39 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
+    // ===== СОРТИРОВКА С УЧЕТОМ РЕЙТИНГОВЫХ ПОЛЕЙ =====
     let displayData = [...data];
     if (currentSortField) {
+        const ratingFields = ['count_res', 'count_res_tv', 'count_res_rv',
+            'count_res_lte', 'count_res_gsm', 'count_res_5g',
+            'count_res_wifi', 'count_res_tetra'];
+
         displayData.sort((a, b) => {
-            let valA = a[currentSortField] !== undefined ? a[currentSortField] : '';
-            let valB = b[currentSortField] !== undefined ? b[currentSortField] : '';
+            let valA, valB;
+
+            // Проверяем, является ли поле рейтинговым
+            if (ratingFields.includes(currentSortField)) {
+                // Получаем значения из рейтинга
+                const ratingA = allRatings[a.id] || {};
+                const ratingB = allRatings[b.id] || {};
+                valA = ratingA[currentSortField];
+                valB = ratingB[currentSortField];
+            } else {
+                // Получаем значения из данных НП
+                valA = a[currentSortField];
+                valB = b[currentSortField];
+            }
+
+            // Если значения undefined или null, заменяем на пустую строку или 0
+            if (valA === undefined || valA === null) valA = '';
+            if (valB === undefined || valB === null) valB = '';
+
+            // Сравнение для чисел
             if (typeof valA === 'number' && typeof valB === 'number') {
                 return currentSortOrder === 'asc' ? valA - valB : valB - valA;
             }
+
+            // Сравнение для строк
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
             if (currentSortOrder === 'asc') {
@@ -1071,6 +1098,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         });
     }
 
+    // ===== ОТРИСОВКА ТЕЛА ТАБЛИЦЫ =====
     if (tbody) {
         displayData.forEach(item => {
             const row = document.createElement('tr');
@@ -1185,11 +1213,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     }
 }
 
-// ==================== ПАГИНАЦИЯ ====================
 
-// ==================== ПАГИНАЦИЯ ====================
-
-// ==================== ПАГИНАЦИЯ ====================
 
 function renderSettlementsPagination(total, currentPage, pageSize) {
     const container = document.getElementById('settlements-pagination');
