@@ -17,18 +17,18 @@
             <div>Выбор населенных пунктов</div>
             <div class="form__div">
                 <div class="form__div__div">
-                    <input type="radio" id="number-settlements" name="number-settlements" value="0" checked>
+                    <input type="radio" id="number-settlements" name="number-settlements" value="0">
                     <label for="number-settlements">все</label>
                     <h5 class="h5-label">Численность</h5>
                 </div>
 
                 <div class="form__div__div">
-                    <input type="radio" id="number-settlement" name="number-settlements" value="1">
+                    <input type="radio" id="number-settlement" name="number-settlements" value="1" checked>
                     <label for="number-settlement"></label>
                     <label for="numbers-settlement">от</label>
-                    <input type="number" id="numbers-settlement" name="numbers-settlement" step="1">
+                    <input type="number" id="numbers-settlement" name="numbers-settlement" step="1" value="1">
                     <label for="numbers-settlements">до</label>
-                    <input type="number" id="numbers-settlements" name="number-settlements" step="1">
+                    <input type="number" id="numbers-settlements" name="number-settlements" step="1" value="10000">
                 </div>
                 <div class="form__div__div">
                     <label for="type-connect">Вид связи</label>
@@ -51,53 +51,48 @@
     <div class="table__rating">
         <!-- Управление размером страницы для НП -->
         <div class="page-size-control" data-table="settlements">
-            <label>Размер страницы НП:</label>
+            <label>Размер страницы:</label>
             <select class="page-size-select">
                 <option value="1">1</option>
                 <option value="5">5</option>
-                <option value="10" selected>10</option>
+                <option value="10">10</option>
                 <option value="15">15</option>
                 <option value="20">20</option>
                 <option value="25">25</option>
-                <option value="50">50</option>
+                <option value="50" selected>50</option>
                 <option value="100">100</option>
             </select>
         </div>
 
+        <!-- Подсказка при отсутствии данных -->
+        <div id="placeholder-message" class="placeholder-message">
+            <p>Выберите регион, а затем:</p>
+            <ul>
+                <li>для получения таблицы НП нажать на кнопку <strong>«Таблица населенных пунктов»</strong></li>
+                <li>для получения таблицы рейтингов НП нажать на кнопку <strong>«Таблица рейтингов НП»</strong></li>
+                <li>для расчета и получения таблицы рейтингов НП нажать на кнопку <strong>«Рассчитать рейтинг НП»</strong></li>
+            </ul>
+        </div>
+
         <!-- Таблица НП -->
-        <table class="table__rating__table" id="settlements-table">
+        <table class="table__rating__table" id="settlements-table" style="display: none">
             <thead></thead>
             <tbody></tbody>
         </table>
 
         <!-- Пагинация НП -->
-        <div class="pagination-controls" id="settlements-pagination"></div>
+        <div class="pagination-controls" id="settlements-pagination" style="display: none"></div>
 
-        <hr>
+        <hr id="table-divider" style="display: none">
 
-        <!-- Управление размером страницы для РЭС -->
-        <div class="page-size-control" data-table="res">
-            <label>Размер страницы РЭС:</label>
-            <select class="page-size-select">
-                <option value="1">1</option>
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
-        </div>
-
-        <!-- Таблица РЭС -->
+        <!-- Таблица РЭС (скрыта, используется в модалке) -->
         <table class="table__rating__table" id="res-table" style="display: none">
             <thead></thead>
             <tbody></tbody>
         </table>
 
-        <!-- Пагинация РЭС -->
-        <div class="pagination-controls" id="res-pagination"></div>
+        <!-- Пагинация РЭС (скрыта, используется в модалке) -->
+        <div class="pagination-controls" id="res-pagination" style="display: none"></div>
 
         <!-- Кнопки внизу -->
         <div class="table_buttons">
