@@ -18,7 +18,7 @@ let settlementsData = {
     items: [],
     total: 0,
     page: 1,
-    pageSize: 10
+    pageSize: 50
 };
 
 // Данные для РЭС (для модального окна)
@@ -26,7 +26,7 @@ let resData = {
     items: [],
     total: 0,
     page: 1,
-    pageSize: 10
+    pageSize: 50
 };
 
 // Текущий выбранный НП
@@ -127,6 +127,36 @@ function hideAutoRating() {
     if (el) el.style.display = 'none';
 }
 
+// ==================== УПРАВЛЕНИЕ ПОДСКАЗКОЙ ====================
+
+function showPlaceholder() {
+    const placeholder = document.getElementById('placeholder-message');
+    const table = document.getElementById('settlements-table');
+    const pagination = document.getElementById('settlements-pagination');
+    const divider = document.getElementById('table-divider');
+    const pageSizeControl = document.querySelector('.page-size-control[data-table="settlements"]');
+
+    if (placeholder) placeholder.style.display = 'flex';
+    if (table) table.style.display = 'none';
+    if (pagination) pagination.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+    // if (pageSizeControl) pageSizeControl.style.display = 'none';
+}
+
+function hidePlaceholder() {
+    const placeholder = document.getElementById('placeholder-message');
+    const table = document.getElementById('settlements-table');
+    const pagination = document.getElementById('settlements-pagination');
+    const divider = document.getElementById('table-divider');
+    const pageSizeControl = document.querySelector('.page-size-control[data-table="settlements"]');
+
+    if (placeholder) placeholder.style.display = 'none';
+    if (table) table.style.display = 'block';
+    if (pagination) pagination.style.display = 'flex';
+    if (divider) divider.style.display = 'block';
+    if (pageSizeControl) pageSizeControl.style.display = 'flex';
+}
+
 // ==================== КНОПКА "РАССЧИТАТЬ РЕЙТИНГ ВЫБРАННОГО НП" ====================
 
 function createCalculateSelectedBtn() {
@@ -147,19 +177,16 @@ function showCalculateSelectedButton() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    // Показываем только если мы в режиме рейтингов, есть выбранный НП и это режим расчета (POST разрешен)
     if (!showRatings || !selectedSettlementId || !isCalculateMode) {
         hideCalculateSelectedButton();
         return;
     }
 
-    // Удаляем кнопки РЭС и Проводные УС если они есть (на всякий случай)
     const resBtn = document.getElementById('res-action-btn');
     if (resBtn) resBtn.remove();
     const wiredBtn = document.getElementById('wired-action-btn');
     if (wiredBtn) wiredBtn.remove();
 
-    // Создаем или показываем кнопку расчета
     let btn = document.getElementById('calculate-selected-btn');
     if (!btn) {
         btn = createCalculateSelectedBtn();
@@ -210,15 +237,12 @@ function showSettlementButtons() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    // Если мы в режиме рейтингов
     if (showRatings) {
-        // Удаляем кнопки РЭС и Проводные УС
         const resBtn = document.getElementById('res-action-btn');
         if (resBtn) resBtn.remove();
         const wiredBtn = document.getElementById('wired-action-btn');
         if (wiredBtn) wiredBtn.remove();
 
-        // Показываем кнопку расчета выбранного НП только если включен режим расчета
         if (isCalculateMode) {
             showCalculateSelectedButton();
         } else {
@@ -227,8 +251,6 @@ function showSettlementButtons() {
         return;
     }
 
-    // Для таблицы населенных пунктов (без рейтингов) - показываем РЭС и Проводные УС
-    // Удаляем старые кнопки
     const oldRes = document.getElementById('res-action-btn');
     if (oldRes) oldRes.remove();
     const oldWired = document.getElementById('wired-action-btn');
@@ -389,7 +411,6 @@ function getPopulationRange() {
     return { from: 1, to: 17000000 };
 }
 
-// Расчет радиуса НП по формуле из документа (п. 3.1) с округлением до целого
 function calculateRadius(area) {
     if (!area || area <= 0) return 1;
     return Math.round(1.1 * Math.sqrt(area / Math.PI));
@@ -424,8 +445,6 @@ function filterData(data, field, value, exactMatch = false) {
     });
 }
 
-// ==================== ФИЛЬТРАЦИЯ ДАННЫХ С УЧЕТОМ РЕЙТИНГОВ ====================
-
 function filterDataWithRatings(data, ratings, field, value, exactMatch = false) {
     if (!value || !field) return data;
 
@@ -436,13 +455,10 @@ function filterDataWithRatings(data, ratings, field, value, exactMatch = false) 
     return data.filter(row => {
         let cellValue;
 
-        // Проверяем, является ли поле рейтинговым
         if (ratingFields.includes(field)) {
-            // Получаем значение из рейтинга
             const rating = ratings[row.id] || {};
             cellValue = rating[field];
         } else {
-            // Получаем значение из данных НП
             cellValue = row[field];
         }
 
@@ -496,7 +512,7 @@ async function loadSettlements(page = 1, regions, popRange, pageSize) {
     }
 }
 
-// ==================== ЗАГРУЗКА РЕЙТИНГОВ ДЛЯ НАСЕЛЕННЫХ ПУНКТОВ ====================
+// ==================== ЗАГРУЗКА РЕЙТИНГОВ ====================
 
 async function loadRatingsForSettlements(items, allowPost = false) {
     const loader = initLoader();
@@ -507,12 +523,10 @@ async function loadRatingsForSettlements(items, allowPost = false) {
 
     for (const settlement of items) {
         try {
-            // Проверяем, есть ли уже рейтинг для этого НП
             if (!allRatings[settlement.id]) {
                 let ratingData = null;
                 let status200 = false;
 
-                // Сначала пробуем GET
                 try {
                     ratingData = await getRatingSett(settlement.id);
                     if (ratingData !== null && ratingData !== undefined) {
@@ -527,7 +541,6 @@ async function loadRatingsForSettlements(items, allowPost = false) {
                     console.warn(`▶ НП ${settlement.id}: ошибка GET`, err);
                 }
 
-                // Если GET не дал результат и разрешен POST (режим расчета)
                 if (!status200 && allowPost) {
                     try {
                         console.log(`▶ НП ${settlement.id}: отправляем POST...`);
@@ -537,7 +550,7 @@ async function loadRatingsForSettlements(items, allowPost = false) {
                             allRatings[settlement.id] = ratingData;
                             successCount++;
                             postCount++;
-                            console.log(`▶ НП ${settlement.id}: рейтинг создан через POST`);
+                            console.log(`▶ НП ${settlement.id}: рейтинг создан через POST и получен через GET`);
                         }
                     } catch (postErr) {
                         console.warn(`▶ НП ${settlement.id}: ошибка POST`, postErr);
@@ -549,7 +562,6 @@ async function loadRatingsForSettlements(items, allowPost = false) {
         } catch (err) {
             console.warn(`▶ НП ${settlement.id}: ошибка обработки`, err);
         }
-        // Небольшая задержка, чтобы не перегружать сервер
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
@@ -569,20 +581,14 @@ async function handleCalculateSelected() {
     loader.show(`Расчет рейтинга для НП: ${selectedSettlementName || selectedSettlementId}...`);
 
     try {
-        // Отправляем POST запрос для выбранного НП
         await postRatingSett(selectedSettlementId);
-
-        // Получаем обновленные данные через GET
         const ratingData = await getRatingSett(selectedSettlementId);
 
         if (ratingData !== null && ratingData !== undefined) {
-            // Обновляем рейтинг в кеше
             allRatings[selectedSettlementId] = ratingData;
 
-            // Перерисовываем таблицу с обновленными данными
             const pageSize = getPageSize('settlements');
 
-            // Если есть активный фильтр, применяем его
             if (savedFilterField && savedFilterValue) {
                 const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
                 renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
@@ -604,11 +610,213 @@ async function handleCalculateSelected() {
     loader.close();
 }
 
+
+// ==================== ОБРАБОТЧИК ДВОЙНОГО КЛИКА ДЛЯ ВСЕХ ТАБЛИЦ ====================
+
+function setupDoubleClickHandler() {
+    // 1. Обработчик для основной таблицы (населенные пункты) - показывает данные строки
+    const table = document.getElementById('settlements-table');
+    if (table) {
+        table.addEventListener('dblclick', function(e) {
+            const row = e.target.closest('tr');
+            if (!row) return;
+
+            // Проверяем, что это не таблица рейтингов (нет колонок с рейтингами)
+            const headerCells = this.querySelectorAll('thead th');
+            let hasRatingColumns = false;
+            headerCells.forEach(th => {
+                if (th.textContent.includes('РЭС') || th.textContent.includes('Всего РЭС')) {
+                    hasRatingColumns = true;
+                }
+            });
+
+            // Если это таблица рейтингов - пропускаем, обрабатывается вторым обработчиком
+            if (hasRatingColumns) return;
+
+            const id = row.dataset.id;
+            const lat = parseFloat(row.dataset.lat);
+            const lon = parseFloat(row.dataset.lon);
+            const area = parseFloat(row.dataset.area);
+            const name = row.dataset.name;
+
+            if (id && !isNaN(lat) && !isNaN(lon)) {
+                // Выделяем строку
+                document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+                    tr.classList.remove('selected');
+                });
+                row.classList.add('selected');
+
+                selectedSettlementId = id;
+                selectedSettlementLat = lat;
+                selectedSettlementLon = lon;
+                selectedSettlementArea = area || 1;
+                selectedSettlementName = name || '';
+
+                console.log('▶ Выбран НП (двойной клик):', selectedSettlementId, selectedSettlementName);
+
+                // Собираем все данные из строки
+                const rowData = {};
+                const cells = row.querySelectorAll('td');
+                const headers = this.querySelectorAll('thead th');
+
+                headers.forEach((th, index) => {
+                    if (cells[index]) {
+                        // Очищаем заголовок от иконок сортировки
+                        let key = th.textContent.trim();
+                        // Убираем ▲ и ▼
+                        key = key.replace(/[▲▼]/g, '').trim();
+                        rowData[key] = cells[index].textContent.trim();
+                    }
+                });
+
+                // Показываем все данные строки в модалке
+                showRowDataModal(rowData, 'settlement');
+            }
+        });
+    }
+
+    // 2. Обработчик для таблицы рейтингов - показывает данные всей строки
+    document.addEventListener('dblclick', function(e) {
+        const table = document.getElementById('settlements-table');
+        if (!table) return;
+
+        // Проверяем, что таблица в режиме рейтингов (есть колонки с рейтингами)
+        const headerCells = table.querySelectorAll('thead th');
+        let hasRatingColumns = false;
+        headerCells.forEach(th => {
+            if (th.textContent.includes('РЭС') || th.textContent.includes('Всего РЭС')) {
+                hasRatingColumns = true;
+            }
+        });
+
+        if (!hasRatingColumns) return;
+
+        const row = e.target.closest('#settlements-table tbody tr');
+        if (!row) return;
+
+        // Собираем ВСЕ данные из строки
+        const rowData = {};
+        const cells = row.querySelectorAll('td');
+        const headers = table.querySelectorAll('thead th');
+
+        headers.forEach((th, index) => {
+            if (cells[index]) {
+                // Очищаем заголовок от иконок сортировки
+                let key = th.textContent.trim();
+                // Убираем ▲ и ▼
+                key = key.replace(/[▲▼]/g, '').trim();
+                rowData[key] = cells[index].textContent.trim();
+            }
+        });
+
+        // Выделяем строку
+        document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+            tr.classList.remove('selected');
+        });
+        row.classList.add('selected');
+
+        console.log('▶ Выбрана строка рейтинга (двойной клик):', rowData);
+
+        // Показываем ВСЕ данные строки в модалке
+        showRowDataModal(rowData, 'rating');
+    });
+}
+
+// ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПОКАЗА ДАННЫХ СТРОКИ ====================
+
+function showRowDataModal(data, type) {
+    // Удаляем старую модалку
+    const existing = document.getElementById('row-data-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'row-data-modal';
+    modal.className = 'res-modal-overlay';
+
+    const content = document.createElement('div');
+    content.className = 'res-modal-content';
+    content.style.maxWidth = '700px';
+
+    // Определяем заголовок
+    let titleText = 'Данные строки';
+    if (type === 'settlement') {
+        const name = data['Название'] || 'Н/Д';
+        titleText = `Данные населенного пункта: ${name}`;
+    } else if (type === 'rating') {
+        const name = data['Название'] || 'Н/Д';
+        titleText = `Данные рейтинга населенного пункта: ${name}`;
+    }
+
+    const title = document.createElement('h3');
+    title.textContent = titleText;
+    title.className = 'res-modal-title';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Закрыть';
+    closeBtn.className = 'res-modal-close-btn';
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+    });
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'res-table-wrapper';
+    tableWrapper.style.maxHeight = '70vh';
+
+    const table = document.createElement('table');
+    table.className = 'res-modal-table';
+    table.style.width = '100%';
+
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+
+    content.appendChild(title);
+    content.appendChild(tableWrapper);
+    tableWrapper.appendChild(table);
+    content.appendChild(closeBtn);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Заполняем таблицу ВСЕМИ данными (без иконок сортировки)
+    Object.keys(data).forEach(key => {
+        // Пропускаем пустые ключи
+        if (!key || key.trim() === '') return;
+
+        // Очищаем ключ от иконок сортировки на всякий случай
+        const cleanKey = key.replace(/[▲▼]/g, '').trim();
+
+        const row = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = cleanKey;
+        // Убираем все иконки сортировки
+        th.style.cssText = 'text-align: left; padding: 8px 12px; border: 1px solid #ddd; background: #f2f2f2; width: 40%;';
+        const td = document.createElement('td');
+        td.textContent = data[key] || '-';
+        td.style.cssText = 'padding: 8px 12px; border: 1px solid #ddd;';
+        row.appendChild(th);
+        row.appendChild(td);
+        tbody.appendChild(row);
+    });
+
+    // Если данных нет, показываем сообщение
+    if (Object.keys(data).length === 0) {
+        const row = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 2;
+        td.textContent = 'Нет данных для отображения';
+        td.style.cssText = 'text-align: center; padding: 20px; border: 1px solid #ddd;';
+        row.appendChild(td);
+        tbody.appendChild(row);
+    }
+}
+
 // ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
 
 function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
     if (!table) return;
+
+    // Скрываем подсказку, показываем таблицу
+    hidePlaceholder();
 
     const oldSettlementsTitle = document.querySelector('.settlements-title');
     if (oldSettlementsTitle) oldSettlementsTitle.remove();
@@ -640,11 +848,9 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
     currentSettlementsFiltered = data;
 
-    // Удаляем старый фильтр
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
 
-    // Создаем фильтр
     const tableContainer = document.querySelector('.table__rating');
 
     const filterContainer = document.createElement('div');
@@ -687,7 +893,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         });
     }
 
-    // Восстанавливаем сохраненное значение поля, если keepFilter = true
     if (keepFilter && savedFilterField) {
         fieldSelect.value = savedFilterField;
     }
@@ -706,7 +911,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     valueInput.type = 'text';
     valueInput.placeholder = 'Введите значение...';
 
-    // Восстанавливаем сохраненное значение, если keepFilter = true
     if (keepFilter && savedFilterValue) {
         valueInput.value = savedFilterValue;
     }
@@ -726,7 +930,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     exactDiv.appendChild(exactLabel);
     filterContainer.appendChild(exactDiv);
 
-    // Восстанавливаем сохраненное состояние чекбокса, если keepFilter = true
     if (keepFilter && savedFilterExact) {
         exactCheckbox.checked = true;
     }
@@ -749,7 +952,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         const value = valueInput.value;
         const exactMatch = exactCheckbox.checked;
         if (field && value) {
-            // Сохраняем значения
             savedFilterField = field;
             savedFilterValue = value;
             savedFilterExact = exactMatch;
@@ -758,14 +960,12 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            // Фильтруем исходные данные и показываем на 1 странице
             const filtered = filterData(originalDataForFilter, field, value, exactMatch);
             renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
         }
     });
 
     resetBtn.addEventListener('click', () => {
-        // Очищаем сохраненные значения
         savedFilterField = '';
         savedFilterValue = '';
         savedFilterExact = false;
@@ -774,7 +974,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         currentFilterValue = '';
         currentFilterExact = false;
 
-        // Показываем исходные данные на ТЕКУЩЕЙ странице
         const currentPage = settlementsData.page || 1;
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
@@ -930,6 +1129,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
     if (!table) return;
 
+    hidePlaceholder();
+
     const oldSettlementsTitle = document.querySelector('.settlements-title');
     if (oldSettlementsTitle) oldSettlementsTitle.remove();
 
@@ -960,11 +1161,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     currentSettlementsFiltered = data;
 
-    // Удаляем старый фильтр
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
 
-    // Создаем фильтр для комбинированной таблицы
     const tableContainer = document.querySelector('.table__rating');
 
     const filterContainer = document.createElement('div');
@@ -1010,7 +1209,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'count_res_wifi', 'count_res_tetra'
     ];
 
-    // Добавляем поля из данных НП
     Object.keys(data[0]).forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
@@ -1018,7 +1216,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         fieldSelect.appendChild(opt);
     });
 
-    // Добавляем поля рейтинга (даже если их нет в data)
     ratingFieldKeys.forEach(key => {
         if (!Object.keys(data[0]).includes(key)) {
             const opt = document.createElement('option');
@@ -1028,7 +1225,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         }
     });
 
-    // Восстанавливаем сохраненное значение поля, если keepFilter = true
     if (keepFilter && savedFilterField) {
         fieldSelect.value = savedFilterField;
     }
@@ -1047,7 +1243,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     valueInput.type = 'text';
     valueInput.placeholder = 'Введите значение...';
 
-    // Восстанавливаем сохраненное значение, если keepFilter = true
     if (keepFilter && savedFilterValue) {
         valueInput.value = savedFilterValue;
     }
@@ -1067,7 +1262,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     exactDiv.appendChild(exactLabel);
     filterContainer.appendChild(exactDiv);
 
-    // Восстанавливаем сохраненное состояние чекбокса, если keepFilter = true
     if (keepFilter && savedFilterExact) {
         exactCheckbox.checked = true;
     }
@@ -1090,7 +1284,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         const value = valueInput.value;
         const exactMatch = exactCheckbox.checked;
         if (field && value) {
-            // Сохраняем значения
             savedFilterField = field;
             savedFilterValue = value;
             savedFilterExact = exactMatch;
@@ -1099,14 +1292,12 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            // Фильтруем данные с учетом рейтингов и показываем на 1 странице
             const filtered = filterDataWithRatings(originalDataForFilter, allRatings, field, value, exactMatch);
             renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
         }
     });
 
     resetBtn.addEventListener('click', () => {
-        // Очищаем сохраненные значения
         savedFilterField = '';
         savedFilterValue = '';
         savedFilterExact = false;
@@ -1115,14 +1306,12 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         currentFilterValue = '';
         currentFilterExact = false;
 
-        // Показываем исходные данные на ТЕКУЩЕЙ странице
         const currentPage = settlementsData.page || 1;
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
 
-    // ===== ЗАГОЛОВКИ =====
     if (thead) {
         const headerRow = document.createElement('tr');
         const headers = [
@@ -1176,7 +1365,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
-    // ===== СОРТИРОВКА С УЧЕТОМ РЕЙТИНГОВЫХ ПОЛЕЙ =====
     let displayData = [...data];
     if (currentSortField) {
         const ratingFields = ['count_res', 'count_res_tv', 'count_res_rv',
@@ -1186,29 +1374,23 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         displayData.sort((a, b) => {
             let valA, valB;
 
-            // Проверяем, является ли поле рейтинговым
             if (ratingFields.includes(currentSortField)) {
-                // Получаем значения из рейтинга
                 const ratingA = allRatings[a.id] || {};
                 const ratingB = allRatings[b.id] || {};
                 valA = ratingA[currentSortField];
                 valB = ratingB[currentSortField];
             } else {
-                // Получаем значения из данных НП
                 valA = a[currentSortField];
                 valB = b[currentSortField];
             }
 
-            // Если значения undefined или null, заменяем на пустую строку или 0
             if (valA === undefined || valA === null) valA = '';
             if (valB === undefined || valB === null) valB = '';
 
-            // Сравнение для чисел
             if (typeof valA === 'number' && typeof valB === 'number') {
                 return currentSortOrder === 'asc' ? valA - valB : valB - valA;
             }
 
-            // Сравнение для строк
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
             if (currentSortOrder === 'asc') {
@@ -1219,7 +1401,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         });
     }
 
-    // ===== ОТРИСОВКА ТЕЛА ТАБЛИЦЫ =====
     if (tbody) {
         displayData.forEach(item => {
             const row = document.createElement('tr');
@@ -1319,7 +1500,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
                 console.log('▶ Выбран НП:', selectedSettlementId, selectedSettlementName);
                 showResPageSize();
 
-                // Показываем кнопку расчета выбранного НП, если нужно
                 showSettlementButtons();
             });
 
@@ -1336,7 +1516,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         }
     }
 
-    // Показываем кнопки в зависимости от режима
     showSettlementButtons();
 }
 
@@ -1408,7 +1587,6 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
                 const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSizeVal);
 
                 if (result && result.items) {
-                    // Сохраняем новые данные как исходные
                     originalDataForFilter = result.items || [];
                     originalTotalForFilter = result.total || 0;
 
@@ -1417,7 +1595,6 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
                     settlementsData.page = newPage;
                     settlementsData.pageSize = pageSizeVal;
 
-                    // Если мы в режиме рейтингов, загружаем рейтинги для новых НП
                     if (showRatings) {
                         await loadRatingsForSettlements(settlementsData.items, isCalculateMode);
 
@@ -1430,7 +1607,6 @@ function renderSettlementsPagination(total, currentPage, pageSize) {
                             renderCombinedTable(originalDataForFilter, originalTotalForFilter, newPage, pageSizeVal, false);
                         }
                     } else {
-                        // Обычный режим без рейтингов
                         if (savedFilterField && savedFilterValue) {
                             const filtered = filterData(originalDataForFilter, savedFilterField, savedFilterValue, savedFilterExact);
                             renderSettlementsTableOnly(filtered, filtered.length, 1, pageSizeVal, true);
@@ -1460,7 +1636,7 @@ async function loadResForModal(settlementId, lat, lon, area) {
     loader.show('Загрузка РЭС...');
 
     try {
-        const radius = calculateRadius(area);
+        const radius = calculateRadius(area || 1);
 
         const body = {
             regions: currentRegions,
@@ -1472,7 +1648,8 @@ async function loadResForModal(settlementId, lat, lon, area) {
             }
         };
 
-        const pageSize = getPageSize('res');
+        // Размер страницы РЭС по умолчанию 50
+        const pageSize = 50; // или getPageSize('res') если нужно из select
         const result = await getResPage(1, pageSize, body);
 
         if (result) {
@@ -1496,6 +1673,10 @@ async function loadResForModal(settlementId, lat, lon, area) {
 
 // ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
 
+// ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
+
+// ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
+
 function openResModal(data, settlementId) {
     const existing = document.getElementById('res-modal');
     if (existing) existing.remove();
@@ -1510,6 +1691,24 @@ function openResModal(data, settlementId) {
     const title = document.createElement('h3');
     title.textContent = `РЭС для НП: ${selectedSettlementName || settlementId}`;
     title.className = 'res-modal-title';
+
+    // Добавляем управление размером страницы РЭС в модалку
+    const pageSizeControl = document.createElement('div');
+    pageSizeControl.className = 'page-size-control';
+    pageSizeControl.dataset.table = 'res';
+    pageSizeControl.innerHTML = `
+        <label>Размер страницы РЭС:</label>
+        <select class="page-size-select">
+            <option value="1">1</option>
+            <option value="5">5</option>
+            <option value="10" >10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+        </select>
+    `;
 
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
@@ -1529,17 +1728,33 @@ function openResModal(data, settlementId) {
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
+    // Пагинация для РЭС
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-controls';
+    paginationContainer.id = 'res-pagination-modal';
+
     content.appendChild(title);
+    content.appendChild(pageSizeControl);
     content.appendChild(tableWrapper);
+    tableWrapper.appendChild(table);
+    content.appendChild(paginationContainer);
     content.appendChild(closeBtn);
     modal.appendChild(content);
     document.body.appendChild(modal);
 
-    function renderResTable(data) {
+    // Сохраняем текущие данные
+    const currentData = data || [];
+    const currentTotal = resData.total || currentData.length || 0;
+    const currentPage = resData.page || 1;
+    const currentPageSize = resData.pageSize || 10;
+
+    // Функция рендеринга таблицы РЭС
+    // Функция рендеринга таблицы РЭС (без обработки двойного клика)
+    function renderResTable(items, total, page, pageSize) {
         thead.innerHTML = '';
         tbody.innerHTML = '';
 
-        if (!data || data.length === 0) {
+        if (!items || items.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 9;
@@ -1547,9 +1762,12 @@ function openResModal(data, settlementId) {
             cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
+
+            paginationContainer.innerHTML = '';
             return;
         }
 
+        // Заголовки
         const headerRow = document.createElement('tr');
         const headers = [
             'ID', 'Тип ID', 'Вид ID', 'Название', 'Оператор',
@@ -1562,7 +1780,8 @@ function openResModal(data, settlementId) {
         });
         thead.appendChild(headerRow);
 
-        data.forEach(item => {
+        // Данные (без обработчиков двойного клика)
+        items.forEach(item => {
             const row = document.createElement('tr');
 
             const idCell = document.createElement('td');
@@ -1603,13 +1822,134 @@ function openResModal(data, settlementId) {
 
             tbody.appendChild(row);
         });
+
+        // Рендерим пагинацию
+        renderResPagination(total, page, pageSize);
     }
 
-    tableWrapper.appendChild(table);
-    renderResTable(data);
-}
+    // Функция пагинации для РЭС
+    function renderResPagination(total, currentPage, pageSize) {
+        const totalPages = Math.ceil(total / pageSize) || 1;
 
-// ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ (GET + POST) ====================
+        let html = `
+            <div class="pagination-info">
+                Страница ${currentPage} из ${totalPages} (всего РЭС: ${total})
+            </div>
+            <div class="pagination-buttons">
+                <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
+        `;
+
+        if (currentPage > 1) {
+            html += `<button class="pagination-btn" data-page="1">1</button>`;
+        } else {
+            html += `<button class="pagination-btn active" data-page="1">1</button>`;
+        }
+
+        if (currentPage > 3) {
+            html += `<span class="pagination-ellipsis">…</span>`;
+        }
+
+        let startPage = Math.max(2, currentPage - 1);
+        let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === 1 || i === totalPages) continue;
+            const isActive = i === currentPage;
+            html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+
+        if (currentPage < totalPages - 2) {
+            html += `<span class="pagination-ellipsis">…</span>`;
+        }
+
+        if (totalPages > 1) {
+            if (currentPage === totalPages) {
+                html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
+            } else {
+                html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
+            }
+        }
+
+        html += `
+                <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
+            </div>
+        `;
+
+        paginationContainer.innerHTML = html;
+
+        // Обработчики для кнопок пагинации
+        paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                let newPage = currentPage;
+
+                if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
+                else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
+                else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
+
+                if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
+                    await loadResPageForModal(newPage, pageSize);
+                }
+            });
+        });
+    }
+
+    // Функция загрузки страницы РЭС для модалки
+    async function loadResPageForModal(page, pageSize) {
+        const loader = initLoader();
+        loader.show('Загрузка РЭС...');
+
+        try {
+            const radius = calculateRadius(selectedSettlementArea || 1);
+            const body = {
+                regions: currentRegions,
+                kinds: currentKinds,
+                area: {
+                    lat: selectedSettlementLat,
+                    lon: selectedSettlementLon,
+                    radius: radius
+                }
+            };
+
+            const result = await getResPage(page, pageSize, body);
+
+            if (result && result.res) {
+                resData.items = result.res || [];
+                resData.total = result.total || 0;
+                resData.page = page;
+                resData.pageSize = pageSize;
+
+                renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
+            } else {
+                renderResTable([], 0, 1, pageSize);
+                renderPopup('Нет РЭС для выбранного населенного пункта');
+            }
+
+            loader.close();
+        } catch (error) {
+            loader.close();
+            renderPopup(`Ошибка загрузки РЭС: ${error.message}`, true);
+            console.error('Ошибка загрузки РЭС:', error);
+        }
+    }
+
+    // Обработчик изменения размера страницы
+    const selectElement = pageSizeControl.querySelector('.page-size-select');
+    selectElement.addEventListener('change', async function() {
+        const newSize = parseInt(this.value);
+        if (!isNaN(newSize) && newSize > 0) {
+            // Обновляем размер страницы в resData
+            resData.pageSize = newSize;
+            // Загружаем первую страницу с новым размером
+            await loadResPageForModal(1, newSize);
+        }
+    });
+
+    // Отрисовываем начальные данные
+    renderResTable(currentData, currentTotal, currentPage, currentPageSize);
+}
+// ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ ====================
 
 function createProgressModal(total) {
     const existing = document.getElementById('rating-progress-modal');
@@ -1698,7 +2038,6 @@ async function getRatingsOnlyForData(items) {
         return;
     }
 
-    // Загружаем рейтинги для всех НП (только GET, без POST)
     await loadRatingsForSettlements(items, false);
 
     renderPopup(`Загружено рейтингов для ${total} населенных пунктов`, false);
@@ -1706,7 +2045,6 @@ async function getRatingsOnlyForData(items) {
 }
 
 async function calculateRatingsForData(items) {
-    // Включаем режим расчета (POST разрешен)
     isCalculateMode = true;
     isCancelled = false;
 
@@ -1737,7 +2075,6 @@ async function calculateRatingsForData(items) {
             let ratingData = null;
             let status200 = false;
 
-            // Проверяем, есть ли уже рейтинг в кеше
             if (allRatings[settlement.id]) {
                 console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
                 processed++;
@@ -1746,7 +2083,6 @@ async function calculateRatingsForData(items) {
                 continue;
             }
 
-            // GET запрос
             try {
                 ratingData = await getRatingSett(settlement.id);
                 if (ratingData !== null && ratingData !== undefined) {
@@ -1759,19 +2095,17 @@ async function calculateRatingsForData(items) {
                 console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
             }
 
-            // Если GET не дал данных — POST
-            if (!status200) {
-                console.log(`▶ НП ${settlement.id}: отправляем POST...`);
-                try {
-                    await postRatingSett(settlement.id);
-                    ratingData = await getRatingSett(settlement.id);
-                    if (ratingData !== null && ratingData !== undefined) {
-                        status200 = true;
-                        console.log(`▶ НП ${settlement.id}: данные получены после POST`);
-                    }
-                } catch (postErr) {
-                    console.warn(`▶ НП ${settlement.id}: POST ошибка`, postErr);
+            // Всегда отправляем POST при расчете
+            console.log(`▶ НП ${settlement.id}: отправляем POST...`);
+            try {
+                await postRatingSett(settlement.id);
+                ratingData = await getRatingSett(settlement.id);
+                if (ratingData !== null && ratingData !== undefined) {
+                    status200 = true;
+                    console.log(`▶ НП ${settlement.id}: данные получены после POST`);
                 }
+            } catch (postErr) {
+                console.warn(`▶ НП ${settlement.id}: POST ошибка`, postErr);
             }
 
             if (status200 && ratingData) {
@@ -1807,10 +2141,8 @@ async function calculateRatingsForData(items) {
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
 
 async function handleSettlementsButton() {
-    // Сбрасываем режим расчета
     isCalculateMode = false;
 
-    // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
@@ -1834,7 +2166,6 @@ async function handleSettlementsButton() {
     const result = await loadSettlements(1, regions, popRange, pageSize);
 
     if (result) {
-        // Сохраняем исходные данные для фильтрации
         originalDataForFilter = result.items || [];
         originalTotalForFilter = result.total || 0;
 
@@ -1851,7 +2182,6 @@ async function handleSettlementsButton() {
         allRatings = {};
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
 
-        // Показываем кнопки РЭС и Проводные УС
         showSettlementButtons();
 
         renderPopup(`Загружено ${settlementsData.total} населенных пунктов`);
@@ -1859,10 +2189,8 @@ async function handleSettlementsButton() {
 }
 
 async function handleRatingButton() {
-    // Сбрасываем режим расчета (только GET)
     isCalculateMode = false;
 
-    // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
@@ -1890,7 +2218,6 @@ async function handleRatingButton() {
         return;
     }
 
-    // Сохраняем исходные данные для фильтрации
     originalDataForFilter = result.items || [];
     originalTotalForFilter = result.total || 0;
 
@@ -1909,16 +2236,13 @@ async function handleRatingButton() {
 
     await getRatingsOnlyForData(settlementsData.items);
 
-    // После загрузки рейтингов - скрываем все кнопки (для таблицы рейтингов НП)
     hideSettlementButtons();
     hideCalculateSelectedButton();
 }
 
 async function handleBothButton() {
-    // Включаем режим расчета (POST разрешен)
     isCalculateMode = true;
 
-    // Сбрасываем сохраненные значения фильтра при новом запросе
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
@@ -1946,7 +2270,6 @@ async function handleBothButton() {
         return;
     }
 
-    // Сохраняем исходные данные для фильтрации
     originalDataForFilter = result.items || [];
     originalTotalForFilter = result.total || 0;
 
@@ -1965,7 +2288,6 @@ async function handleBothButton() {
 
     await calculateRatingsForData(settlementsData.items);
 
-    // После расчета - показываем кнопку "Рассчитать рейтинг выбранного НП"
     showSettlementButtons();
 }
 
@@ -1997,21 +2319,17 @@ function handleClear() {
         }
     }
 
-    // Сбрасываем режим расчета
     isCalculateMode = false;
 
-    // Скрываем все кнопки
     hideSettlementButtons();
     hideCalculateSelectedButton();
 
-    // Сбрасываем сохраненные значения фильтра
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
     originalDataForFilter = [];
     originalTotalForFilter = 0;
 
-    // Очищаем поле поиска (фильтр)
     clearFilterInputs();
 
     hideResPageSize();
@@ -2048,19 +2366,20 @@ function handleClear() {
     allRatings = {};
     showRatings = false;
 
+    // Показываем подсказку
+    showPlaceholder();
+
     renderPopup('Фильтры сброшены');
 }
 
 // ==================== ОЧИСТКА ПОЛЯ ПОИСКА ====================
 
 function clearFilterInputs() {
-    // Удаляем контейнер фильтра
     const filterContainer = document.querySelector('.filter-container');
     if (filterContainer) {
         filterContainer.remove();
     }
 
-    // Также очищаем значения в сохраненных переменных
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
@@ -2080,6 +2399,9 @@ document.addEventListener('DOMContentLoaded', function() {
     hideAutoRating();
     hideSettlementButtons();
     hideCalculateSelectedButton();
+
+    // Показываем подсказку при загрузке
+    showPlaceholder();
 
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
     document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
@@ -2103,6 +2425,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         });
     }
+
+    // Настраиваем обработчик двойного клика
+    setupDoubleClickHandler();
 
     document.querySelectorAll('.page-size-control .page-size-select').forEach(select => {
         select.addEventListener('change', function() {
