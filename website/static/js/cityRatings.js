@@ -448,7 +448,7 @@ function filterDataWithRatings(data, ratings, field, value, exactMatch = false) 
     if (!value || !field) return data;
 
     const ratingFields = [
-        'count_res', 'count_res_tv', 'count_res_rv',
+        'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
         'count_res_wifi', 'count_res_tetra',
         'count_operators',
@@ -1190,7 +1190,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'lon': 'Долгота',
         'population': 'Население',
         'fias_id': 'Код ФИАС',
-        'count_res': 'Всего РЭС',
         'count_res_tv': 'Количество РЭС ТВ',
         'count_res_rv': 'Количество РЭС РВ',
         'count_res_lte': 'Количество РЭС LTE',
@@ -1239,7 +1238,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     };
 
     const ratingFieldKeys = [
-        'count_res', 'count_res_tv', 'count_res_rv',
+        'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
         'count_res_wifi', 'count_res_tetra',
         'count_operators',
@@ -1380,7 +1379,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             { key: 'lon', label: 'Долгота' },
             { key: 'population', label: 'Население' },
             { key: 'fias_id', label: 'Код ФИАС' },
-            { key: 'count_res', label: 'Всего РЭС' },
             { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
             { key: 'count_res_rv', label: 'Количество РЭС РВ' },
             { key: 'count_res_lte', label: 'Количество РЭС LTE' },
@@ -1461,7 +1459,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     let displayData = [...data];
     if (currentSortField) {
         const ratingFields = [
-            'count_res', 'count_res_tv', 'count_res_rv',
+            'count_res_tv', 'count_res_rv',
             'count_res_lte', 'count_res_gsm', 'count_res_5g',
             'count_res_wifi', 'count_res_tetra',
             'count_operators',
@@ -1568,9 +1566,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
             const rating = allRatings[item.id] || {};
 
-            const countResCell = document.createElement('td');
-            countResCell.textContent = rating.count_res !== undefined ? rating.count_res : '-';
-            row.appendChild(countResCell);
 
             const countResTvCell = document.createElement('td');
             countResTvCell.textContent = rating.count_res_tv !== undefined ? rating.count_res_tv : '-';
