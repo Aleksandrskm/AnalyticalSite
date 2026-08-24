@@ -140,7 +140,6 @@ function showPlaceholder() {
     if (table) table.style.display = 'none';
     if (pagination) pagination.style.display = 'none';
     if (divider) divider.style.display = 'none';
-    // if (pageSizeControl) pageSizeControl.style.display = 'none';
 }
 
 function hidePlaceholder() {
@@ -448,9 +447,31 @@ function filterData(data, field, value, exactMatch = false) {
 function filterDataWithRatings(data, ratings, field, value, exactMatch = false) {
     if (!value || !field) return data;
 
-    const ratingFields = ['count_res', 'count_res_tv', 'count_res_rv',
+    const ratingFields = [
+        'count_res', 'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
-        'count_res_wifi', 'count_res_tetra'];
+        'count_res_wifi', 'count_res_tetra',
+        'count_operators',
+        'count_abonents_lte', 'population_percent_lte',
+        'communication_coverage_lte', 'communication_coverage_percent_lte',
+        'traffic_lte', 'traffic_percent_lte',
+        'count_abonents_gsm', 'population_percent_gsm',
+        'communication_coverage_gsm', 'communication_coverage_percent_gsm',
+        'traffic_gsm', 'traffic_percent_gsm',
+        'count_abonents_5g', 'population_percent_5g',
+        'communication_coverage_5g', 'communication_coverage_percent_5g',
+        'traffic_5g', 'traffic_percent_5g',
+        'count_abonents_wifi', 'population_percent_wifi',
+        'communication_coverage_wifi', 'communication_coverage_percent_wifi',
+        'traffic_wifi', 'traffic_percent_wifi',
+        'count_abonents_tetra', 'population_percent_tetra',
+        'communication_coverage_tetra', 'communication_coverage_percent_tetra',
+        'traffic_tetra', 'traffic_percent_tetra',
+        'count_res_mobile', 'count_abonents_mobile',
+        'population_percent_mobile', 'communication_coverage_mobile',
+        'communication_coverage_percent_mobile', 'traffic_mobile',
+        'traffic_percent_mobile'
+    ];
 
     return data.filter(row => {
         let cellValue;
@@ -610,18 +631,15 @@ async function handleCalculateSelected() {
     loader.close();
 }
 
-
 // ==================== ОБРАБОТЧИК ДВОЙНОГО КЛИКА ДЛЯ ВСЕХ ТАБЛИЦ ====================
 
 function setupDoubleClickHandler() {
-    // 1. Обработчик для основной таблицы (населенные пункты) - показывает данные строки
     const table = document.getElementById('settlements-table');
     if (table) {
         table.addEventListener('dblclick', function(e) {
             const row = e.target.closest('tr');
             if (!row) return;
 
-            // Проверяем, что это не таблица рейтингов (нет колонок с рейтингами)
             const headerCells = this.querySelectorAll('thead th');
             let hasRatingColumns = false;
             headerCells.forEach(th => {
@@ -630,7 +648,6 @@ function setupDoubleClickHandler() {
                 }
             });
 
-            // Если это таблица рейтингов - пропускаем, обрабатывается вторым обработчиком
             if (hasRatingColumns) return;
 
             const id = row.dataset.id;
@@ -640,7 +657,6 @@ function setupDoubleClickHandler() {
             const name = row.dataset.name;
 
             if (id && !isNaN(lat) && !isNaN(lon)) {
-                // Выделяем строку
                 document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
                     tr.classList.remove('selected');
                 });
@@ -654,33 +670,27 @@ function setupDoubleClickHandler() {
 
                 console.log('▶ Выбран НП (двойной клик):', selectedSettlementId, selectedSettlementName);
 
-                // Собираем все данные из строки
                 const rowData = {};
                 const cells = row.querySelectorAll('td');
                 const headers = this.querySelectorAll('thead th');
 
                 headers.forEach((th, index) => {
                     if (cells[index]) {
-                        // Очищаем заголовок от иконок сортировки
                         let key = th.textContent.trim();
-                        // Убираем ▲ и ▼
                         key = key.replace(/[▲▼]/g, '').trim();
                         rowData[key] = cells[index].textContent.trim();
                     }
                 });
 
-                // Показываем все данные строки в модалке
                 showRowDataModal(rowData, 'settlement');
             }
         });
     }
 
-    // 2. Обработчик для таблицы рейтингов - показывает данные всей строки
     document.addEventListener('dblclick', function(e) {
         const table = document.getElementById('settlements-table');
         if (!table) return;
 
-        // Проверяем, что таблица в режиме рейтингов (есть колонки с рейтингами)
         const headerCells = table.querySelectorAll('thead th');
         let hasRatingColumns = false;
         headerCells.forEach(th => {
@@ -694,22 +704,18 @@ function setupDoubleClickHandler() {
         const row = e.target.closest('#settlements-table tbody tr');
         if (!row) return;
 
-        // Собираем ВСЕ данные из строки
         const rowData = {};
         const cells = row.querySelectorAll('td');
         const headers = table.querySelectorAll('thead th');
 
         headers.forEach((th, index) => {
             if (cells[index]) {
-                // Очищаем заголовок от иконок сортировки
                 let key = th.textContent.trim();
-                // Убираем ▲ и ▼
                 key = key.replace(/[▲▼]/g, '').trim();
                 rowData[key] = cells[index].textContent.trim();
             }
         });
 
-        // Выделяем строку
         document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
             tr.classList.remove('selected');
         });
@@ -717,7 +723,6 @@ function setupDoubleClickHandler() {
 
         console.log('▶ Выбрана строка рейтинга (двойной клик):', rowData);
 
-        // Показываем ВСЕ данные строки в модалке
         showRowDataModal(rowData, 'rating');
     });
 }
@@ -725,7 +730,6 @@ function setupDoubleClickHandler() {
 // ==================== МОДАЛЬНОЕ ОКНО ДЛЯ ПОКАЗА ДАННЫХ СТРОКИ ====================
 
 function showRowDataModal(data, type) {
-    // Удаляем старую модалку
     const existing = document.getElementById('row-data-modal');
     if (existing) existing.remove();
 
@@ -737,7 +741,6 @@ function showRowDataModal(data, type) {
     content.className = 'res-modal-content';
     content.style.maxWidth = '700px';
 
-    // Определяем заголовок
     let titleText = 'Данные строки';
     if (type === 'settlement') {
         const name = data['Название'] || 'Н/Д';
@@ -776,18 +779,14 @@ function showRowDataModal(data, type) {
     modal.appendChild(content);
     document.body.appendChild(modal);
 
-    // Заполняем таблицу ВСЕМИ данными (без иконок сортировки)
     Object.keys(data).forEach(key => {
-        // Пропускаем пустые ключи
         if (!key || key.trim() === '') return;
 
-        // Очищаем ключ от иконок сортировки на всякий случай
         const cleanKey = key.replace(/[▲▼]/g, '').trim();
 
         const row = document.createElement('tr');
         const th = document.createElement('th');
         th.textContent = cleanKey;
-        // Убираем все иконки сортировки
         th.style.cssText = 'text-align: left; padding: 8px 12px; border: 1px solid #ddd; background: #f2f2f2; width: 40%;';
         const td = document.createElement('td');
         td.textContent = data[key] || '-';
@@ -797,7 +796,6 @@ function showRowDataModal(data, type) {
         tbody.appendChild(row);
     });
 
-    // Если данных нет, показываем сообщение
     if (Object.keys(data).length === 0) {
         const row = document.createElement('tr');
         const td = document.createElement('td');
@@ -815,7 +813,6 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     const table = document.getElementById('settlements-table');
     if (!table) return;
 
-    // Скрываем подсказку, показываем таблицу
     hidePlaceholder();
 
     const oldSettlementsTitle = document.querySelector('.settlements-title');
@@ -1149,7 +1146,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 18;
+            cell.colSpan = 57;
             cell.textContent = 'Нет населенных пунктов для отображения';
             cell.className = 'empty-message';
             row.appendChild(cell);
@@ -1194,19 +1191,77 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'population': 'Население',
         'fias_id': 'Код ФИАС',
         'count_res': 'Всего РЭС',
-        'count_res_tv': 'РЭС ТВ',
-        'count_res_rv': 'РЭС РВ',
-        'count_res_lte': 'РЭС LTE',
-        'count_res_gsm': 'РЭС GSM',
-        'count_res_5g': 'РЭС 5G',
-        'count_res_wifi': 'РЭС Wi-Fi',
-        'count_res_tetra': 'РЭС TETRA'
+        'count_res_tv': 'Количество РЭС ТВ',
+        'count_res_rv': 'Количество РЭС РВ',
+        'count_res_lte': 'Количество РЭС LTE',
+        'count_res_gsm': 'Количество РЭС GSM',
+        'count_res_5g': 'Количество РЭС 5G',
+        'count_res_wifi': 'Количество РЭС Wi-Fi',
+        'count_res_tetra': 'Количество РЭС Tetra',
+        'count_operators': 'Количество РЭС',
+        'count_abonents_lte': 'Количество абонентов LTE',
+        'population_percent_lte': 'Процент охвата населения LTE',
+        'communication_coverage_lte': 'Покрытие связи LTE',
+        'communication_coverage_percent_lte': 'Процент покрытия связи LTE',
+        'traffic_lte': 'Объем трафика LTE',
+        'traffic_percent_lte': 'Процент трафика LTE',
+        'count_abonents_gsm': 'Количество абонентов GSM',
+        'population_percent_gsm': 'Процент охвата населения GSM',
+        'communication_coverage_gsm': 'Покрытие связи GSM',
+        'communication_coverage_percent_gsm': 'Процент покрытия связи GSM',
+        'traffic_gsm': 'Объем трафика GSM',
+        'traffic_percent_gsm': 'Процент трафика GSM',
+        'count_abonents_5g': 'Количество абонентов 5G',
+        'population_percent_5g': 'Процент охвата населения 5G',
+        'communication_coverage_5g': 'Покрытие связи 5G',
+        'communication_coverage_percent_5g': 'Процент покрытия связи 5G',
+        'traffic_5g': 'Объем трафика 5G',
+        'traffic_percent_5g': 'Процент трафика 5G',
+        'count_abonents_wifi': 'Количество абонентов Wi-Fi',
+        'population_percent_wifi': 'Процент охвата населения Wi-Fi',
+        'communication_coverage_wifi': 'Покрытие связи Wi-Fi',
+        'communication_coverage_percent_wifi': 'Процент покрытия связи Wi-Fi',
+        'traffic_wifi': 'Объем трафика Wi-Fi',
+        'traffic_percent_wifi': 'Процент трафика Wi-Fi',
+        'count_abonents_tetra': 'Количество абонентов Tetra',
+        'population_percent_tetra': 'Процент охвата населения Tetra',
+        'communication_coverage_tetra': 'Покрытие связи Tetra',
+        'communication_coverage_percent_tetra': 'Процент покрытия связи Tetra',
+        'traffic_tetra': 'Объем трафика Tetra',
+        'traffic_percent_tetra': 'Процент трафика Tetra',
+        'count_res_mobile': 'Количество РЭС моб. связи',
+        'count_abonents_mobile': 'Количество абонентов моб. связи',
+        'population_percent_mobile': 'Процент охвата населения моб. связи',
+        'communication_coverage_mobile': 'Покрытие моб. связи',
+        'communication_coverage_percent_mobile': 'Процент покрытия моб. связи',
+        'traffic_mobile': 'Объем трафика моб. связи',
+        'traffic_percent_mobile': 'Процент трафика моб. связи'
     };
 
     const ratingFieldKeys = [
         'count_res', 'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
-        'count_res_wifi', 'count_res_tetra'
+        'count_res_wifi', 'count_res_tetra',
+        'count_operators',
+        'count_abonents_lte', 'population_percent_lte',
+        'communication_coverage_lte', 'communication_coverage_percent_lte',
+        'traffic_lte', 'traffic_percent_lte',
+        'count_abonents_gsm', 'population_percent_gsm',
+        'communication_coverage_gsm', 'communication_coverage_percent_gsm',
+        'traffic_gsm', 'traffic_percent_gsm',
+        'count_abonents_5g', 'population_percent_5g',
+        'communication_coverage_5g', 'communication_coverage_percent_5g',
+        'traffic_5g', 'traffic_percent_5g',
+        'count_abonents_wifi', 'population_percent_wifi',
+        'communication_coverage_wifi', 'communication_coverage_percent_wifi',
+        'traffic_wifi', 'traffic_percent_wifi',
+        'count_abonents_tetra', 'population_percent_tetra',
+        'communication_coverage_tetra', 'communication_coverage_percent_tetra',
+        'traffic_tetra', 'traffic_percent_tetra',
+        'count_res_mobile', 'count_abonents_mobile',
+        'population_percent_mobile', 'communication_coverage_mobile',
+        'communication_coverage_percent_mobile', 'traffic_mobile',
+        'traffic_percent_mobile'
     ];
 
     Object.keys(data[0]).forEach(key => {
@@ -1326,13 +1381,51 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             { key: 'population', label: 'Население' },
             { key: 'fias_id', label: 'Код ФИАС' },
             { key: 'count_res', label: 'Всего РЭС' },
-            { key: 'count_res_tv', label: 'РЭС ТВ' },
-            { key: 'count_res_rv', label: 'РЭС РВ' },
-            { key: 'count_res_lte', label: 'РЭС LTE' },
-            { key: 'count_res_gsm', label: 'РЭС GSM' },
-            { key: 'count_res_5g', label: 'РЭС 5G' },
-            { key: 'count_res_wifi', label: 'РЭС Wi-Fi' },
-            { key: 'count_res_tetra', label: 'РЭС TETRA' }
+            { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
+            { key: 'count_res_rv', label: 'Количество РЭС РВ' },
+            { key: 'count_res_lte', label: 'Количество РЭС LTE' },
+            { key: 'count_res_gsm', label: 'Количество РЭС GSM' },
+            { key: 'count_res_5g', label: 'Количество РЭС 5G' },
+            { key: 'count_res_wifi', label: 'Количество РЭС Wi-Fi' },
+            { key: 'count_res_tetra', label: 'Количество РЭС Tetra' },
+            { key: 'count_operators', label: 'Количество РЭС' },
+            { key: 'count_abonents_lte', label: 'Количество абонентов LTE' },
+            { key: 'population_percent_lte', label: 'Процент охвата населения LTE' },
+            { key: 'communication_coverage_lte', label: 'Покрытие связи LTE' },
+            { key: 'communication_coverage_percent_lte', label: 'Процент покрытия связи LTE' },
+            { key: 'traffic_lte', label: 'Объем трафика LTE' },
+            { key: 'traffic_percent_lte', label: 'Процент трафика LTE' },
+            { key: 'count_abonents_gsm', label: 'Количество абонентов GSM' },
+            { key: 'population_percent_gsm', label: 'Процент охвата населения GSM' },
+            { key: 'communication_coverage_gsm', label: 'Покрытие связи GSM' },
+            { key: 'communication_coverage_percent_gsm', label: 'Процент покрытия связи GSM' },
+            { key: 'traffic_gsm', label: 'Объем трафика GSM' },
+            { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' },
+            { key: 'count_abonents_5g', label: 'Количество абонентов 5G' },
+            { key: 'population_percent_5g', label: 'Процент охвата населения 5G' },
+            { key: 'communication_coverage_5g', label: 'Покрытие связи 5G' },
+            { key: 'communication_coverage_percent_5g', label: 'Процент покрытия связи 5G' },
+            { key: 'traffic_5g', label: 'Объем трафика 5G' },
+            { key: 'traffic_percent_5g', label: 'Процент трафика 5G' },
+            { key: 'count_abonents_wifi', label: 'Количество абонентов Wi-Fi' },
+            { key: 'population_percent_wifi', label: 'Процент охвата населения Wi-Fi' },
+            { key: 'communication_coverage_wifi', label: 'Покрытие связи Wi-Fi' },
+            { key: 'communication_coverage_percent_wifi', label: 'Процент покрытия связи Wi-Fi' },
+            { key: 'traffic_wifi', label: 'Объем трафика Wi-Fi' },
+            { key: 'traffic_percent_wifi', label: 'Процент трафика Wi-Fi' },
+            { key: 'count_abonents_tetra', label: 'Количество абонентов Tetra' },
+            { key: 'population_percent_tetra', label: 'Процент охвата населения Tetra' },
+            { key: 'communication_coverage_tetra', label: 'Покрытие связи Tetra' },
+            { key: 'communication_coverage_percent_tetra', label: 'Процент покрытия связи Tetra' },
+            { key: 'traffic_tetra', label: 'Объем трафика Tetra' },
+            { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' },
+            { key: 'count_res_mobile', label: 'Количество РЭС моб. связи' },
+            { key: 'count_abonents_mobile', label: 'Количество абонентов моб. связи' },
+            { key: 'population_percent_mobile', label: 'Процент охвата населения моб. связи' },
+            { key: 'communication_coverage_mobile', label: 'Покрытие моб. связи' },
+            { key: 'communication_coverage_percent_mobile', label: 'Процент покрытия моб. связи' },
+            { key: 'traffic_mobile', label: 'Объем трафика моб. связи' },
+            { key: 'traffic_percent_mobile', label: 'Процент трафика моб. связи' }
         ];
 
         headers.forEach(h => {
@@ -1367,9 +1460,31 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     let displayData = [...data];
     if (currentSortField) {
-        const ratingFields = ['count_res', 'count_res_tv', 'count_res_rv',
+        const ratingFields = [
+            'count_res', 'count_res_tv', 'count_res_rv',
             'count_res_lte', 'count_res_gsm', 'count_res_5g',
-            'count_res_wifi', 'count_res_tetra'];
+            'count_res_wifi', 'count_res_tetra',
+            'count_operators',
+            'count_abonents_lte', 'population_percent_lte',
+            'communication_coverage_lte', 'communication_coverage_percent_lte',
+            'traffic_lte', 'traffic_percent_lte',
+            'count_abonents_gsm', 'population_percent_gsm',
+            'communication_coverage_gsm', 'communication_coverage_percent_gsm',
+            'traffic_gsm', 'traffic_percent_gsm',
+            'count_abonents_5g', 'population_percent_5g',
+            'communication_coverage_5g', 'communication_coverage_percent_5g',
+            'traffic_5g', 'traffic_percent_5g',
+            'count_abonents_wifi', 'population_percent_wifi',
+            'communication_coverage_wifi', 'communication_coverage_percent_wifi',
+            'traffic_wifi', 'traffic_percent_wifi',
+            'count_abonents_tetra', 'population_percent_tetra',
+            'communication_coverage_tetra', 'communication_coverage_percent_tetra',
+            'traffic_tetra', 'traffic_percent_tetra',
+            'count_res_mobile', 'count_abonents_mobile',
+            'population_percent_mobile', 'communication_coverage_mobile',
+            'communication_coverage_percent_mobile', 'traffic_mobile',
+            'traffic_percent_mobile'
+        ];
 
         displayData.sort((a, b) => {
             let valA, valB;
@@ -1484,6 +1599,159 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             const countResTetraCell = document.createElement('td');
             countResTetraCell.textContent = rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-';
             row.appendChild(countResTetraCell);
+
+            // НОВЫЕ ПОЛЯ
+            const countOperatorsCell = document.createElement('td');
+            countOperatorsCell.textContent = rating.count_operators !== undefined ? rating.count_operators : '-';
+            row.appendChild(countOperatorsCell);
+
+            const countAbonentsLteCell = document.createElement('td');
+            countAbonentsLteCell.textContent = rating.count_abonents_lte !== undefined ? rating.count_abonents_lte : '-';
+            row.appendChild(countAbonentsLteCell);
+
+            const populationPercentLteCell = document.createElement('td');
+            populationPercentLteCell.textContent = rating.population_percent_lte !== undefined ? rating.population_percent_lte : '-';
+            row.appendChild(populationPercentLteCell);
+
+            const communicationCoverageLteCell = document.createElement('td');
+            communicationCoverageLteCell.textContent = rating.communication_coverage_lte !== undefined ? rating.communication_coverage_lte : '-';
+            row.appendChild(communicationCoverageLteCell);
+
+            const communicationCoveragePercentLteCell = document.createElement('td');
+            communicationCoveragePercentLteCell.textContent = rating.communication_coverage_percent_lte !== undefined ? rating.communication_coverage_percent_lte : '-';
+            row.appendChild(communicationCoveragePercentLteCell);
+
+            const trafficLteCell = document.createElement('td');
+            trafficLteCell.textContent = rating.traffic_lte !== undefined ? rating.traffic_lte : '-';
+            row.appendChild(trafficLteCell);
+
+            const trafficPercentLteCell = document.createElement('td');
+            trafficPercentLteCell.textContent = rating.traffic_percent_lte !== undefined ? rating.traffic_percent_lte : '-';
+            row.appendChild(trafficPercentLteCell);
+
+            const countAbonentsGsmCell = document.createElement('td');
+            countAbonentsGsmCell.textContent = rating.count_abonents_gsm !== undefined ? rating.count_abonents_gsm : '-';
+            row.appendChild(countAbonentsGsmCell);
+
+            const populationPercentGsmCell = document.createElement('td');
+            populationPercentGsmCell.textContent = rating.population_percent_gsm !== undefined ? rating.population_percent_gsm : '-';
+            row.appendChild(populationPercentGsmCell);
+
+            const communicationCoverageGsmCell = document.createElement('td');
+            communicationCoverageGsmCell.textContent = rating.communication_coverage_gsm !== undefined ? rating.communication_coverage_gsm : '-';
+            row.appendChild(communicationCoverageGsmCell);
+
+            const communicationCoveragePercentGsmCell = document.createElement('td');
+            communicationCoveragePercentGsmCell.textContent = rating.communication_coverage_percent_gsm !== undefined ? rating.communication_coverage_percent_gsm : '-';
+            row.appendChild(communicationCoveragePercentGsmCell);
+
+            const trafficGsmCell = document.createElement('td');
+            trafficGsmCell.textContent = rating.traffic_gsm !== undefined ? rating.traffic_gsm : '-';
+            row.appendChild(trafficGsmCell);
+
+            const trafficPercentGsmCell = document.createElement('td');
+            trafficPercentGsmCell.textContent = rating.traffic_percent_gsm !== undefined ? rating.traffic_percent_gsm : '-';
+            row.appendChild(trafficPercentGsmCell);
+
+            const countAbonents5gCell = document.createElement('td');
+            countAbonents5gCell.textContent = rating.count_abonents_5g !== undefined ? rating.count_abonents_5g : '-';
+            row.appendChild(countAbonents5gCell);
+
+            const populationPercent5gCell = document.createElement('td');
+            populationPercent5gCell.textContent = rating.population_percent_5g !== undefined ? rating.population_percent_5g : '-';
+            row.appendChild(populationPercent5gCell);
+
+            const communicationCoverage5gCell = document.createElement('td');
+            communicationCoverage5gCell.textContent = rating.communication_coverage_5g !== undefined ? rating.communication_coverage_5g : '-';
+            row.appendChild(communicationCoverage5gCell);
+
+            const communicationCoveragePercent5gCell = document.createElement('td');
+            communicationCoveragePercent5gCell.textContent = rating.communication_coverage_percent_5g !== undefined ? rating.communication_coverage_percent_5g : '-';
+            row.appendChild(communicationCoveragePercent5gCell);
+
+            const traffic5gCell = document.createElement('td');
+            traffic5gCell.textContent = rating.traffic_5g !== undefined ? rating.traffic_5g : '-';
+            row.appendChild(traffic5gCell);
+
+            const trafficPercent5gCell = document.createElement('td');
+            trafficPercent5gCell.textContent = rating.traffic_percent_5g !== undefined ? rating.traffic_percent_5g : '-';
+            row.appendChild(trafficPercent5gCell);
+
+            const countAbonentsWifiCell = document.createElement('td');
+            countAbonentsWifiCell.textContent = rating.count_abonents_wifi !== undefined ? rating.count_abonents_wifi : '-';
+            row.appendChild(countAbonentsWifiCell);
+
+            const populationPercentWifiCell = document.createElement('td');
+            populationPercentWifiCell.textContent = rating.population_percent_wifi !== undefined ? rating.population_percent_wifi : '-';
+            row.appendChild(populationPercentWifiCell);
+
+            const communicationCoverageWifiCell = document.createElement('td');
+            communicationCoverageWifiCell.textContent = rating.communication_coverage_wifi !== undefined ? rating.communication_coverage_wifi : '-';
+            row.appendChild(communicationCoverageWifiCell);
+
+            const communicationCoveragePercentWifiCell = document.createElement('td');
+            communicationCoveragePercentWifiCell.textContent = rating.communication_coverage_percent_wifi !== undefined ? rating.communication_coverage_percent_wifi : '-';
+            row.appendChild(communicationCoveragePercentWifiCell);
+
+            const trafficWifiCell = document.createElement('td');
+            trafficWifiCell.textContent = rating.traffic_wifi !== undefined ? rating.traffic_wifi : '-';
+            row.appendChild(trafficWifiCell);
+
+            const trafficPercentWifiCell = document.createElement('td');
+            trafficPercentWifiCell.textContent = rating.traffic_percent_wifi !== undefined ? rating.traffic_percent_wifi : '-';
+            row.appendChild(trafficPercentWifiCell);
+
+            const countAbonentsTetraCell = document.createElement('td');
+            countAbonentsTetraCell.textContent = rating.count_abonents_tetra !== undefined ? rating.count_abonents_tetra : '-';
+            row.appendChild(countAbonentsTetraCell);
+
+            const populationPercentTetraCell = document.createElement('td');
+            populationPercentTetraCell.textContent = rating.population_percent_tetra !== undefined ? rating.population_percent_tetra : '-';
+            row.appendChild(populationPercentTetraCell);
+
+            const communicationCoverageTetraCell = document.createElement('td');
+            communicationCoverageTetraCell.textContent = rating.communication_coverage_tetra !== undefined ? rating.communication_coverage_tetra : '-';
+            row.appendChild(communicationCoverageTetraCell);
+
+            const communicationCoveragePercentTetraCell = document.createElement('td');
+            communicationCoveragePercentTetraCell.textContent = rating.communication_coverage_percent_tetra !== undefined ? rating.communication_coverage_percent_tetra : '-';
+            row.appendChild(communicationCoveragePercentTetraCell);
+
+            const trafficTetraCell = document.createElement('td');
+            trafficTetraCell.textContent = rating.traffic_tetra !== undefined ? rating.traffic_tetra : '-';
+            row.appendChild(trafficTetraCell);
+
+            const trafficPercentTetraCell = document.createElement('td');
+            trafficPercentTetraCell.textContent = rating.traffic_percent_tetra !== undefined ? rating.traffic_percent_tetra : '-';
+            row.appendChild(trafficPercentTetraCell);
+
+            const countResMobileCell = document.createElement('td');
+            countResMobileCell.textContent = rating.count_res_mobile !== undefined ? rating.count_res_mobile : '-';
+            row.appendChild(countResMobileCell);
+
+            const countAbonentsMobileCell = document.createElement('td');
+            countAbonentsMobileCell.textContent = rating.count_abonents_mobile !== undefined ? rating.count_abonents_mobile : '-';
+            row.appendChild(countAbonentsMobileCell);
+
+            const populationPercentMobileCell = document.createElement('td');
+            populationPercentMobileCell.textContent = rating.population_percent_mobile !== undefined ? rating.population_percent_mobile : '-';
+            row.appendChild(populationPercentMobileCell);
+
+            const communicationCoverageMobileCell = document.createElement('td');
+            communicationCoverageMobileCell.textContent = rating.communication_coverage_mobile !== undefined ? rating.communication_coverage_mobile : '-';
+            row.appendChild(communicationCoverageMobileCell);
+
+            const communicationCoveragePercentMobileCell = document.createElement('td');
+            communicationCoveragePercentMobileCell.textContent = rating.communication_coverage_percent_mobile !== undefined ? rating.communication_coverage_percent_mobile : '-';
+            row.appendChild(communicationCoveragePercentMobileCell);
+
+            const trafficMobileCell = document.createElement('td');
+            trafficMobileCell.textContent = rating.traffic_mobile !== undefined ? rating.traffic_mobile : '-';
+            row.appendChild(trafficMobileCell);
+
+            const trafficPercentMobileCell = document.createElement('td');
+            trafficPercentMobileCell.textContent = rating.traffic_percent_mobile !== undefined ? rating.traffic_percent_mobile : '-';
+            row.appendChild(trafficPercentMobileCell);
 
             row.addEventListener('click', function() {
                 document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
@@ -1648,8 +1916,7 @@ async function loadResForModal(settlementId, lat, lon, area) {
             }
         };
 
-        // Размер страницы РЭС по умолчанию 50
-        const pageSize = 50; // или getPageSize('res') если нужно из select
+        const pageSize = 50;
         const result = await getResPage(1, pageSize, body);
 
         if (result) {
@@ -1673,10 +1940,6 @@ async function loadResForModal(settlementId, lat, lon, area) {
 
 // ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
 
-// ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
-
-// ==================== МОДАЛЬНОЕ ОКНО С РЭС ====================
-
 function openResModal(data, settlementId) {
     const existing = document.getElementById('res-modal');
     if (existing) existing.remove();
@@ -1692,7 +1955,6 @@ function openResModal(data, settlementId) {
     title.textContent = `РЭС для НП: ${selectedSettlementName || settlementId}`;
     title.className = 'res-modal-title';
 
-    // Добавляем управление размером страницы РЭС в модалку
     const pageSizeControl = document.createElement('div');
     pageSizeControl.className = 'page-size-control';
     pageSizeControl.dataset.table = 'res';
@@ -1701,7 +1963,7 @@ function openResModal(data, settlementId) {
         <select class="page-size-select">
             <option value="1">1</option>
             <option value="5">5</option>
-            <option value="10" >10</option>
+            <option value="10">10</option>
             <option value="15">15</option>
             <option value="20">20</option>
             <option value="25">25</option>
@@ -1728,7 +1990,6 @@ function openResModal(data, settlementId) {
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
-    // Пагинация для РЭС
     const paginationContainer = document.createElement('div');
     paginationContainer.className = 'pagination-controls';
     paginationContainer.id = 'res-pagination-modal';
@@ -1742,14 +2003,11 @@ function openResModal(data, settlementId) {
     modal.appendChild(content);
     document.body.appendChild(modal);
 
-    // Сохраняем текущие данные
     const currentData = data || [];
     const currentTotal = resData.total || currentData.length || 0;
     const currentPage = resData.page || 1;
     const currentPageSize = resData.pageSize || 10;
 
-    // Функция рендеринга таблицы РЭС
-    // Функция рендеринга таблицы РЭС (без обработки двойного клика)
     function renderResTable(items, total, page, pageSize) {
         thead.innerHTML = '';
         tbody.innerHTML = '';
@@ -1767,7 +2025,6 @@ function openResModal(data, settlementId) {
             return;
         }
 
-        // Заголовки
         const headerRow = document.createElement('tr');
         const headers = [
             'ID', 'Тип ID', 'Вид ID', 'Название', 'Оператор',
@@ -1780,7 +2037,6 @@ function openResModal(data, settlementId) {
         });
         thead.appendChild(headerRow);
 
-        // Данные (без обработчиков двойного клика)
         items.forEach(item => {
             const row = document.createElement('tr');
 
@@ -1823,11 +2079,9 @@ function openResModal(data, settlementId) {
             tbody.appendChild(row);
         });
 
-        // Рендерим пагинацию
         renderResPagination(total, page, pageSize);
     }
 
-    // Функция пагинации для РЭС
     function renderResPagination(total, currentPage, pageSize) {
         const totalPages = Math.ceil(total / pageSize) || 1;
 
@@ -1877,7 +2131,6 @@ function openResModal(data, settlementId) {
 
         paginationContainer.innerHTML = html;
 
-        // Обработчики для кнопок пагинации
         paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => {
             btn.addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -1895,7 +2148,6 @@ function openResModal(data, settlementId) {
         });
     }
 
-    // Функция загрузки страницы РЭС для модалки
     async function loadResPageForModal(page, pageSize) {
         const loader = initLoader();
         loader.show('Загрузка РЭС...');
@@ -1934,21 +2186,18 @@ function openResModal(data, settlementId) {
         }
     }
 
-    // Обработчик изменения размера страницы
     const selectElement = pageSizeControl.querySelector('.page-size-select');
     selectElement.addEventListener('change', async function() {
         const newSize = parseInt(this.value);
         if (!isNaN(newSize) && newSize > 0) {
-            // Обновляем размер страницы в resData
             resData.pageSize = newSize;
-            // Загружаем первую страницу с новым размером
             await loadResPageForModal(1, newSize);
         }
     });
 
-    // Отрисовываем начальные данные
     renderResTable(currentData, currentTotal, currentPage, currentPageSize);
 }
+
 // ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ ====================
 
 function createProgressModal(total) {
@@ -2095,7 +2344,6 @@ async function calculateRatingsForData(items) {
                 console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
             }
 
-            // Всегда отправляем POST при расчете
             console.log(`▶ НП ${settlement.id}: отправляем POST...`);
             try {
                 await postRatingSett(settlement.id);
@@ -2319,6 +2567,23 @@ function handleClear() {
         }
     }
 
+    // Восстанавливаем значения по умолчанию
+    const radioRange = document.getElementById('number-settlement');
+    const radioAll = document.getElementById('number-settlements');
+    const fromInput = document.getElementById('numbers-settlement');
+    const toInput = document.getElementById('numbers-settlements');
+
+    if (radioRange) radioRange.checked = true;
+    if (radioAll) radioAll.checked = false;
+    if (fromInput) fromInput.value = 1;
+    if (toInput) toInput.value = 10000;
+
+    const pageSizeSelect = document.querySelector('.page-size-control[data-table="settlements"] .page-size-select');
+    if (pageSizeSelect) {
+        pageSizeSelect.value = '50';
+        settlementsData.pageSize = 50;
+    }
+
     isCalculateMode = false;
 
     hideSettlementButtons();
@@ -2350,7 +2615,7 @@ function handleClear() {
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
-    settlementsData = { items: [], total: 0, page: 1, pageSize: 10 };
+    settlementsData = { items: [], total: 0, page: 1, pageSize: 50 };
     selectedSettlementId = null;
     selectedSettlementLat = null;
     selectedSettlementLon = null;
@@ -2366,10 +2631,9 @@ function handleClear() {
     allRatings = {};
     showRatings = false;
 
-    // Показываем подсказку
     showPlaceholder();
 
-    renderPopup('Фильтры сброшены');
+    renderPopup('Фильтры сброшены к значениям по умолчанию');
 }
 
 // ==================== ОЧИСТКА ПОЛЯ ПОИСКА ====================
@@ -2400,7 +2664,6 @@ document.addEventListener('DOMContentLoaded', function() {
     hideSettlementButtons();
     hideCalculateSelectedButton();
 
-    // Показываем подсказку при загрузке
     showPlaceholder();
 
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
@@ -2426,7 +2689,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Настраиваем обработчик двойного клика
     setupDoubleClickHandler();
 
     document.querySelectorAll('.page-size-control .page-size-select').forEach(select => {
