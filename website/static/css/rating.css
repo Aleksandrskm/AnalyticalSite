@@ -303,8 +303,9 @@ header {
 }
 
 .pagination-info {
-    font-size: 13px;
-    color: #333;
+    font-size: 14px;
+    color: black;
+    font-weight: 550;
 }
 
 .pagination-buttons {
@@ -1138,7 +1139,7 @@ header {
     padding: 8px 16px;
     font-size: 14px;
     text-align: center;
-    white-space: nowrap;
+    /*white-space: nowrap;*/
     flex-shrink: 0;
 }
 
@@ -1169,5 +1170,143 @@ header {
         max-width: unset;
         white-space: normal;
         flex-shrink: 1;
+    }
+}
+/* ===== КНОПКИ ВНИЗУ ===== */
+.table_buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #1a1a1a;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.table_buttons .grid-btn {
+    width: 220px !important;
+    min-width: 150px;
+    max-width: 280px;
+    margin-top: 0;
+    padding: 8px 16px;
+    font-size: 14px;
+    text-align: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Кнопки РЭС, Проводные УС и Рассчитать рейтинг выбранного НП */
+.table_buttons .res-action-btn,
+.table_buttons .wired-action-btn,
+.table_buttons .calculate-selected-btn,
+.table_buttons .calculate-all-btn {
+    width: 220px !important;
+    min-width: 150px;
+    max-width: 280px;
+    flex-shrink: 0;
+    white-space: break-spaces;
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ СРЕДНИХ ЭКРАНОВ ===== */
+@media (max-width: 1200px) {
+    .table_buttons {
+        gap: 10px;
+    }
+
+    .table_buttons .grid-btn,
+    .table_buttons .res-action-btn,
+    .table_buttons .wired-action-btn,
+    .table_buttons .calculate-selected-btn,
+    .table_buttons .calculate-all-btn {
+        width: 190px !important;
+        min-width: 130px;
+        max-width: 220px;
+        font-size: 13px;
+        padding: 7px 12px;
+        white-space: break-spaces;
+    }
+}
+
+@media (max-width: 992px) {
+    .table_buttons {
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .table_buttons .grid-btn,
+    .table_buttons .res-action-btn,
+    .table_buttons .wired-action-btn,
+    .table_buttons .calculate-selected-btn,
+    .table_buttons .calculate-all-btn {
+        width: 170px !important;
+        min-width: 120px;
+        max-width: 200px;
+        font-size: 12px;
+        padding: 6px 10px;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 768px) {
+    .table_buttons {
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .table_buttons .grid-btn,
+    .table_buttons .res-action-btn,
+    .table_buttons .wired-action-btn,
+    .table_buttons .calculate-selected-btn,
+    .table_buttons .calculate-all-btn {
+        width: 150px !important;
+        min-width: 100px;
+        max-width: 180px;
+        font-size: 11px;
+        padding: 5px 8px;
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+
+/* ===== МАЛЫЕ ЭКРАНЫ (МОБИЛЬНЫЕ) ===== */
+@media (max-width: 600px) {
+    .table_buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        padding-top: 10px;
+    }
+
+    .table_buttons .grid-btn,
+    .table_buttons .res-action-btn,
+    .table_buttons .wired-action-btn,
+    .table_buttons .calculate-selected-btn,
+    .table_buttons .calculate-all-btn {
+        width: calc(50% - 6px) !important;
+        min-width: 80px;
+        max-width: 160px;
+        font-size: 11px;
+        padding: 5px 8px;
+        white-space: normal;
+        word-break: break-word;
+        flex-shrink: 1;
+        flex-grow: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .table_buttons .grid-btn,
+    .table_buttons .res-action-btn,
+    .table_buttons .wired-action-btn,
+    .table_buttons .calculate-selected-btn,
+    .table_buttons .calculate-all-btn {
+        width: 100% !important;
+        max-width: 100%;
+        font-size: 12px;
+        padding: 6px 12px;
+        white-space: normal;
+        word-break: break-word;
     }
 }

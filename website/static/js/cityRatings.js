@@ -17,16 +17,16 @@ let loader = null;
 let settlementsData = {
     items: [],
     total: 0,
-    page: 1,
-    pageSize: 50
+    page: 0,
+    pageSize: 1
 };
 
 // Данные для РЭС (для модального окна)
 let resData = {
     items: [],
     total: 0,
-    page: 1,
-    pageSize: 50
+    page: 0,
+    pageSize: 1
 };
 
 // Текущий выбранный НП
@@ -134,7 +134,6 @@ function showPlaceholder() {
     const table = document.getElementById('settlements-table');
     const pagination = document.getElementById('settlements-pagination');
     const divider = document.getElementById('table-divider');
-    const pageSizeControl = document.querySelector('.page-size-control[data-table="settlements"]');
 
     if (placeholder) placeholder.style.display = 'flex';
     if (table) table.style.display = 'none';
@@ -147,17 +146,62 @@ function hidePlaceholder() {
     const table = document.getElementById('settlements-table');
     const pagination = document.getElementById('settlements-pagination');
     const divider = document.getElementById('table-divider');
-    const pageSizeControl = document.querySelector('.page-size-control[data-table="settlements"]');
 
     if (placeholder) placeholder.style.display = 'none';
     if (table) table.style.display = 'block';
     if (pagination) pagination.style.display = 'flex';
     if (divider) divider.style.display = 'block';
-    if (pageSizeControl) pageSizeControl.style.display = 'flex';
 }
 
-// ==================== КНОПКА "РАССЧИТАТЬ РЕЙТИНГ ВЫБРАННОГО НП" ====================
+// ==================== КНОПКИ ====================
 
+// Кнопка "Рассчитать рейтинг всех НП в таблице"
+function createCalculateAllBtn() {
+    let existing = document.getElementById('calculate-all-btn');
+    if (existing) existing.remove();
+
+    const btn = document.createElement('button');
+    btn.id = 'calculate-all-btn';
+    btn.className = 'grid-btn calculate-all-btn';
+    btn.textContent = 'Рассчитать рейтинг всех НП в таблице';
+    btn.style.marginRight = '10px';
+    btn.style.width = 'auto';
+    btn.addEventListener('click', handleCalculateAll);
+    return btn;
+}
+
+function showCalculateAllButton() {
+    const container = document.querySelector('.table_buttons');
+    if (!container) return;
+
+    if (!showRatings) {
+        hideCalculateAllButton();
+        return;
+    }
+
+    const resBtn = document.getElementById('res-action-btn');
+    if (resBtn) resBtn.remove();
+    const wiredBtn = document.getElementById('wired-action-btn');
+    if (wiredBtn) wiredBtn.remove();
+
+    let btn = document.getElementById('calculate-all-btn');
+    if (!btn) {
+        btn = createCalculateAllBtn();
+        const firstBtn = container.querySelector('.grid-btn');
+        if (firstBtn) {
+            container.insertBefore(btn, firstBtn);
+        } else {
+            container.appendChild(btn);
+        }
+    }
+}
+
+function hideCalculateAllButton() {
+    const btn = document.getElementById('calculate-all-btn');
+    if (btn) btn.remove();
+}
+
+// Кнопка "Рассчитать рейтинг выбранного НП"
 function createCalculateSelectedBtn() {
     let existing = document.getElementById('calculate-selected-btn');
     if (existing) existing.remove();
@@ -176,7 +220,7 @@ function showCalculateSelectedButton() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    if (!showRatings || !selectedSettlementId || !isCalculateMode) {
+    if (!showRatings || !selectedSettlementId) {
         hideCalculateSelectedButton();
         return;
     }
@@ -242,11 +286,8 @@ function showSettlementButtons() {
         const wiredBtn = document.getElementById('wired-action-btn');
         if (wiredBtn) wiredBtn.remove();
 
-        if (isCalculateMode) {
-            showCalculateSelectedButton();
-        } else {
-            hideCalculateSelectedButton();
-        }
+        showCalculateAllButton();
+        showCalculateSelectedButton();
         return;
     }
 
@@ -254,8 +295,10 @@ function showSettlementButtons() {
     if (oldRes) oldRes.remove();
     const oldWired = document.getElementById('wired-action-btn');
     if (oldWired) oldWired.remove();
-    const oldCalc = document.getElementById('calculate-selected-btn');
-    if (oldCalc) oldCalc.remove();
+    const oldCalcAll = document.getElementById('calculate-all-btn');
+    if (oldCalcAll) oldCalcAll.remove();
+    const oldCalcSelected = document.getElementById('calculate-selected-btn');
+    if (oldCalcSelected) oldCalcSelected.remove();
 
     const resBtn = createResButton();
     const wiredBtn = createWiredButton();
@@ -275,6 +318,7 @@ function hideSettlementButtons() {
     if (resBtn) resBtn.remove();
     const wiredBtn = document.getElementById('wired-action-btn');
     if (wiredBtn) wiredBtn.remove();
+    hideCalculateAllButton();
     hideCalculateSelectedButton();
 }
 
@@ -410,18 +454,22 @@ function getPopulationRange() {
     return { from: 1, to: 17000000 };
 }
 
+// ==================== РАСЧЕТ РАДИУСА ====================
+
 function calculateRadius(area) {
     if (!area || area <= 0) return 1;
-    return Math.round(1.1 * Math.sqrt(area / Math.PI));
+    const radius = Math.round(1.1 * Math.sqrt(area / Math.PI));
+    return radius >= 1 ? radius : 1;
 }
 
+// ==================== ФУНКЦИИ СТРАНИЦ ====================
+
 function getPageSize(tableType) {
-    const select = document.querySelector(`.page-size-control[data-table="${tableType}"] .page-size-select`);
-    if (select) {
-        const val = parseInt(select.value);
-        if (!isNaN(val) && val > 0) return val;
-    }
-    return 10;
+    return 1;
+}
+
+function getPage() {
+    return 0;
 }
 
 // ==================== ФИЛЬТРАЦИЯ ДАННЫХ ====================
@@ -498,7 +546,7 @@ function filterDataWithRatings(data, ratings, field, value, exactMatch = false) 
 
 // ==================== ЗАГРУЗКА НАСЕЛЕННЫХ ПУНКТОВ ====================
 
-async function loadSettlements(page = 1, regions, popRange, pageSize) {
+async function loadSettlements(page = 0, regions, popRange, pageSize) {
     const loader = initLoader();
     loader.show('Загрузка населенных пунктов...');
 
@@ -533,16 +581,40 @@ async function loadSettlements(page = 1, regions, popRange, pageSize) {
     }
 }
 
-// ==================== ЗАГРУЗКА РЕЙТИНГОВ ====================
+// ==================== ЗАГРУЗКА РЕЙТИНГОВ С ВОЗМОЖНОСТЬЮ ОТМЕНЫ ====================
 
 async function loadRatingsForSettlements(items, allowPost = false) {
-    const loader = initLoader();
-    loader.show('Загрузка рейтингов...');
+    const total = items.length;
+    if (total === 0) {
+        renderPopup('Нет населенных пунктов для загрузки рейтингов', true);
+        return;
+    }
+
+    const modal = createProgressModal(total);
+
+    const titleEl = modal.querySelector('.progress-modal-title');
+    if (titleEl) {
+        titleEl.textContent = allowPost ? 'Расчет рейтингов' : 'Загрузка рейтингов';
+    }
+
+    isCancelled = false;
 
     let successCount = 0;
     let postCount = 0;
+    let processed = 0;
 
     for (const settlement of items) {
+        if (isCancelled) {
+            closeProgressModal();
+            renderPopup(
+                allowPost
+                    ? `Расчёт отменён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`
+                    : `Загрузка отменена. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`,
+                false
+            );
+            return;
+        }
+
         try {
             if (!allRatings[settlement.id]) {
                 let ratingData = null;
@@ -583,11 +655,96 @@ async function loadRatingsForSettlements(items, allowPost = false) {
         } catch (err) {
             console.warn(`▶ НП ${settlement.id}: ошибка обработки`, err);
         }
+
+        processed++;
+        updateProgress(processed, total, successCount);
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    loader.close();
+    closeProgressModal();
     console.log(`▶ Загружено ${successCount} рейтингов (из них создано через POST: ${postCount})`);
+}
+
+// ==================== ОПТИМИЗИРОВАННАЯ СОРТИРОВКА ====================
+
+function sortDataWithRatings(data, ratings, sortField, sortOrder) {
+    if (!sortField || data.length === 0) return data;
+
+    const ratingFields = [
+        'count_res_tv', 'count_res_rv',
+        'count_res_lte', 'count_res_gsm', 'count_res_5g',
+        'count_res_wifi', 'count_res_tetra',
+        'count_operators',
+        'count_abonents_lte', 'population_percent_lte',
+        'communication_coverage_lte', 'communication_coverage_percent_lte',
+        'traffic_lte', 'traffic_percent_lte',
+        'count_abonents_gsm', 'population_percent_gsm',
+        'communication_coverage_gsm', 'communication_coverage_percent_gsm',
+        'traffic_gsm', 'traffic_percent_gsm',
+        'count_abonents_5g', 'population_percent_5g',
+        'communication_coverage_5g', 'communication_coverage_percent_5g',
+        'traffic_5g', 'traffic_percent_5g',
+        'count_abonents_wifi', 'population_percent_wifi',
+        'communication_coverage_wifi', 'communication_coverage_percent_wifi',
+        'traffic_wifi', 'traffic_percent_wifi',
+        'count_abonents_tetra', 'population_percent_tetra',
+        'communication_coverage_tetra', 'communication_coverage_percent_tetra',
+        'traffic_tetra', 'traffic_percent_tetra',
+        'count_res_mobile', 'count_abonents_mobile',
+        'population_percent_mobile', 'communication_coverage_mobile',
+        'communication_coverage_percent_mobile', 'traffic_mobile',
+        'traffic_percent_mobile'
+    ];
+
+    const isRatingField = ratingFields.includes(sortField);
+
+    const cachedData = data.map(item => {
+        let value;
+        if (isRatingField) {
+            const rating = ratings[item.id] || {};
+            value = rating[sortField];
+        } else {
+            value = item[sortField];
+        }
+
+        if (value === undefined || value === null) {
+            value = '';
+        } else if (typeof value === 'string') {
+            value = value.toLowerCase();
+        }
+
+        return {
+            item: item,
+            sortValue: value
+        };
+    });
+
+    const sorted = cachedData.sort((a, b) => {
+        const valA = a.sortValue;
+        const valB = b.sortValue;
+
+        if (typeof valA === 'number' && typeof valB === 'number') {
+            return sortOrder === 'asc' ? valA - valB : valB - valA;
+        }
+
+        if (typeof valA === 'string' && typeof valB === 'string') {
+            if (sortOrder === 'asc') {
+                return valA.localeCompare(valB);
+            } else {
+                return valB.localeCompare(valA);
+            }
+        }
+
+        const strA = String(valA);
+        const strB = String(valB);
+        if (sortOrder === 'asc') {
+            return strA.localeCompare(strB);
+        } else {
+            return strB.localeCompare(strA);
+        }
+    });
+
+    return sorted.map(item => item.item);
 }
 
 // ==================== РАСЧЕТ РЕЙТИНГА ДЛЯ ВЫБРАННОГО НП ====================
@@ -609,12 +766,13 @@ async function handleCalculateSelected() {
             allRatings[selectedSettlementId] = ratingData;
 
             const pageSize = getPageSize('settlements');
+            const page = getPage();
 
             if (savedFilterField && savedFilterValue) {
                 const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-                renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+                renderCombinedTable(filtered, filtered.length, page, pageSize, true);
             } else {
-                renderCombinedTable(originalDataForFilter, originalTotalForFilter, settlementsData.page || 1, pageSize, false);
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
             }
 
             renderPopup(`Рейтинг для НП "${selectedSettlementName || selectedSettlementId}" успешно рассчитан!`, false);
@@ -631,7 +789,138 @@ async function handleCalculateSelected() {
     loader.close();
 }
 
-// ==================== ОБРАБОТЧИК ДВОЙНОГО КЛИКА ДЛЯ ВСЕХ ТАБЛИЦ ====================
+// ==================== РАСЧЕТ РЕЙТИНГА ВСЕХ НП В ТАБЛИЦЕ ====================
+
+async function handleCalculateAll() {
+    // Берем данные из currentSettlementsFiltered (отфильтрованные данные)
+    const items = currentSettlementsFiltered || settlementsData.items || [];
+
+    if (items.length === 0) {
+        renderPopup('Нет населенных пунктов для расчета', true);
+        return;
+    }
+
+    // Проверяем, есть ли активный фильтр
+    const hasFilter = savedFilterField && savedFilterValue;
+    let settlementsToCalculate = [];
+
+    if (hasFilter) {
+        // Если есть фильтр, используем отфильтрованные данные
+        settlementsToCalculate = items.map(item => ({
+            id: item.id,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            area: parseFloat(item.area) || 1
+        }));
+    } else {
+        // Если фильтра нет, используем все данные
+        settlementsToCalculate = items.map(item => ({
+            id: item.id,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            area: parseFloat(item.area) || 1
+        }));
+    }
+
+    const total = settlementsToCalculate.length;
+    if (total === 0) {
+        renderPopup('Нет населенных пунктов для расчёта', true);
+        return;
+    }
+
+    // Показываем модалку с количеством
+    renderPopup(`Начинаем расчет рейтингов для ${total} населенных пунктов...`, false);
+
+    isCalculateMode = true;
+    isCancelled = false;
+
+    const modal = createProgressModal(total);
+
+    let processed = 0;
+    let successCount = 0;
+
+    for (const settlement of settlementsToCalculate) {
+        if (isCancelled) break;
+
+        console.log(`▶ Обработка НП ID ${settlement.id}...`);
+
+        try {
+            let ratingData = null;
+            let status200 = false;
+
+            if (allRatings[settlement.id]) {
+                console.log(`▶ НП ${settlement.id}: рейтинг уже есть в кеше`);
+                processed++;
+                successCount++;
+                updateProgress(processed, total, successCount);
+                continue;
+            }
+
+            try {
+                ratingData = await getRatingSett(settlement.id);
+                if (ratingData !== null && ratingData !== undefined) {
+                    status200 = true;
+                    console.log(`▶ НП ${settlement.id}: данные получены через GET`);
+                } else {
+                    console.log(`▶ НП ${settlement.id}: GET вернул null, пробуем POST`);
+                }
+            } catch (err) {
+                console.warn(`▶ НП ${settlement.id}: GET ошибка`, err);
+            }
+
+            console.log(`▶ НП ${settlement.id}: отправляем POST...`);
+            try {
+                await postRatingSett(settlement.id);
+                ratingData = await getRatingSett(settlement.id);
+                if (ratingData !== null && ratingData !== undefined) {
+                    status200 = true;
+                    console.log(`▶ НП ${settlement.id}: данные получены после POST`);
+                }
+            } catch (postErr) {
+                console.warn(`▶ НП ${settlement.id}: POST ошибка`, postErr);
+            }
+
+            if (status200 && ratingData) {
+                allRatings[settlement.id] = ratingData;
+                processed++;
+                successCount++;
+                console.log(`▶ НП ${settlement.id}: успешно обработан. Всего успешно: ${successCount}`);
+            } else {
+                console.warn(`▶ НП ${settlement.id}: не удалось получить данные, пропускаем`);
+                processed++;
+            }
+
+            updateProgress(processed, total, successCount);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+        } catch (error) {
+            console.error(`▶ НП ${settlement.id}: критическая ошибка`, error);
+            processed++;
+        }
+    }
+
+    closeProgressModal();
+
+    if (isCancelled) {
+        renderPopup(`Расчёт отменён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    } else {
+        renderPopup(`Расчёт завершён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
+    }
+
+    // Обновляем таблицу с новыми рейтингами
+    const pageSize = getPageSize('settlements');
+    const page = getPage();
+
+    // Если есть активный фильтр, применяем его к данным с новыми рейтингами
+    if (savedFilterField && savedFilterValue) {
+        const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+        renderCombinedTable(filtered, filtered.length, page, pageSize, true);
+    } else {
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
+    }
+}
+
+// ==================== ОБРАБОТЧИК ДВОЙНОГО КЛИКА ====================
 
 function setupDoubleClickHandler() {
     const table = document.getElementById('settlements-table');
@@ -643,7 +932,7 @@ function setupDoubleClickHandler() {
             const headerCells = this.querySelectorAll('thead th');
             let hasRatingColumns = false;
             headerCells.forEach(th => {
-                if (th.textContent.includes('РЭС') || th.textContent.includes('Всего РЭС')) {
+                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС')) {
                     hasRatingColumns = true;
                 }
             });
@@ -694,7 +983,7 @@ function setupDoubleClickHandler() {
         const headerCells = table.querySelectorAll('thead th');
         let hasRatingColumns = false;
         headerCells.forEach(th => {
-            if (th.textContent.includes('РЭС') || th.textContent.includes('Всего РЭС')) {
+            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС')) {
                 hasRatingColumns = true;
             }
         });
@@ -971,7 +1260,7 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         currentFilterValue = '';
         currentFilterExact = false;
 
-        const currentPage = settlementsData.page || 1;
+        const currentPage = settlementsData.page || 0;
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
 
@@ -1360,7 +1649,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         currentFilterValue = '';
         currentFilterExact = false;
 
-        const currentPage = settlementsData.page || 1;
+        const currentPage = settlementsData.page || 0;
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
     });
 
@@ -1456,62 +1745,10 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
+    // ===== ОПТИМИЗИРОВАННАЯ СОРТИРОВКА =====
     let displayData = [...data];
     if (currentSortField) {
-        const ratingFields = [
-            'count_res_tv', 'count_res_rv',
-            'count_res_lte', 'count_res_gsm', 'count_res_5g',
-            'count_res_wifi', 'count_res_tetra',
-            'count_operators',
-            'count_abonents_lte', 'population_percent_lte',
-            'communication_coverage_lte', 'communication_coverage_percent_lte',
-            'traffic_lte', 'traffic_percent_lte',
-            'count_abonents_gsm', 'population_percent_gsm',
-            'communication_coverage_gsm', 'communication_coverage_percent_gsm',
-            'traffic_gsm', 'traffic_percent_gsm',
-            'count_abonents_5g', 'population_percent_5g',
-            'communication_coverage_5g', 'communication_coverage_percent_5g',
-            'traffic_5g', 'traffic_percent_5g',
-            'count_abonents_wifi', 'population_percent_wifi',
-            'communication_coverage_wifi', 'communication_coverage_percent_wifi',
-            'traffic_wifi', 'traffic_percent_wifi',
-            'count_abonents_tetra', 'population_percent_tetra',
-            'communication_coverage_tetra', 'communication_coverage_percent_tetra',
-            'traffic_tetra', 'traffic_percent_tetra',
-            'count_res_mobile', 'count_abonents_mobile',
-            'population_percent_mobile', 'communication_coverage_mobile',
-            'communication_coverage_percent_mobile', 'traffic_mobile',
-            'traffic_percent_mobile'
-        ];
-
-        displayData.sort((a, b) => {
-            let valA, valB;
-
-            if (ratingFields.includes(currentSortField)) {
-                const ratingA = allRatings[a.id] || {};
-                const ratingB = allRatings[b.id] || {};
-                valA = ratingA[currentSortField];
-                valB = ratingB[currentSortField];
-            } else {
-                valA = a[currentSortField];
-                valB = b[currentSortField];
-            }
-
-            if (valA === undefined || valA === null) valA = '';
-            if (valB === undefined || valB === null) valB = '';
-
-            if (typeof valA === 'number' && typeof valB === 'number') {
-                return currentSortOrder === 'asc' ? valA - valB : valB - valA;
-            }
-
-            valA = String(valA).toLowerCase();
-            valB = String(valB).toLowerCase();
-            if (currentSortOrder === 'asc') {
-                return valA.localeCompare(valB);
-            } else {
-                return valB.localeCompare(valA);
-            }
-        });
+        displayData = sortDataWithRatings(displayData, allRatings, currentSortField, currentSortOrder);
     }
 
     if (tbody) {
@@ -1566,7 +1803,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
             const rating = allRatings[item.id] || {};
 
-
             const countResTvCell = document.createElement('td');
             countResTvCell.textContent = rating.count_res_tv !== undefined ? rating.count_res_tv : '-';
             row.appendChild(countResTvCell);
@@ -1595,7 +1831,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             countResTetraCell.textContent = rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-';
             row.appendChild(countResTetraCell);
 
-            // НОВЫЕ ПОЛЯ
             const countOperatorsCell = document.createElement('td');
             countOperatorsCell.textContent = rating.count_operators !== undefined ? rating.count_operators : '-';
             row.appendChild(countOperatorsCell);
@@ -1782,109 +2017,17 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     showSettlementButtons();
 }
 
-// ==================== ПАГИНАЦИЯ ====================
+// ==================== ПАГИНАЦИЯ (только информация о количестве) ====================
 
 function renderSettlementsPagination(total, currentPage, pageSize) {
     const container = document.getElementById('settlements-pagination');
     if (!container) return;
 
-    const totalPages = Math.ceil(total / pageSize) || 1;
-
-    let html = `
+    container.innerHTML = `
         <div class="pagination-info">
-            Страница ${currentPage} из ${totalPages} (всего НП: ${total})
-        </div>
-        <div class="pagination-buttons">
-            <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
-    `;
-
-    if (currentPage > 1) {
-        html += `<button class="pagination-btn" data-page="1">1</button>`;
-    } else {
-        html += `<button class="pagination-btn active" data-page="1">1</button>`;
-    }
-
-    if (currentPage > 3) {
-        html += `<span class="pagination-ellipsis">…</span>`;
-    }
-
-    let startPage = Math.max(2, currentPage - 1);
-    let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-    for (let i = startPage; i <= endPage; i++) {
-        if (i === 1 || i === totalPages) continue;
-        const isActive = i === currentPage;
-        html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
-    }
-
-    if (currentPage < totalPages - 2) {
-        html += `<span class="pagination-ellipsis">…</span>`;
-    }
-
-    if (totalPages > 1) {
-        if (currentPage === totalPages) {
-            html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
-        } else {
-            html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
-        }
-    }
-
-    html += `
-            <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
+            Всего НП: ${total}
         </div>
     `;
-
-    container.innerHTML = html;
-
-    container.querySelectorAll('.pagination-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const page = btn.dataset.page;
-            let newPage = currentPage;
-
-            if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
-            else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
-            else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
-
-            if (newPage !== currentPage) {
-                const pageSizeVal = getPageSize('settlements');
-                const result = await loadSettlements(newPage, currentRegions, currentPopRange, pageSizeVal);
-
-                if (result && result.items) {
-                    originalDataForFilter = result.items || [];
-                    originalTotalForFilter = result.total || 0;
-
-                    settlementsData.items = result.items || [];
-                    settlementsData.total = result.total || 0;
-                    settlementsData.page = newPage;
-                    settlementsData.pageSize = pageSizeVal;
-
-                    if (showRatings) {
-                        await loadRatingsForSettlements(settlementsData.items, isCalculateMode);
-
-                        if (savedFilterField && savedFilterValue) {
-                            const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-                            renderCombinedTable(filtered, filtered.length, 1, pageSizeVal, true);
-                        } else {
-                            currentSortField = null;
-                            currentSortOrder = 'asc';
-                            renderCombinedTable(originalDataForFilter, originalTotalForFilter, newPage, pageSizeVal, false);
-                        }
-                    } else {
-                        if (savedFilterField && savedFilterValue) {
-                            const filtered = filterData(originalDataForFilter, savedFilterField, savedFilterValue, savedFilterExact);
-                            renderSettlementsTableOnly(filtered, filtered.length, 1, pageSizeVal, true);
-                        } else {
-                            currentSortField = null;
-                            currentSortOrder = 'asc';
-                            renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, newPage, pageSizeVal, false);
-                        }
-                    }
-                } else {
-                    renderPopup('Нет данных для отображения на этой странице', true);
-                }
-            }
-        });
-    });
 }
 
 // ==================== ЗАГРУЗКА РЭС (для модального окна) ====================
@@ -1899,7 +2042,7 @@ async function loadResForModal(settlementId, lat, lon, area) {
     loader.show('Загрузка РЭС...');
 
     try {
-        const radius = calculateRadius(area || 1);
+        const radius = calculateRadius(area);
 
         const body = {
             regions: currentRegions,
@@ -1911,13 +2054,14 @@ async function loadResForModal(settlementId, lat, lon, area) {
             }
         };
 
-        const pageSize = 50;
-        const result = await getResPage(1, pageSize, body);
+        const pageSize = getPageSize('res');
+        const page = getPage();
+        const result = await getResPage(page, pageSize, body);
 
         if (result) {
             resData.items = result.res || [];
             resData.total = result.total || 0;
-            resData.page = 1;
+            resData.page = page;
             resData.pageSize = pageSize;
 
             openResModal(resData.items, settlementId);
@@ -1950,23 +2094,6 @@ function openResModal(data, settlementId) {
     title.textContent = `РЭС для НП: ${selectedSettlementName || settlementId}`;
     title.className = 'res-modal-title';
 
-    const pageSizeControl = document.createElement('div');
-    pageSizeControl.className = 'page-size-control';
-    pageSizeControl.dataset.table = 'res';
-    pageSizeControl.innerHTML = `
-        <label>Размер страницы РЭС:</label>
-        <select class="page-size-select">
-            <option value="1">1</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-            <option value="25">25</option>
-            <option value="50" selected>50</option>
-            <option value="100">100</option>
-        </select>
-    `;
-
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
@@ -1985,25 +2112,14 @@ function openResModal(data, settlementId) {
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
-    const paginationContainer = document.createElement('div');
-    paginationContainer.className = 'pagination-controls';
-    paginationContainer.id = 'res-pagination-modal';
-
     content.appendChild(title);
-    content.appendChild(pageSizeControl);
     content.appendChild(tableWrapper);
     tableWrapper.appendChild(table);
-    content.appendChild(paginationContainer);
     content.appendChild(closeBtn);
     modal.appendChild(content);
     document.body.appendChild(modal);
 
-    const currentData = data || [];
-    const currentTotal = resData.total || currentData.length || 0;
-    const currentPage = resData.page || 1;
-    const currentPageSize = resData.pageSize || 10;
-
-    function renderResTable(items, total, page, pageSize) {
+    function renderResTable(items) {
         thead.innerHTML = '';
         tbody.innerHTML = '';
 
@@ -2015,8 +2131,6 @@ function openResModal(data, settlementId) {
             cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
-
-            paginationContainer.innerHTML = '';
             return;
         }
 
@@ -2073,124 +2187,9 @@ function openResModal(data, settlementId) {
 
             tbody.appendChild(row);
         });
-
-        renderResPagination(total, page, pageSize);
     }
 
-    function renderResPagination(total, currentPage, pageSize) {
-        const totalPages = Math.ceil(total / pageSize) || 1;
-
-        let html = `
-            <div class="pagination-info">
-                Страница ${currentPage} из ${totalPages} (всего РЭС: ${total})
-            </div>
-            <div class="pagination-buttons">
-                <button class="pagination-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>◀</button>
-        `;
-
-        if (currentPage > 1) {
-            html += `<button class="pagination-btn" data-page="1">1</button>`;
-        } else {
-            html += `<button class="pagination-btn active" data-page="1">1</button>`;
-        }
-
-        if (currentPage > 3) {
-            html += `<span class="pagination-ellipsis">…</span>`;
-        }
-
-        let startPage = Math.max(2, currentPage - 1);
-        let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-        for (let i = startPage; i <= endPage; i++) {
-            if (i === 1 || i === totalPages) continue;
-            const isActive = i === currentPage;
-            html += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
-        }
-
-        if (currentPage < totalPages - 2) {
-            html += `<span class="pagination-ellipsis">…</span>`;
-        }
-
-        if (totalPages > 1) {
-            if (currentPage === totalPages) {
-                html += `<button class="pagination-btn active" data-page="${totalPages}">${totalPages}</button>`;
-            } else {
-                html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
-            }
-        }
-
-        html += `
-                <button class="pagination-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>▶</button>
-            </div>
-        `;
-
-        paginationContainer.innerHTML = html;
-
-        paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => {
-            btn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                const page = this.dataset.page;
-                let newPage = currentPage;
-
-                if (page === 'prev' && currentPage > 1) newPage = currentPage - 1;
-                else if (page === 'next' && currentPage < totalPages) newPage = currentPage + 1;
-                else if (page !== 'prev' && page !== 'next') newPage = parseInt(page);
-
-                if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
-                    await loadResPageForModal(newPage, pageSize);
-                }
-            });
-        });
-    }
-
-    async function loadResPageForModal(page, pageSize) {
-        const loader = initLoader();
-        loader.show('Загрузка РЭС...');
-
-        try {
-            const radius = calculateRadius(selectedSettlementArea || 1);
-            const body = {
-                regions: currentRegions,
-                kinds: currentKinds,
-                area: {
-                    lat: selectedSettlementLat,
-                    lon: selectedSettlementLon,
-                    radius: radius
-                }
-            };
-
-            const result = await getResPage(page, pageSize, body);
-
-            if (result && result.res) {
-                resData.items = result.res || [];
-                resData.total = result.total || 0;
-                resData.page = page;
-                resData.pageSize = pageSize;
-
-                renderResTable(resData.items, resData.total, resData.page, resData.pageSize);
-            } else {
-                renderResTable([], 0, 1, pageSize);
-                renderPopup('Нет РЭС для выбранного населенного пункта');
-            }
-
-            loader.close();
-        } catch (error) {
-            loader.close();
-            renderPopup(`Ошибка загрузки РЭС: ${error.message}`, true);
-            console.error('Ошибка загрузки РЭС:', error);
-        }
-    }
-
-    const selectElement = pageSizeControl.querySelector('.page-size-select');
-    selectElement.addEventListener('change', async function() {
-        const newSize = parseInt(this.value);
-        if (!isNaN(newSize) && newSize > 0) {
-            resData.pageSize = newSize;
-            await loadResPageForModal(1, newSize);
-        }
-    });
-
-    renderResTable(currentData, currentTotal, currentPage, currentPageSize);
+    renderResTable(data);
 }
 
 // ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ ====================
@@ -2284,8 +2283,9 @@ async function getRatingsOnlyForData(items) {
 
     await loadRatingsForSettlements(items, false);
 
-    renderPopup(`Загружено рейтингов для ${total} населенных пунктов`, false);
-    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+    const pageSize = getPageSize('settlements');
+    const page = getPage();
+    renderCombinedTable(settlementsData.items, settlementsData.total, page, pageSize);
 }
 
 async function calculateRatingsForData(items) {
@@ -2378,7 +2378,9 @@ async function calculateRatingsForData(items) {
         renderPopup(`Расчёт завершён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
     }
 
-    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
+    const pageSize = getPageSize('settlements');
+    const page = getPage();
+    renderCombinedTable(settlementsData.items, settlementsData.total, page, pageSize);
 }
 
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
@@ -2406,7 +2408,8 @@ async function handleSettlementsButton() {
     currentKinds = kinds;
 
     const pageSize = getPageSize('settlements');
-    const result = await loadSettlements(1, regions, popRange, pageSize);
+    const page = getPage();
+    const result = await loadSettlements(page, regions, popRange, pageSize);
 
     if (result) {
         originalDataForFilter = result.items || [];
@@ -2414,7 +2417,7 @@ async function handleSettlementsButton() {
 
         settlementsData.items = result.items || [];
         settlementsData.total = result.total || 0;
-        settlementsData.page = 1;
+        settlementsData.page = page;
         settlementsData.pageSize = pageSize;
         currentSortField = null;
         currentSortOrder = 'asc';
@@ -2423,7 +2426,7 @@ async function handleSettlementsButton() {
         currentFilterExact = false;
         showRatings = false;
         allRatings = {};
-        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 1, pageSize, false);
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
 
         showSettlementButtons();
 
@@ -2454,7 +2457,8 @@ async function handleRatingButton() {
     currentKinds = kinds;
 
     const pageSize = getPageSize('settlements');
-    const result = await loadSettlements(1, regions, popRange, pageSize);
+    const page = getPage();
+    const result = await loadSettlements(page, regions, popRange, pageSize);
 
     if (!result || result.items.length === 0) {
         renderPopup('Нет населенных пунктов для выбранных фильтров', true);
@@ -2466,7 +2470,7 @@ async function handleRatingButton() {
 
     settlementsData.items = result.items || [];
     settlementsData.total = result.total || 0;
-    settlementsData.page = 1;
+    settlementsData.page = page;
     settlementsData.pageSize = pageSize;
     currentSortField = null;
     currentSortOrder = 'asc';
@@ -2477,59 +2481,9 @@ async function handleRatingButton() {
     showRatings = true;
     allRatings = {};
 
-    await getRatingsOnlyForData(settlementsData.items);
+    await loadRatingsForSettlements(settlementsData.items, false);
 
-    hideSettlementButtons();
-    hideCalculateSelectedButton();
-}
-
-async function handleBothButton() {
-    isCalculateMode = true;
-
-    savedFilterField = '';
-    savedFilterValue = '';
-    savedFilterExact = false;
-
-    hideResPageSize();
-
-    const regions = getSelectedRegions();
-    const popRange = getPopulationRange();
-    const kinds = getSelectedKinds();
-
-    if (regions.length === 0) {
-        renderPopup('Выберите хотя бы один регион', true);
-        return;
-    }
-
-    currentRegions = regions;
-    currentPopRange = popRange;
-    currentKinds = kinds;
-
-    const pageSize = getPageSize('settlements');
-    const result = await loadSettlements(1, regions, popRange, pageSize);
-
-    if (!result || result.items.length === 0) {
-        renderPopup('Нет населенных пунктов для выбранных фильтров', true);
-        return;
-    }
-
-    originalDataForFilter = result.items || [];
-    originalTotalForFilter = result.total || 0;
-
-    settlementsData.items = result.items || [];
-    settlementsData.total = result.total || 0;
-    settlementsData.page = 1;
-    settlementsData.pageSize = pageSize;
-    currentSortField = null;
-    currentSortOrder = 'asc';
-    currentFilterField = '';
-    currentFilterValue = '';
-    currentFilterExact = false;
-
-    showRatings = true;
-    allRatings = {};
-
-    await calculateRatingsForData(settlementsData.items);
+    renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
 
     showSettlementButtons();
 }
@@ -2562,7 +2516,6 @@ function handleClear() {
         }
     }
 
-    // Восстанавливаем значения по умолчанию
     const radioRange = document.getElementById('number-settlement');
     const radioAll = document.getElementById('number-settlements');
     const fromInput = document.getElementById('numbers-settlement');
@@ -2573,15 +2526,10 @@ function handleClear() {
     if (fromInput) fromInput.value = 1;
     if (toInput) toInput.value = 10000;
 
-    const pageSizeSelect = document.querySelector('.page-size-control[data-table="settlements"] .page-size-select');
-    if (pageSizeSelect) {
-        pageSizeSelect.value = '50';
-        settlementsData.pageSize = 50;
-    }
-
     isCalculateMode = false;
 
     hideSettlementButtons();
+    hideCalculateAllButton();
     hideCalculateSelectedButton();
 
     savedFilterField = '';
@@ -2610,7 +2558,7 @@ function handleClear() {
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
-    settlementsData = { items: [], total: 0, page: 1, pageSize: 50 };
+    settlementsData = { items: [], total: 0, page: 0, pageSize: 1 };
     selectedSettlementId = null;
     selectedSettlementLat = null;
     selectedSettlementLon = null;
@@ -2657,13 +2605,13 @@ document.addEventListener('DOMContentLoaded', function() {
     hideResPageSize();
     hideAutoRating();
     hideSettlementButtons();
+    hideCalculateAllButton();
     hideCalculateSelectedButton();
 
     showPlaceholder();
 
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
     document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
-    document.getElementById('btn-both').addEventListener('click', handleBothButton);
 
     const clearBtn = document.querySelector('.form__rating + button.grid-btn') ||
         document.querySelector('button.grid-btn:not([type="submit"])');
@@ -2685,20 +2633,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     setupDoubleClickHandler();
-
-    document.querySelectorAll('.page-size-control .page-size-select').forEach(select => {
-        select.addEventListener('change', function() {
-            const tableType = this.closest('.page-size-control').dataset.table;
-            const newSize = parseInt(this.value);
-
-            if (tableType === 'settlements' && settlementsData.total > 0) {
-                settlementsData.pageSize = newSize;
-                if (showRatings) {
-                    renderCombinedTable(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
-                } else {
-                    renderSettlementsTableOnly(settlementsData.items, settlementsData.total, settlementsData.page, settlementsData.pageSize);
-                }
-            }
-        });
-    });
 });
