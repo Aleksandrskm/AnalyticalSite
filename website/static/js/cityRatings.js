@@ -781,9 +781,9 @@ async function handleCalculateSelected() {
 
             const pageSize = getPageSize('settlements');
 
+            // Передаём оригинальные данные, фильтрация будет применена внутри
             if (savedFilterField && savedFilterValue) {
-                const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-                renderCombinedTable(filtered, filtered.length, currentDisplayPage, pageSize, true);
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
             } else {
                 renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
             }
@@ -917,9 +917,9 @@ async function handleCalculateAll() {
 
     const pageSize = getPageSize('settlements');
 
+    // Передаём оригинальные данные, фильтрация будет применена внутри
     if (savedFilterField && savedFilterValue) {
-        const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-        renderCombinedTable(filtered, filtered.length, currentDisplayPage, pageSize, true);
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
     } else {
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
     }
@@ -1297,7 +1297,14 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         currentFilterExact = false;
 
         currentDisplayPage = 0;
-        renderSettlementsTableOnly(allData, allTotal, 0, pageSize, false);
+
+        // Очищаем поля фильтра
+        fieldSelect.value = '';
+        valueInput.value = '';
+        exactCheckbox.checked = false;
+
+        // Показываем все данные (оригинальные, без фильтрации)
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
@@ -1481,6 +1488,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     }
 
     currentSettlementsFiltered = sortedData;
+    // originalDataForFilter не перезаписываем, если keepFilter === true,
+    // но мы всегда передаём оригинальные данные, так что перезапись на те же данные безопасна.
     originalDataForFilter = allData;
     originalTotalForFilter = allTotal;
 
@@ -1694,7 +1703,14 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         currentFilterExact = false;
 
         currentDisplayPage = 0;
-        renderCombinedTable(allData, allTotal, 0, pageSize, false);
+
+        // Очищаем поля фильтра
+        fieldSelect.value = '';
+        valueInput.value = '';
+        exactCheckbox.checked = false;
+
+        // Показываем все данные (оригинальные, без фильтрации)
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
@@ -2706,16 +2722,20 @@ function handleClear() {
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
-    originalDataForFilter = [];
-    originalTotalForFilter = 0;
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
 
-    clearFilterInputs();
+    // Удаляем контейнер фильтра
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterContainer) filterContainer.remove();
 
     hideResPageSize();
 
     const resModal = document.getElementById('res-modal');
     if (resModal) resModal.remove();
 
+    // Очищаем таблицу
     const settlementsTable = document.getElementById('settlements-table');
     if (settlementsTable) {
         const thead = settlementsTable.querySelector('thead');
@@ -2724,11 +2744,15 @@ function handleClear() {
         if (tbody) tbody.innerHTML = '';
     }
 
-    document.getElementById('settlements-pagination').innerHTML = '';
+    // Очищаем пагинацию
+    const paginationContainer = document.getElementById('settlements-pagination');
+    if (paginationContainer) paginationContainer.innerHTML = '';
 
+    // Удаляем заголовок
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
+    // Сбрасываем состояние
     settlementsData = { items: [], total: 0, page: 0, pageSize: 100, allItems: [] };
     selectedSettlementId = null;
     selectedSettlementLat = null;
@@ -2738,33 +2762,15 @@ function handleClear() {
     currentSortField = null;
     currentSortOrder = 'asc';
     currentSettlementsFiltered = [];
-    currentFilterField = '';
-    currentFilterValue = '';
-    currentFilterExact = false;
     isCancelled = false;
     allRatings = {};
     showRatings = false;
     currentDisplayPage = 0;
 
+    // Показываем placeholder
     showPlaceholder();
 
     renderPopup('Фильтры сброшены к значениям по умолчанию');
-}
-
-// ==================== ОЧИСТКА ПОЛЯ ПОИСКА ====================
-
-function clearFilterInputs() {
-    const filterContainer = document.querySelector('.filter-container');
-    if (filterContainer) {
-        filterContainer.remove();
-    }
-
-    savedFilterField = '';
-    savedFilterValue = '';
-    savedFilterExact = false;
-    currentFilterField = '';
-    currentFilterValue = '';
-    currentFilterExact = false;
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
