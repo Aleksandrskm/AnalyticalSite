@@ -357,6 +357,7 @@ header {
     font-size: 14px;
     background: #fff;
     cursor: pointer;
+    display: none;
 }
 
 .page-size-select:focus {
@@ -1308,5 +1309,162 @@ header {
         padding: 6px 12px;
         white-space: normal;
         word-break: break-word;
+    }
+}
+
+/* ===== ЕДИНЫЕ СТИЛИ ДЛЯ ЭЛЕМЕНТОВ ПАГИНАЦИИ (НА ОДНОМ УРОВНЕ) ===== */
+#settlements-pagination {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 10px 0 !important;
+    flex-shrink: 0 !important;
+}
+
+#settlements-pagination .pagination-info {
+    font-size: 14px !important;
+    color: black !important;
+    font-weight: 550 !important;
+}
+
+#settlements-pagination .pagination-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* Общий размер для всех элементов управления пагинацией */
+#settlements-pagination .pagination-btn,
+#settlements-pagination .page-input,
+#settlements-pagination .page-size-select {
+    height: 32px !important;
+    padding: 0 10px !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    background: #fff !important;
+    color: #333 !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Кнопки пагинации */
+#settlements-pagination .pagination-btn {
+    min-width: 32px !important;
+    background: #eee !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+}
+
+#settlements-pagination .pagination-btn:hover:not(:disabled) {
+    background: #ddd !important;
+}
+
+#settlements-pagination .pagination-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: default !important;
+}
+
+/* Инпут страницы */
+#settlements-pagination .page-input {
+    width: 40px !important;
+    text-align: center !important;
+    /*margin-top: 13px;*/
+}
+
+#settlements-pagination .page-input::-webkit-inner-spin-button,
+#settlements-pagination .page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+
+#settlements-pagination .page-input:focus {
+    outline: none !important;
+    border-color: #000 !important;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.1) !important;
+}
+
+/* Селект размера страницы */
+#settlements-pagination .page-size-select {
+    min-width: 60px !important;
+    cursor: pointer !important;
+    background: #fff !important;
+}
+
+#settlements-pagination .page-size-select:focus {
+    outline: none !important;
+    border-color: #000 !important;
+}
+
+/* Разделитель между страницами */
+#settlements-pagination .pagination-separator {
+    color: #666 !important;
+    font-size: 14px !important;
+    padding: 0 2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* ===== АДАПТИВ ДЛЯ ПАГИНАЦИИ ===== */
+@media (max-width: 768px) {
+    #settlements-pagination {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    #settlements-pagination .pagination-controls {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #settlements-pagination .page-input,
+    #settlements-pagination .page-size-select {
+        height: 28px !important;
+        font-size: 12px !important;
+        padding: 0 8px !important;
+    }
+
+    #settlements-pagination .page-input {
+        width: 44px !important;
+    }
+
+    #settlements-pagination .pagination-btn {
+        min-width: 28px !important;
+    }
+
+    #settlements-pagination .page-size-select {
+        min-width: 54px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #settlements-pagination .pagination-controls {
+        gap: 4px !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #settlements-pagination .page-input,
+    #settlements-pagination .page-size-select {
+        height: 26px !important;
+        font-size: 11px !important;
+        padding: 0 6px !important;
+    }
+
+    #settlements-pagination .page-input {
+        width: 38px !important;
+    }
+
+    #settlements-pagination .pagination-btn {
+        min-width: 26px !important;
+    }
+
+    #settlements-pagination .page-size-select {
+        min-width: 48px !important;
     }
 }

@@ -18,7 +18,8 @@ let settlementsData = {
     items: [],
     total: 0,
     page: 0,
-    pageSize: 1
+    pageSize: 100,
+    allItems: []
 };
 
 // Данные для РЭС (для модального окна)
@@ -71,6 +72,9 @@ let savedFilterExact = false;
 // Сохраняем исходные данные для фильтрации
 let originalDataForFilter = [];
 let originalTotalForFilter = 0;
+
+// Текущая страница для отображения
+let currentDisplayPage = 0;
 
 function initLoader() {
     if (!loader) {
@@ -465,7 +469,7 @@ function calculateRadius(area) {
 // ==================== ФУНКЦИИ СТРАНИЦ ====================
 
 function getPageSize(tableType) {
-    return 1;
+    return settlementsData.pageSize || 100;
 }
 
 function getPage() {
@@ -561,14 +565,16 @@ async function loadSettlements(page = 0, regions, popRange, pageSize) {
             ]
         };
 
-        const result = await getSettlementsPage(page, pageSize, body);
+        // Загружаем все данные (pageSize = 0 означает все записи)
+        const result = await getSettlementsPage(0, 1, body);
 
         loader.close();
 
         if (result) {
+            const allItems = result.settlements || [];
             return {
-                items: result.settlements || [],
-                total: result.total || 0
+                items: allItems,
+                total: allItems.length
             };
         }
 
@@ -747,6 +753,14 @@ function sortDataWithRatings(data, ratings, sortField, sortOrder) {
     return sorted.map(item => item.item);
 }
 
+// ==================== ПОЛУЧЕНИЕ ДАННЫХ ДЛЯ ТЕКУЩЕЙ СТРАНИЦЫ ====================
+
+function getPageData(allData, page, pageSize) {
+    const start = page * pageSize;
+    const end = Math.min(start + pageSize, allData.length);
+    return allData.slice(start, end);
+}
+
 // ==================== РАСЧЕТ РЕЙТИНГА ДЛЯ ВЫБРАННОГО НП ====================
 
 async function handleCalculateSelected() {
@@ -766,13 +780,12 @@ async function handleCalculateSelected() {
             allRatings[selectedSettlementId] = ratingData;
 
             const pageSize = getPageSize('settlements');
-            const page = getPage();
 
             if (savedFilterField && savedFilterValue) {
                 const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-                renderCombinedTable(filtered, filtered.length, page, pageSize, true);
+                renderCombinedTable(filtered, filtered.length, currentDisplayPage, pageSize, true);
             } else {
-                renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
             }
 
             renderPopup(`Рейтинг для НП "${selectedSettlementName || selectedSettlementId}" успешно рассчитан!`, false);
@@ -792,7 +805,6 @@ async function handleCalculateSelected() {
 // ==================== РАСЧЕТ РЕЙТИНГА ВСЕХ НП В ТАБЛИЦЕ ====================
 
 async function handleCalculateAll() {
-    // Берем данные из currentSettlementsFiltered (отфильтрованные данные)
     const items = currentSettlementsFiltered || settlementsData.items || [];
 
     if (items.length === 0) {
@@ -800,12 +812,10 @@ async function handleCalculateAll() {
         return;
     }
 
-    // Проверяем, есть ли активный фильтр
     const hasFilter = savedFilterField && savedFilterValue;
     let settlementsToCalculate = [];
 
     if (hasFilter) {
-        // Если есть фильтр, используем отфильтрованные данные
         settlementsToCalculate = items.map(item => ({
             id: item.id,
             lat: parseFloat(item.lat),
@@ -813,7 +823,6 @@ async function handleCalculateAll() {
             area: parseFloat(item.area) || 1
         }));
     } else {
-        // Если фильтра нет, используем все данные
         settlementsToCalculate = items.map(item => ({
             id: item.id,
             lat: parseFloat(item.lat),
@@ -828,7 +837,6 @@ async function handleCalculateAll() {
         return;
     }
 
-    // Показываем модалку с количеством
     renderPopup(`Начинаем расчет рейтингов для ${total} населенных пунктов...`, false);
 
     isCalculateMode = true;
@@ -907,16 +915,13 @@ async function handleCalculateAll() {
         renderPopup(`Расчёт завершён. Обработано ${processed} из ${total}, получено ${successCount} рейтингов.`, false);
     }
 
-    // Обновляем таблицу с новыми рейтингами
     const pageSize = getPageSize('settlements');
-    const page = getPage();
 
-    // Если есть активный фильтр, применяем его к данным с новыми рейтингами
     if (savedFilterField && savedFilterValue) {
         const filtered = filterDataWithRatings(originalDataForFilter, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
-        renderCombinedTable(filtered, filtered.length, page, pageSize, true);
+        renderCombinedTable(filtered, filtered.length, currentDisplayPage, pageSize, true);
     } else {
-        renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
+        renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
     }
 }
 
@@ -1118,7 +1123,36 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     if (thead) thead.innerHTML = '';
     if (tbody) tbody.innerHTML = '';
 
-    if (!data || data.length === 0) {
+    const allData = data;
+    const allTotal = total;
+
+    let filteredData = allData;
+    if (keepFilter && savedFilterField && savedFilterValue) {
+        filteredData = filterData(allData, savedFilterField, savedFilterValue, savedFilterExact);
+    }
+
+    let sortedData = [...filteredData];
+    if (currentSortField) {
+        sortedData.sort((a, b) => {
+            let valA = a[currentSortField] !== undefined ? a[currentSortField] : '';
+            let valB = b[currentSortField] !== undefined ? b[currentSortField] : '';
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return currentSortOrder === 'asc' ? valA - valB : valB - valA;
+            }
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            if (currentSortOrder === 'asc') {
+                return valA.localeCompare(valB);
+            } else {
+                return valB.localeCompare(valA);
+            }
+        });
+    }
+
+    const pageData = getPageData(sortedData, page, pageSize);
+    const totalPages = Math.ceil(sortedData.length / pageSize);
+
+    if (pageData.length === 0) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
@@ -1128,11 +1162,13 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             row.appendChild(cell);
             tbody.appendChild(row);
         }
-        renderSettlementsPagination(total, page, pageSize);
+        renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
         return;
     }
 
-    currentSettlementsFiltered = data;
+    currentSettlementsFiltered = sortedData;
+    originalDataForFilter = allData;
+    originalTotalForFilter = allTotal;
 
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
@@ -1168,8 +1204,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         'fias_id': 'Код ФИАС'
     };
 
-    if (data && data.length > 0) {
-        Object.keys(data[0]).forEach(key => {
+    if (allData && allData.length > 0) {
+        Object.keys(allData[0]).forEach(key => {
             if (labels[key]) {
                 const opt = document.createElement('option');
                 opt.value = key;
@@ -1246,8 +1282,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            const filtered = filterData(originalDataForFilter, field, value, exactMatch);
-            renderSettlementsTableOnly(filtered, filtered.length, 1, pageSize, true);
+            currentDisplayPage = 0;
+            renderSettlementsTableOnly(allData, allTotal, 0, pageSize, true);
         }
     });
 
@@ -1260,8 +1296,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         currentFilterValue = '';
         currentFilterExact = false;
 
-        const currentPage = settlementsData.page || 0;
-        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
+        currentDisplayPage = 0;
+        renderSettlementsTableOnly(allData, allTotal, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
@@ -1303,7 +1339,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
                     currentSortField = h.key;
                     currentSortOrder = 'asc';
                 }
-                renderSettlementsTableOnly(data, total, page, pageSize, true);
+                currentDisplayPage = 0;
+                renderSettlementsTableOnly(allData, allTotal, 0, pageSize, true);
             });
 
             headerRow.appendChild(th);
@@ -1311,26 +1348,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         thead.appendChild(headerRow);
     }
 
-    let displayData = [...data];
-    if (currentSortField) {
-        displayData.sort((a, b) => {
-            let valA = a[currentSortField] !== undefined ? a[currentSortField] : '';
-            let valB = b[currentSortField] !== undefined ? b[currentSortField] : '';
-            if (typeof valA === 'number' && typeof valB === 'number') {
-                return currentSortOrder === 'asc' ? valA - valB : valB - valA;
-            }
-            valA = String(valA).toLowerCase();
-            valB = String(valB).toLowerCase();
-            if (currentSortOrder === 'asc') {
-                return valA.localeCompare(valB);
-            } else {
-                return valB.localeCompare(valA);
-            }
-        });
-    }
-
     if (tbody) {
-        displayData.forEach(item => {
+        pageData.forEach(item => {
             const row = document.createElement('tr');
             row.dataset.id = item.id;
             row.dataset.lat = item.lat;
@@ -1399,9 +1418,9 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         });
     }
 
-    renderSettlementsPagination(total, page, pageSize);
+    renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
-    if (data && data.length > 0) {
+    if (pageData && pageData.length > 0) {
         const firstRow = tbody.querySelector('tr');
         if (firstRow) {
             firstRow.click();
@@ -1431,7 +1450,23 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     if (thead) thead.innerHTML = '';
     if (tbody) tbody.innerHTML = '';
 
-    if (!data || data.length === 0) {
+    const allData = data;
+    const allTotal = total;
+
+    let filteredData = allData;
+    if (keepFilter && savedFilterField && savedFilterValue) {
+        filteredData = filterDataWithRatings(allData, allRatings, savedFilterField, savedFilterValue, savedFilterExact);
+    }
+
+    let sortedData = [...filteredData];
+    if (currentSortField) {
+        sortedData = sortDataWithRatings(sortedData, allRatings, currentSortField, currentSortOrder);
+    }
+
+    const pageData = getPageData(sortedData, page, pageSize);
+    const totalPages = Math.ceil(sortedData.length / pageSize);
+
+    if (pageData.length === 0) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
@@ -1441,11 +1476,13 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             row.appendChild(cell);
             tbody.appendChild(row);
         }
-        renderSettlementsPagination(total, page, pageSize);
+        renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
         return;
     }
 
-    currentSettlementsFiltered = data;
+    currentSettlementsFiltered = sortedData;
+    originalDataForFilter = allData;
+    originalTotalForFilter = allTotal;
 
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
@@ -1468,7 +1505,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     optionNone.textContent = '-- Выберите поле --';
     fieldSelect.appendChild(optionNone);
 
+    // ВСЕ ПОЛЯ С ЧИТАЕМЫМИ НАЗВАНИЯМИ
     const labels = {
+        // Поля населенных пунктов
         'id': 'ID',
         'name': 'Название',
         'area': 'Площадь (км²)',
@@ -1479,6 +1518,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'lon': 'Долгота',
         'population': 'Население',
         'fias_id': 'Код ФИАС',
+        // Поля рейтинга
         'count_res_tv': 'Количество РЭС ТВ',
         'count_res_rv': 'Количество РЭС РВ',
         'count_res_lte': 'Количество РЭС LTE',
@@ -1552,20 +1592,24 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'traffic_percent_mobile'
     ];
 
-    Object.keys(data[0]).forEach(key => {
+    // Добавляем поля населенных пунктов из данных
+    if (allData && allData.length > 0) {
+        Object.keys(allData[0]).forEach(key => {
+            if (labels[key] && !ratingFieldKeys.includes(key)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = labels[key];
+                fieldSelect.appendChild(opt);
+            }
+        });
+    }
+
+    // Добавляем поля рейтинга
+    ratingFieldKeys.forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
         opt.textContent = labels[key] || key;
         fieldSelect.appendChild(opt);
-    });
-
-    ratingFieldKeys.forEach(key => {
-        if (!Object.keys(data[0]).includes(key)) {
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = labels[key] || key;
-            fieldSelect.appendChild(opt);
-        }
     });
 
     if (keepFilter && savedFilterField) {
@@ -1635,8 +1679,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             currentFilterValue = value;
             currentFilterExact = exactMatch;
 
-            const filtered = filterDataWithRatings(originalDataForFilter, allRatings, field, value, exactMatch);
-            renderCombinedTable(filtered, filtered.length, 1, pageSize, true);
+            currentDisplayPage = 0;
+            renderCombinedTable(allData, allTotal, 0, pageSize, true);
         }
     });
 
@@ -1649,8 +1693,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         currentFilterValue = '';
         currentFilterExact = false;
 
-        const currentPage = settlementsData.page || 0;
-        renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentPage, pageSize, false);
+        currentDisplayPage = 0;
+        renderCombinedTable(allData, allTotal, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
@@ -1737,7 +1781,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
                     currentSortField = h.key;
                     currentSortOrder = 'asc';
                 }
-                renderCombinedTable(data, total, page, pageSize, true);
+                currentDisplayPage = 0;
+                renderCombinedTable(allData, allTotal, 0, pageSize, true);
             });
 
             headerRow.appendChild(th);
@@ -1745,14 +1790,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
-    // ===== ОПТИМИЗИРОВАННАЯ СОРТИРОВКА =====
-    let displayData = [...data];
-    if (currentSortField) {
-        displayData = sortDataWithRatings(displayData, allRatings, currentSortField, currentSortOrder);
-    }
-
     if (tbody) {
-        displayData.forEach(item => {
+        pageData.forEach(item => {
             const row = document.createElement('tr');
             row.dataset.id = item.id;
             row.dataset.lat = item.lat;
@@ -2005,9 +2044,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         });
     }
 
-    renderSettlementsPagination(total, page, pageSize);
+    renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
-    if (data && data.length > 0) {
+    if (pageData && pageData.length > 0) {
         const firstRow = tbody.querySelector('tr');
         if (firstRow) {
             firstRow.click();
@@ -2017,17 +2056,149 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     showSettlementButtons();
 }
 
-// ==================== ПАГИНАЦИЯ (только информация о количестве) ====================
+// ==================== ПАГИНАЦИЯ ====================
 
-function renderSettlementsPagination(total, currentPage, pageSize) {
+function renderSettlementsPagination(total, currentPage, totalPages, pageSize) {
     const container = document.getElementById('settlements-pagination');
     if (!container) return;
 
-    container.innerHTML = `
-        <div class="pagination-info">
-            Всего НП: ${total}
-        </div>
-    `;
+    container.innerHTML = '';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'space-between';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '10px';
+    container.style.padding = '10px 0';
+
+    // Информация о количестве
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'pagination-info';
+    infoDiv.textContent = `Всего НП: ${total}, Страница ${currentPage + 1} из ${totalPages || 1}`;
+    container.appendChild(infoDiv);
+
+    // Блок управления пагинацией
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'pagination-controls';
+    controlsDiv.style.display = 'flex';
+    controlsDiv.style.alignItems = 'center';
+    controlsDiv.style.gap = '6px';
+
+    // Кнопка "Назад"
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '◀';
+    prevBtn.className = 'pagination-btn';
+    prevBtn.disabled = currentPage === 0;
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 0) {
+            currentDisplayPage = currentPage - 1;
+            if (savedFilterField && savedFilterValue) {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                }
+            } else {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                }
+            }
+        }
+    });
+    controlsDiv.appendChild(prevBtn);
+
+    // Инпут для ввода номера страницы
+    const pageInput = document.createElement('input');
+    pageInput.type = 'number';
+    pageInput.className = 'page-input';
+    pageInput.min = 1;
+    pageInput.max = totalPages || 1;
+    pageInput.value = currentPage + 1;
+    pageInput.addEventListener('change', function() {
+        let val = parseInt(this.value);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > totalPages) val = totalPages || 1;
+        this.value = val;
+        const pageIndex = val - 1;
+        if (pageIndex !== currentPage) {
+            currentDisplayPage = pageIndex;
+            if (savedFilterField && savedFilterValue) {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                }
+            } else {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                }
+            }
+        }
+    });
+    controlsDiv.appendChild(pageInput);
+
+    // Кнопка "Вперед"
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '▶';
+    nextBtn.className = 'pagination-btn';
+    nextBtn.disabled = currentPage >= totalPages - 1 || totalPages === 0;
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages - 1) {
+            currentDisplayPage = currentPage + 1;
+            if (savedFilterField && savedFilterValue) {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+                }
+            } else {
+                if (showRatings) {
+                    renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                } else {
+                    renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+                }
+            }
+        }
+    });
+    controlsDiv.appendChild(nextBtn);
+
+    // Выбор количества записей на странице
+    const pageSizeSelect = document.createElement('select');
+    pageSizeSelect.className = 'page-size-select';
+
+    const sizes = [10, 25, 50, 100, 200, 500];
+    sizes.forEach(size => {
+        const opt = document.createElement('option');
+        opt.value = size;
+        opt.textContent = size;
+        if (size === pageSize) opt.selected = true;
+        pageSizeSelect.appendChild(opt);
+    });
+
+    pageSizeSelect.addEventListener('change', function() {
+        const newSize = parseInt(this.value);
+        settlementsData.pageSize = newSize;
+        currentDisplayPage = 0;
+        if (savedFilterField && savedFilterValue) {
+            if (showRatings) {
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, newSize, true);
+            } else {
+                renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, newSize, true);
+            }
+        } else {
+            if (showRatings) {
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, newSize, false);
+            } else {
+                renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, newSize, false);
+            }
+        }
+    });
+    controlsDiv.appendChild(pageSizeSelect);
+
+    container.appendChild(controlsDiv);
 }
 
 // ==================== ЗАГРУЗКА РЭС (для модального окна) ====================
@@ -2284,8 +2455,7 @@ async function getRatingsOnlyForData(items) {
     await loadRatingsForSettlements(items, false);
 
     const pageSize = getPageSize('settlements');
-    const page = getPage();
-    renderCombinedTable(settlementsData.items, settlementsData.total, page, pageSize);
+    renderCombinedTable(settlementsData.items, settlementsData.total, currentDisplayPage, pageSize);
 }
 
 async function calculateRatingsForData(items) {
@@ -2379,8 +2549,7 @@ async function calculateRatingsForData(items) {
     }
 
     const pageSize = getPageSize('settlements');
-    const page = getPage();
-    renderCombinedTable(settlementsData.items, settlementsData.total, page, pageSize);
+    renderCombinedTable(settlementsData.items, settlementsData.total, currentDisplayPage, pageSize);
 }
 
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
@@ -2391,6 +2560,7 @@ async function handleSettlementsButton() {
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
+    currentDisplayPage = 0;
 
     showResPageSize();
 
@@ -2426,7 +2596,7 @@ async function handleSettlementsButton() {
         currentFilterExact = false;
         showRatings = false;
         allRatings = {};
-        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
         showSettlementButtons();
 
@@ -2440,6 +2610,7 @@ async function handleRatingButton() {
     savedFilterField = '';
     savedFilterValue = '';
     savedFilterExact = false;
+    currentDisplayPage = 0;
 
     hideResPageSize();
 
@@ -2483,7 +2654,7 @@ async function handleRatingButton() {
 
     await loadRatingsForSettlements(settlementsData.items, false);
 
-    renderCombinedTable(originalDataForFilter, originalTotalForFilter, page, pageSize, false);
+    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
     showSettlementButtons();
 }
@@ -2558,7 +2729,7 @@ function handleClear() {
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
 
-    settlementsData = { items: [], total: 0, page: 0, pageSize: 1 };
+    settlementsData = { items: [], total: 0, page: 0, pageSize: 100, allItems: [] };
     selectedSettlementId = null;
     selectedSettlementLat = null;
     selectedSettlementLon = null;
@@ -2573,6 +2744,7 @@ function handleClear() {
     isCancelled = false;
     allRatings = {};
     showRatings = false;
+    currentDisplayPage = 0;
 
     showPlaceholder();
 
