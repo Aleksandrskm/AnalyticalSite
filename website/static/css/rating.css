@@ -33,36 +33,68 @@ header {
     top: 20px;
     align-self: start;
     height: fit-content;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.column__form::-webkit-scrollbar {
+    width: 4px;
+}
+
+.column__form::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.column__form::-webkit-scrollbar-track {
+    background: #d4d4d4;
 }
 
 .form__rating {
     background: #ececec;
     border: 2px solid #1a1a1a;
-    padding: 16px;
+    padding: 14px;
 }
 
 .form__rating label {
     display: block;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: #1a1a1a;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .form__rating > label:first-of-type {
-    font-size: 15px;
-    margin-bottom: 8px;
+    font-size: 14px;
+    margin-bottom: 6px;
 }
 
 .form__rating select,
 .form__rating input[type="text"],
 .form__rating input[type="number"] {
     width: 100%;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border: 1.5px solid #333;
     background: #fff;
-    font-size: 14px;
+    font-size: 13px;
     box-sizing: border-box;
+}
+
+/* Множественный выбор регионов */
+.form__rating select[multiple] {
+    height: 80px;
+    min-height: 60px;
+}
+
+.form__rating select[multiple] option {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.form__rating select[multiple] option:checked {
+    background: #1a1a1a;
+    color: #fff;
 }
 
 .form__rating select:focus,
@@ -73,19 +105,19 @@ header {
 
 .form__rating > div:not(.form__div) {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: #1a1a1a;
-    margin: 16px 0 8px 0;
+    margin: 12px 0 6px 0;
 }
 
 .form__div {
     background: #e0e0e0;
-    padding: 12px;
+    padding: 10px;
     border: 1.5px solid #2a2a2a;
 }
 
 .form__div__div {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .form__div__div:last-child {
@@ -95,28 +127,33 @@ header {
 .form__div__div input[type="radio"] {
     width: 14px;
     height: 14px;
-    margin-right: 8px;
+    margin-right: 6px;
     accent-color: #1a1a1a;
 }
 
 .form__div__div label {
     display: inline;
     font-weight: normal;
-    font-size: 14px;
+    font-size: 13px;
     color: #1a1a1a;
 }
 
 .form__div__div:nth-child(2) {
-    margin-top: 8px;
+    margin-top: 6px;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 5px;
+    flex-wrap: wrap;
 }
 
 .form__div__div:nth-child(2) input[type="number"] {
-    width: 85px;
-    padding: 6px 8px;
-    font-size: 14px;
+    width: 70px;
+    padding: 4px 6px;
+    font-size: 13px;
+}
+
+.h5-label {
+    font-size: 13px;
 }
 
 /* ===== КНОПКИ ===== */
@@ -125,39 +162,64 @@ header {
     background: #2a2a2a;
     color: #fff;
     border: 1.5px solid #1a1a1a;
-    padding: 10px 16px;
-    font-size: 15px;
+    padding: 8px 12px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 18px;
+    margin-top: 6px;
+    transition: background 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .grid-btn:hover {
     background: #1a1a1a;
 }
 
+/* Все кнопки формы - черные */
+.rating-btn {
+    background: #2a2a2a;
+    border-color: #1a1a1a;
+}
+
+.rating-btn:hover {
+    background: #1a1a1a;
+}
+
+.form__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.form__buttons .grid-btn {
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
 /* ===== ПРАВАЯ КОЛОНКА ===== */
 .table__rating {
     background: #ececec;
     border: 2px solid #1a1a1a;
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     height: 88%;
     overflow: hidden;
     margin-top: 20px;
 }
-.h5-label{
-    font-size: 15px;
-}
+
 /* ===== ЗАГОЛОВКИ ТАБЛИЦ ===== */
 .settlements-title,
 .res-title {
     text-align: center;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #1a1a1a;
-    margin: 5px 0 5px 0;
+    margin: 3px 0 5px 0;
     padding: 0;
     flex-shrink: 0;
 }
@@ -180,14 +242,13 @@ header {
 .table__rating__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 13px;
     border: 1px solid #1a1a1a;
     flex: 1;
     display: block;
     overflow-y: auto;
 }
 
-/* Заголовки теперь НЕ фиксированы — скроллятся вместе с данными */
 .table__rating__table thead {
     display: table;
     width: 100%;
@@ -202,49 +263,45 @@ header {
 }
 
 /* ===== ФИКСИРОВАННАЯ ШИРИНА ДЛЯ ВСЕХ КОЛОНОК ===== */
-
-/* Общие стили для всех ячеек и заголовков - ФИКСИРОВАННАЯ ШИРИНА 115px */
 .table__rating__table th,
 .table__rating__table td {
     border: 1px solid #1a1a1a !important;
-    padding: 8px 10px;
+    padding: 5px 8px;
     vertical-align: middle;
-    width: 115px;
-    min-width: 115px;
-    max-width: 115px;
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
     word-break: break-word;
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Специальные стили для заголовков - без фона */
 .table__rating__table th {
     text-align: left;
     font-weight: 700;
     color: #1a1a1a;
     cursor: pointer;
     user-select: none;
-    padding: 10px 10px;
+    padding: 6px 8px;
+    font-size: 12px;
 }
 
-/* Сортировка */
 .sort-icon {
-    margin-left: 5px;
-    font-size: 11px;
+    margin-left: 4px;
+    font-size: 10px;
     font-weight: bold;
 }
 
-/* Ячейки данных */
 .table__rating__table td {
     color: #2a2a2a;
+    font-size: 12px;
 }
 
 .table__rating__table tbody tr:hover {
     background: #e0e0e0;
 }
 
-/* Кликабельные строки */
 .clickable-row {
     cursor: pointer;
 }
@@ -253,13 +310,125 @@ header {
     background: #e0e0e0;
 }
 
-/* Пустое сообщение - занимает всю ширину */
 .empty-message {
     text-align: center;
     padding: 20px !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
+}
+
+/* ===== КОНТЕЙНЕР ДЛЯ ДИАГРАММЫ ===== */
+#chart-container {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+}
+
+#chart-container canvas {
+    width: 100% !important;
+    height: 85% !important;
+    flex: 1;
+}
+
+.chart-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+    flex-shrink: 0;
+}
+
+/* ===== ПАГИНАЦИЯ ДИАГРАММЫ ===== */
+#chart-pagination {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid #ddd !important;
+    margin-top: 8px !important;
+}
+
+#chart-pagination .pagination-info {
+    font-size: 13px !important;
+    color: black !important;
+    font-weight: 550 !important;
+}
+
+#chart-pagination .pagination-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+#chart-pagination .pagination-btn,
+#chart-pagination .page-input,
+#chart-pagination .page-size-select {
+    height: 28px !important;
+    padding: 0 8px !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    background: #fff !important;
+    color: #333 !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#chart-pagination .pagination-btn {
+    min-width: 28px !important;
+    background: #eee !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+}
+
+#chart-pagination .pagination-btn:hover:not(:disabled) {
+    background: #ddd !important;
+}
+
+#chart-pagination .pagination-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: default !important;
+}
+
+#chart-pagination .page-input {
+    width: 36px !important;
+    text-align: center !important;
+}
+
+#chart-pagination .page-input::-webkit-inner-spin-button,
+#chart-pagination .page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+
+#chart-pagination .page-input:focus {
+    outline: none !important;
+    border-color: #000 !important;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.1) !important;
+}
+
+#chart-pagination .page-size-select {
+    min-width: 50px !important;
+    cursor: pointer !important;
+    background: #fff !important;
+}
+
+#chart-pagination .page-size-select:focus {
+    outline: none !important;
+    border-color: #000 !important;
 }
 
 /* ===== ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ===== */
@@ -274,106 +443,136 @@ header {
 .table_buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding-top: 12px;
+    gap: 8px;
+    padding-top: 8px;
     border-top: 1px solid #1a1a1a;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    min-height: 40px;
 }
 
 .table_buttons .grid-btn {
-    width: auto;
+    width: auto !important;
+    min-width: 100px;
+    max-width: 220px;
     margin-top: 0;
-    padding: 6px 18px;
-    font-size: 14px;
+    padding: 6px 12px;
+    font-size: 12px;
+    text-align: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.table_buttons .res-action-btn,
+.table_buttons .wired-action-btn,
+.table_buttons .calculate-selected-btn,
+.table_buttons .calculate-all-btn {
+    width: auto !important;
+    min-width: 100px;
+    max-width: 220px;
+    flex-shrink: 0;
+    white-space: break-spaces;
 }
 
 #exit-home {
     text-decoration: none;
 }
 
-/* ===== ПАГИНАЦИЯ ===== */
-.pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    flex-shrink: 0;
+/* ===== ПАГИНАЦИЯ ТАБЛИЦЫ ===== */
+#settlements-pagination {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    flex-shrink: 0 !important;
 }
 
-.pagination-info {
-    font-size: 14px;
-    color: black;
-    font-weight: 550;
+#settlements-pagination .pagination-info {
+    font-size: 13px !important;
+    color: black !important;
+    font-weight: 550 !important;
 }
 
-.pagination-buttons {
-    display: flex;
-    gap: 6px;
+#settlements-pagination .pagination-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
 }
 
-.pagination-btn {
-    padding: 3px 10px;
-    border: 1px solid #333;
-    background: #eee;
-    cursor: pointer;
-    font-size: 13px;
+#settlements-pagination .pagination-btn,
+#settlements-pagination .page-input,
+#settlements-pagination .page-size-select {
+    height: 28px !important;
+    padding: 0 8px !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    background: #fff !important;
+    color: #333 !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-.pagination-btn:hover:not(:disabled) {
-    background: #ddd;
+#settlements-pagination .pagination-btn {
+    min-width: 28px !important;
+    background: #eee !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
 }
 
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
+#settlements-pagination .pagination-btn:hover:not(:disabled) {
+    background: #ddd !important;
 }
 
-.pagination-btn.active {
-    background: #1a1a1a;
-    color: #fff;
-    border-color: #1a1a1a;
+#settlements-pagination .pagination-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: default !important;
+}
+
+#settlements-pagination .page-input {
+    width: 36px !important;
+    text-align: center !important;
+}
+
+#settlements-pagination .page-input::-webkit-inner-spin-button,
+#settlements-pagination .page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+
+#settlements-pagination .page-input:focus {
+    outline: none !important;
+    border-color: #000 !important;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.1) !important;
+}
+
+#settlements-pagination .page-size-select {
+    min-width: 50px !important;
+    cursor: pointer !important;
+    background: #fff !important;
+}
+
+#settlements-pagination .page-size-select:focus {
+    outline: none !important;
+    border-color: #000 !important;
 }
 
 /* ===== РАЗМЕР СТРАНИЦЫ ===== */
 .page-size-control {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
     flex-shrink: 0;
     margin-bottom: 5px;
 }
 
 .page-size-control label {
     font-weight: normal;
-}
-
-.page-size-select {
-    padding: 4px 8px;
-    border: 1px solid #333;
-    border-radius: 4px;
-    font-size: 14px;
-    background: #fff;
-    cursor: pointer;
-    display: none;
-}
-
-.page-size-select:focus {
-    outline: none;
-    border-color: #000;
-}
-
-.form__buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.form__buttons .grid-btn {
-    margin-top: 0;
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО ===== */
@@ -562,12 +761,12 @@ header {
 /* === ФИЛЬТР === */
 .filter-container {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     align-items: flex-end;
-    padding: 15px;
+    padding: 10px;
     background: #f5f5f5;
-    border-radius: 8px;
-    margin-bottom: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
     flex-wrap: wrap;
     border: 1.2px solid black;
 }
@@ -575,56 +774,56 @@ header {
 .filter-field-group,
 .filter-value-group {
     flex: 2;
-    min-width: 180px;
+    min-width: 150px;
 }
 
 .filter-exact-group {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     padding-bottom: 2px;
 }
 
 .filter-buttons-group {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .filter-label {
     display: block;
-    margin-bottom: 5px;
-    font-size: 16px;
+    margin-bottom: 4px;
+    font-size: 13px;
     font-weight: bold;
     color: #333;
 }
 
 .filter-field-select {
     width: 100%;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid black;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 4px;
+    font-size: 13px;
     background: white;
     cursor: pointer;
 }
 
 .filter-value-input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid black;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 4px;
+    font-size: 13px;
     box-sizing: border-box;
 }
 
 .filter-apply-btn {
-    padding: 8px 20px;
+    padding: 6px 16px;
     background: #4caf50;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
 }
 
@@ -633,13 +832,13 @@ header {
 }
 
 .filter-reset-btn {
-    padding: 8px 20px;
+    padding: 6px 16px;
     background: #f44336;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
 }
 
@@ -739,7 +938,7 @@ header {
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    min-width: 400px;
+    min-width: 350px;
     max-width: 500px;
     text-align: center;
 }
@@ -807,120 +1006,19 @@ header {
     width: auto !important;
 }
 
-/* ===== АДАПТИВНОСТЬ ===== */
-@media (max-width: 1200px) {
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 90px;
-        min-width: 90px;
-        max-width: 90px;
-        padding: 6px 8px;
-        font-size: 13px;
-    }
-}
-
-@media (max-width: 900px) {
-    .container__forms {
-        grid-template-columns: 1fr;
-        gap: 15px;
-        padding: 15px;
-        height: auto;
-        overflow: auto;
-    }
-
-    .column__form {
-        position: static;
-    }
-
-    .form__div__div:nth-child(2) {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 100%;
-    }
-
-    .table__rating {
-        height: auto;
-        overflow: visible;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 70px;
-        min-width: 70px;
-        max-width: 70px;
-        padding: 5px 6px;
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 768px) {
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 60px;
-        min-width: 60px;
-        max-width: 60px;
-        padding: 4px 6px;
-        font-size: 11px;
-    }
-
-    .filter-container {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filter-buttons-group {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 600px) {
-    .table_buttons {
-        flex-direction: column;
-    }
-
-    .table_buttons .grid-btn {
-        width: 100%;
-        text-align: center;
-    }
-
-    .task-parameter {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .task-parameter label {
-        min-width: auto;
-    }
-
-    .task-parameter select {
-        width: 100%;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 50px;
-        min-width: 50px;
-        max-width: 50px;
-        padding: 3px 4px;
-        font-size: 10px;
-    }
-}
 /* ===== ПОДСКАЗКА ПРИ ОТСУТСТВИИ ДАННЫХ ===== */
 .placeholder-message {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 50px 30px;
+    padding: 40px 20px;
     background: linear-gradient(145deg, #f8f8f8, #e8e8e8);
     border: 2px dashed #1a1a1a;
     border-radius: 12px;
     margin: 10px 0;
     flex: 1;
-    min-height: 350px;
+    min-height: 300px;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
@@ -937,10 +1035,10 @@ header {
 }
 
 .placeholder-message p {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: #1a1a1a;
-    margin: 0 0 20px 0;
+    margin: 0 0 15px 0;
     letter-spacing: 0.3px;
 }
 
@@ -949,15 +1047,15 @@ header {
     padding: 0;
     margin: 0;
     text-align: left;
-    max-width: 550px;
+    max-width: 500px;
     width: 100%;
 }
 
 .placeholder-message ul li {
-    font-size: 16px;
+    font-size: 14px;
     color: #333;
-    padding: 12px 16px 12px 40px;
-    line-height: 1.6;
+    padding: 10px 12px 10px 32px;
+    line-height: 1.5;
     position: relative;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: background 0.2s ease;
@@ -975,78 +1073,24 @@ header {
 .placeholder-message ul li::before {
     content: "▸";
     position: absolute;
-    left: 12px;
+    left: 10px;
     color: #1a1a1a;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .placeholder-message ul li strong {
     color: #1a1a1a;
     font-weight: 700;
     background: #e0e0e0;
-    padding: 2px 10px;
+    padding: 2px 8px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     letter-spacing: 0.2px;
     white-space: nowrap;
 }
 
-/* ===== АДАПТИВ ДЛЯ ПОДСКАЗКИ ===== */
-@media (max-width: 768px) {
-    .placeholder-message {
-        padding: 30px 20px;
-        min-height: 250px;
-    }
-
-    .placeholder-message p {
-        font-size: 17px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 14px;
-        padding: 10px 12px 10px 32px;
-    }
-
-    .placeholder-message ul li::before {
-        font-size: 16px;
-        left: 8px;
-    }
-
-    .placeholder-message ul li strong {
-        font-size: 13px;
-        padding: 1px 8px;
-    }
-}
-
-@media (max-width: 600px) {
-    .placeholder-message {
-        padding: 20px 15px;
-        min-height: 200px;
-    }
-
-    .placeholder-message p {
-        font-size: 15px;
-        margin-bottom: 15px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 13px;
-        padding: 8px 10px 8px 28px;
-    }
-
-    .placeholder-message ul li::before {
-        font-size: 14px;
-        left: 6px;
-    }
-
-    .placeholder-message ul li strong {
-        font-size: 12px;
-        padding: 1px 6px;
-        white-space: normal;
-    }
-}
-/* === ПАГИНАЦИЯ В МОДАЛКЕ РЭС === */
+/* ===== ПАГИНАЦИЯ В МОДАЛКЕ РЭС ===== */
 #res-pagination-modal {
     display: flex;
     justify-content: space-between;
@@ -1090,229 +1134,446 @@ header {
     color: #fff;
     border-color: #1a1a1a;
 }
-/* ===== КНОПКИ ВНИЗУ ===== */
-.table_buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #1a1a1a;
-    flex-shrink: 0;
-}
 
-.table_buttons .grid-btn {
-    width: 200px;
-    flex-shrink: 0;
-    margin-top: 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    text-align: center;
-}
+/* ===== АДАПТИВНОСТЬ ===== */
 
-/* Для мобильных устройств */
-@media (max-width: 600px) {
-    .table_buttons {
-        flex-direction: column;
-        align-items: stretch;
+/* Планшеты и маленькие ноутбуки */
+@media (max-width: 1200px) {
+    .container__forms {
+        grid-template-columns: 280px 1fr;
+        gap: 12px;
+        padding: 0 12px 12px 12px;
+    }
+
+    .column__form {
+        max-height: calc(100vh - 100px);
+    }
+
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        padding: 4px 6px;
+        font-size: 11px;
     }
 
     .table_buttons .grid-btn {
-        width: 100% !important;
-        flex-shrink: 1;
-        white-space: normal;
-    }
-}
-/* ===== КНОПКИ ВНИЗУ ===== */
-.table_buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #1a1a1a;
-    flex-shrink: 0;
-}
-
-.table_buttons .grid-btn {
-    width: 220px !important;
-    min-width: 180px;
-    max-width: 280px;
-    margin-top: 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    text-align: center;
-    /*white-space: nowrap;*/
-    flex-shrink: 0;
-}
-
-/* Кнопки РЭС, Проводные УС и Рассчитать рейтинг выбранного НП */
-.table_buttons .res-action-btn,
-.table_buttons .wired-action-btn,
-.table_buttons .calculate-selected-btn {
-    width: 220px !important;
-    min-width: 180px;
-    max-width: 280px;
-    flex-shrink: 0;
-}
-
-/* Для мобильных устройств */
-@media (max-width: 600px) {
-    .table_buttons {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn {
-        width: 100% !important;
-        min-width: unset;
-        max-width: unset;
-        white-space: normal;
-        flex-shrink: 1;
-    }
-}
-/* ===== КНОПКИ ВНИЗУ ===== */
-.table_buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #1a1a1a;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
-
-.table_buttons .grid-btn {
-    width: 220px !important;
-    min-width: 150px;
-    max-width: 280px;
-    margin-top: 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    text-align: center;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-/* Кнопки РЭС, Проводные УС и Рассчитать рейтинг выбранного НП */
-.table_buttons .res-action-btn,
-.table_buttons .wired-action-btn,
-.table_buttons .calculate-selected-btn,
-.table_buttons .calculate-all-btn {
-    width: 220px !important;
-    min-width: 150px;
-    max-width: 280px;
-    flex-shrink: 0;
-    white-space: break-spaces;
-}
-
-/* ===== АДАПТИВНОСТЬ ДЛЯ СРЕДНИХ ЭКРАНОВ ===== */
-@media (max-width: 1200px) {
-    .table_buttons {
-        gap: 10px;
-    }
-
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn {
-        width: 190px !important;
-        min-width: 130px;
-        max-width: 220px;
-        font-size: 13px;
-        padding: 7px 12px;
+        width: auto !important;
+        min-width: 90px;
+        max-width: 180px;
+        font-size: 11px;
+        padding: 5px 10px;
         white-space: break-spaces;
     }
 }
 
 @media (max-width: 992px) {
-    .table_buttons {
-        gap: 8px;
-        justify-content: center;
+    .container__forms {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+        height: auto;
+        overflow: auto;
     }
 
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn {
-        width: 170px !important;
-        min-width: 120px;
-        max-width: 200px;
-        font-size: 12px;
-        padding: 6px 10px;
-        white-space: normal;
+    .column__form {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
     }
-}
 
-@media (max-width: 768px) {
+    .form__div__div:nth-child(2) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form__div__div:nth-child(2) input[type="number"] {
+        width: 100%;
+    }
+
+    .table__rating {
+        height: auto;
+        overflow: visible;
+        min-height: 350px;
+    }
+
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 65px;
+        min-width: 65px;
+        max-width: 65px;
+        padding: 4px 5px;
+        font-size: 10px;
+    }
+
+    #chart-container {
+        height: 350px;
+        min-height: 250px;
+    }
+
     .table_buttons {
         gap: 6px;
         justify-content: center;
-        flex-wrap: wrap;
     }
 
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn {
-        width: 150px !important;
-        min-width: 100px;
-        max-width: 180px;
-        font-size: 11px;
-        padding: 5px 8px;
-        white-space: normal;
-        word-break: break-word;
-    }
-}
-
-/* ===== МАЛЫЕ ЭКРАНЫ (МОБИЛЬНЫЕ) ===== */
-@media (max-width: 600px) {
-    .table_buttons {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 6px;
-        padding-top: 10px;
-    }
-
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn {
-        width: calc(50% - 6px) !important;
+    .table_buttons .grid-btn {
+        width: auto !important;
         min-width: 80px;
         max-width: 160px;
         font-size: 11px;
         padding: 5px 8px;
         white-space: normal;
+    }
+}
+
+@media (max-width: 768px) {
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+        padding: 3px 4px;
+        font-size: 9px;
+    }
+
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .filter-buttons-group {
+        flex-direction: column;
+    }
+
+    .filter-buttons-group .filter-apply-btn,
+    .filter-buttons-group .filter-reset-btn {
+        width: 100%;
+    }
+
+    #chart-container {
+        height: 280px;
+        min-height: 200px;
+    }
+
+    .placeholder-message {
+        padding: 25px 15px;
+        min-height: 200px;
+    }
+
+    .placeholder-message p {
+        font-size: 15px;
+    }
+
+    .placeholder-message ul li {
+        font-size: 12px;
+        padding: 8px 10px 8px 28px;
+    }
+
+    .placeholder-message ul li::before {
+        font-size: 14px;
+        left: 6px;
+    }
+
+    .placeholder-message ul li strong {
+        font-size: 11px;
+        padding: 1px 6px;
+    }
+
+    .table_buttons {
+        gap: 5px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .table_buttons .grid-btn {
+        width: auto !important;
+        min-width: 70px;
+        max-width: 140px;
+        font-size: 10px;
+        padding: 4px 6px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    #settlements-pagination,
+    #chart-pagination {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+    }
+
+    #settlements-pagination .pagination-controls,
+    #chart-pagination .pagination-controls {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #chart-pagination .pagination-btn,
+    #settlements-pagination .page-input,
+    #chart-pagination .page-input,
+    #settlements-pagination .page-size-select,
+    #chart-pagination .page-size-select {
+        height: 24px !important;
+        font-size: 11px !important;
+        padding: 0 6px !important;
+    }
+
+    #settlements-pagination .page-input,
+    #chart-pagination .page-input {
+        width: 38px !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #chart-pagination .pagination-btn {
+        min-width: 24px !important;
+    }
+
+    #settlements-pagination .page-size-select,
+    #chart-pagination .page-size-select {
+        min-width: 44px !important;
+    }
+}
+
+/* Мобильные устройства */
+@media (max-width: 600px) {
+    .form__rating {
+        padding: 10px;
+    }
+
+    .form__rating select[multiple] {
+        height: 60px;
+    }
+
+    .form__rating > div:not(.form__div) {
+        font-size: 12px;
+        margin: 8px 0 4px 0;
+    }
+
+    .form__div {
+        padding: 8px;
+    }
+
+    .form__div__div {
+        margin-bottom: 5px;
+    }
+
+    .form__div__div label {
+        font-size: 12px;
+    }
+
+    .form__div__div:nth-child(2) input[type="number"] {
+        width: 60px;
+        padding: 3px 5px;
+        font-size: 12px;
+    }
+
+    .grid-btn {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+
+    .form__buttons .grid-btn {
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+
+    .table_buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+        padding-top: 8px;
+    }
+
+    .table_buttons .grid-btn {
+        width: calc(50% - 4px) !important;
+        min-width: 60px;
+        max-width: 120px;
+        font-size: 10px;
+        padding: 4px 6px;
+        white-space: normal;
         word-break: break-word;
         flex-shrink: 1;
         flex-grow: 0;
     }
-}
 
-@media (max-width: 400px) {
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn {
-        width: 100% !important;
-        max-width: 100%;
+    .placeholder-message {
+        padding: 20px 12px;
+        min-height: 180px;
+    }
+
+    .placeholder-message p {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .placeholder-message ul li {
+        font-size: 11px;
+        padding: 6px 8px 6px 24px;
+        line-height: 1.4;
+    }
+
+    .placeholder-message ul li::before {
         font-size: 12px;
-        padding: 6px 12px;
+        left: 5px;
+    }
+
+    .placeholder-message ul li strong {
+        font-size: 10px;
+        padding: 1px 5px;
         white-space: normal;
-        word-break: break-word;
+    }
+
+    #chart-container {
+        height: 220px;
+        min-height: 180px;
+        padding: 4px;
+    }
+
+    .chart-title {
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .table__rating {
+        padding: 8px;
+        min-height: 300px;
+    }
+
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 45px;
+        min-width: 45px;
+        max-width: 45px;
+        padding: 2px 3px;
+        font-size: 8px;
+    }
+
+    .table__rating__table th {
+        font-size: 8px;
+        padding: 3px 4px;
+    }
+
+    .settlements-title {
+        font-size: 14px;
+    }
+
+    #settlements-pagination .pagination-controls,
+    #chart-pagination .pagination-controls {
+        gap: 3px !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #chart-pagination .pagination-btn,
+    #settlements-pagination .page-input,
+    #chart-pagination .page-input,
+    #settlements-pagination .page-size-select,
+    #chart-pagination .page-size-select {
+        height: 22px !important;
+        font-size: 10px !important;
+        padding: 0 4px !important;
+    }
+
+    #settlements-pagination .page-input,
+    #chart-pagination .page-input {
+        width: 32px !important;
+    }
+
+    #settlements-pagination .pagination-btn,
+    #chart-pagination .pagination-btn {
+        min-width: 22px !important;
+    }
+
+    #settlements-pagination .page-size-select,
+    #chart-pagination .page-size-select {
+        min-width: 38px !important;
+    }
+
+    .progress-modal-content {
+        min-width: auto;
+        max-width: 95%;
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .res-modal-content {
+        padding: 12px;
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .res-modal-table th,
+    .res-modal-table td {
+        min-width: 50px;
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    .filter-container {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .filter-field-group,
+    .filter-value-group {
+        min-width: 100px;
+    }
+
+    .filter-label {
+        font-size: 11px;
+    }
+
+    .filter-field-select,
+    .filter-value-input {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .filter-apply-btn,
+    .filter-reset-btn {
+        font-size: 11px;
+        padding: 4px 12px;
     }
 }
 
-/* ===== ЕДИНЫЕ СТИЛИ ДЛЯ ЭЛЕМЕНТОВ ПАГИНАЦИИ (НА ОДНОМ УРОВНЕ) ===== */
+@media (max-width: 400px) {
+    .table_buttons .grid-btn {
+        width: 100% !important;
+        max-width: 100%;
+        font-size: 11px;
+        padding: 4px 8px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .form__div__div:nth-child(2) input[type="number"] {
+        width: 50px;
+        font-size: 11px;
+    }
+
+    .table__rating__table th,
+    .table__rating__table td {
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        padding: 2px;
+        font-size: 7px;
+    }
+
+    .table__rating__table th {
+        font-size: 7px;
+        padding: 2px;
+    }
+
+    #chart-container {
+        height: 180px;
+        min-height: 150px;
+    }
+}
+/* Убедимся что пагинация отображается */
 #settlements-pagination {
     display: flex !important;
     align-items: center !important;
@@ -1321,6 +1582,8 @@ header {
     gap: 10px !important;
     padding: 10px 0 !important;
     flex-shrink: 0 !important;
+    border-top: 1px solid #ddd !important;
+    margin-top: 5px !important;
 }
 
 #settlements-pagination .pagination-info {
@@ -1335,15 +1598,14 @@ header {
     gap: 6px !important;
 }
 
-/* Общий размер для всех элементов управления пагинацией */
 #settlements-pagination .pagination-btn,
 #settlements-pagination .page-input,
 #settlements-pagination .page-size-select {
-    height: 32px !important;
+    height: 30px !important;
     padding: 0 10px !important;
     border: 1px solid #333 !important;
     border-radius: 4px !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     background: #fff !important;
     color: #333 !important;
     box-sizing: border-box !important;
@@ -1352,9 +1614,8 @@ header {
     justify-content: center !important;
 }
 
-/* Кнопки пагинации */
 #settlements-pagination .pagination-btn {
-    min-width: 32px !important;
+    min-width: 30px !important;
     background: #eee !important;
     cursor: pointer !important;
     font-weight: 600 !important;
@@ -1369,11 +1630,9 @@ header {
     cursor: default !important;
 }
 
-/* Инпут страницы */
 #settlements-pagination .page-input {
     width: 40px !important;
     text-align: center !important;
-    /*margin-top: 13px;*/
 }
 
 #settlements-pagination .page-input::-webkit-inner-spin-button,
@@ -1388,9 +1647,8 @@ header {
     box-shadow: 0 0 0 2px rgba(0,0,0,0.1) !important;
 }
 
-/* Селект размера страницы */
 #settlements-pagination .page-size-select {
-    min-width: 60px !important;
+    min-width: 50px !important;
     cursor: pointer !important;
     background: #fff !important;
 }
@@ -1398,73 +1656,4 @@ header {
 #settlements-pagination .page-size-select:focus {
     outline: none !important;
     border-color: #000 !important;
-}
-
-/* Разделитель между страницами */
-#settlements-pagination .pagination-separator {
-    color: #666 !important;
-    font-size: 14px !important;
-    padding: 0 2px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-}
-
-/* ===== АДАПТИВ ДЛЯ ПАГИНАЦИИ ===== */
-@media (max-width: 768px) {
-    #settlements-pagination {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 8px !important;
-    }
-
-    #settlements-pagination .pagination-controls {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #settlements-pagination .page-size-select {
-        height: 28px !important;
-        font-size: 12px !important;
-        padding: 0 8px !important;
-    }
-
-    #settlements-pagination .page-input {
-        width: 44px !important;
-    }
-
-    #settlements-pagination .pagination-btn {
-        min-width: 28px !important;
-    }
-
-    #settlements-pagination .page-size-select {
-        min-width: 54px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    #settlements-pagination .pagination-controls {
-        gap: 4px !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #settlements-pagination .page-size-select {
-        height: 26px !important;
-        font-size: 11px !important;
-        padding: 0 6px !important;
-    }
-
-    #settlements-pagination .page-input {
-        width: 38px !important;
-    }
-
-    #settlements-pagination .pagination-btn {
-        min-width: 26px !important;
-    }
-
-    #settlements-pagination .page-size-select {
-        min-width: 48px !important;
-    }
 }
