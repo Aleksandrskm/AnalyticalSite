@@ -30,6 +30,11 @@ let resData = {
     pageSize: 1
 };
 
+let chartCurrentPage = 0;
+let chartPageSize = 50;
+let chartAllData = [];
+let chartCurrentData = [];
+
 // Текущий выбранный НП
 let selectedSettlementId = null;
 let selectedSettlementLat = null;
@@ -75,6 +80,11 @@ let originalTotalForFilter = 0;
 
 // Текущая страница для отображения
 let currentDisplayPage = 0;
+
+// Переменные для диаграммы
+let ratingChart = null;
+let isChartMode = false;
+let chartType = 'provided'; // 'provided' | 'deficit' | 'norms_provided' | 'norms_consumption'
 
 function initLoader() {
     if (!loader) {
@@ -138,25 +148,506 @@ function showPlaceholder() {
     const table = document.getElementById('settlements-table');
     const pagination = document.getElementById('settlements-pagination');
     const divider = document.getElementById('table-divider');
+    const chartContainer = document.getElementById('chart-container');
 
     if (placeholder) placeholder.style.display = 'flex';
     if (table) table.style.display = 'none';
     if (pagination) pagination.style.display = 'none';
     if (divider) divider.style.display = 'none';
+    if (chartContainer) chartContainer.style.display = 'none';
+
+    // Удаляем пагинацию диаграммы
+    const oldChartPagination = document.getElementById('chart-pagination');
+    if (oldChartPagination) oldChartPagination.remove();
+
+    // Скрываем кнопки действий
+    hideSettlementButtons();
+    hideCalculateAllButton();
+    hideCalculateSelectedButton();
+
+    // Скрываем фильтр
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterContainer) filterContainer.remove();
+
+    // Удаляем заголовок
+    const settlementsTitle = document.querySelector('.settlements-title');
+    if (settlementsTitle) settlementsTitle.remove();
+
+    // Удаляем заголовок диаграммы
+    const chartTitle = document.querySelector('.chart-title');
+    if (chartTitle) chartTitle.remove();
+
+    // Уничтожаем диаграмму если есть
+    destroyChart();
 }
 
 function hidePlaceholder() {
     const placeholder = document.getElementById('placeholder-message');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Показываем таблицу по умолчанию (если данные есть)
+    const table = document.getElementById('settlements-table');
+    if (table && settlementsData.items && settlementsData.items.length > 0) {
+        table.style.display = 'block';
+    }
+}
+
+// ==================== УПРАВЛЕНИЕ ДИАГРАММОЙ ====================
+
+function destroyChart() {
+    if (ratingChart) {
+        ratingChart.destroy();
+        ratingChart = null;
+    }
+    isChartMode = false;
+}
+
+function showChartContainer() {
+    const chartContainer = document.getElementById('chart-container');
     const table = document.getElementById('settlements-table');
     const pagination = document.getElementById('settlements-pagination');
     const divider = document.getElementById('table-divider');
+    const placeholder = document.getElementById('placeholder-message');
 
+    if (chartContainer) {
+        chartContainer.style.display = 'flex';
+        chartContainer.style.flexDirection = 'column';
+    }
+
+    // СКРЫВАЕМ ТАБЛИЦУ
+    if (table) table.style.display = 'none';
+    if (pagination) pagination.style.display = 'none';
+    if (divider) divider.style.display = 'none';
     if (placeholder) placeholder.style.display = 'none';
-    if (table) table.style.display = 'block';
-    if (pagination) pagination.style.display = 'flex';
-    if (divider) divider.style.display = 'block';
+
+    // Удаляем старую пагинацию диаграммы
+    const oldChartPagination = document.getElementById('chart-pagination');
+    if (oldChartPagination) oldChartPagination.remove();
+
+    // Скрываем кнопки действий для таблицы
+    hideSettlementButtons();
+    hideCalculateAllButton();
+    hideCalculateSelectedButton();
+
+    // Скрываем фильтр
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterContainer) filterContainer.remove();
+
+    // Удаляем заголовок таблицы
+    const settlementsTitle = document.querySelector('.settlements-title');
+    if (settlementsTitle) settlementsTitle.remove();
 }
 
+function hideChartContainer() {
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer) {
+        chartContainer.style.display = 'none';
+        // Удаляем пагинацию диаграммы
+        const chartPagination = document.getElementById('chart-pagination');
+        if (chartPagination) chartPagination.remove();
+    }
+    destroyChart();
+    chartAllData = [];
+    chartCurrentData = [];
+    chartCurrentPage = 0;
+
+    // Удаляем заголовок диаграммы
+    const chartTitle = document.querySelector('.chart-title');
+    if (chartTitle) chartTitle.remove();
+}
+
+// ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
+
+function createRatingChart(data, type, page = 0, pageSize = 50) {
+    const canvas = document.getElementById('rating-chart');
+    if (!canvas) {
+        console.error('Canvas для диаграммы не найден');
+        return;
+    }
+
+    destroyChart();
+
+    // Удаляем старую пагинацию диаграммы
+    const oldChartPagination = document.getElementById('chart-pagination');
+    if (oldChartPagination) oldChartPagination.remove();
+
+    const ctx = canvas.getContext('2d');
+
+    // Сортируем данные по рейтингу (по убыванию)
+    const sortedData = [...data].sort((a, b) => {
+        const ratingA = a.rating || 0;
+        const ratingB = b.rating || 0;
+        return ratingB - ratingA;
+    });
+
+    // Сохраняем все данные для пагинации
+    chartAllData = sortedData;
+    chartCurrentPage = page;
+    chartPageSize = pageSize;
+
+    // Берем данные для текущей страницы
+    const start = page * pageSize;
+    const end = Math.min(start + pageSize, sortedData.length);
+    const pageData = sortedData.slice(start, end);
+    chartCurrentData = pageData;
+
+    const labels = pageData.map(item => item.name || `ID: ${item.id}`);
+    const values = pageData.map(item => item.rating || 0);
+
+    // Оранжевый цвет
+    const color = '#e67e22';
+    const backgroundColor = 'rgba(230, 126, 34, 0.7)';
+    const backgroundColorLight = 'rgba(230, 126, 34, 0.3)';
+
+    let labelText = '';
+    switch(type) {
+        case 'provided': labelText = 'Рейтинг обеспеченности'; break;
+        case 'deficit': labelText = 'Рейтинг дефицита'; break;
+        case 'norms_provided': labelText = 'Нормы обеспеченности'; break;
+        case 'norms_consumption': labelText = 'Нормы потребления'; break;
+        default: labelText = 'Рейтинг';
+    }
+
+    // Создаем градиент для столбцов
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, backgroundColorLight);
+
+    // Находим максимальное значение для масштабирования
+    const maxValue = Math.max(...values, 1);
+
+    ratingChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: labelText,
+                data: values,
+                backgroundColor: gradient,
+                borderColor: color,
+                borderWidth: 1,
+                borderRadius: 4,
+                barPercentage: 0.8,
+                categoryPercentage: 0.9,
+                minBarLength: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+                axis: 'x'
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        color: '#1a1a1a',
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    // Включаем режим, который показывает тултип при наведении
+                    enabled: true,
+                    intersect: false,
+                    mode: 'index',
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#e67e22',
+                    borderWidth: 2,
+                    padding: 12,
+                    cornerRadius: 8,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            const item = pageData[context.dataIndex];
+                            let label = `${context.dataset.label}: ${context.parsed.y !== undefined ? context.parsed.y.toFixed(2) : '0.00'}`;
+                            if (item) {
+                                label += `\nНаселение: ${item.population || 0}`;
+                                label += `\nРегион: ${item.region_name || 'Н/Д'}`;
+                                label += `\nID: ${item.id}`;
+                            }
+                            return label;
+                        },
+                        title: function(context) {
+                            const item = pageData[context[0].dataIndex];
+                            return item ? item.name || `ID: ${item.id}` : '';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: {
+                            size: 10
+                        },
+                        color: '#1a1a1a'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMin: 0,
+                    suggestedMax: maxValue * 1.1,
+                    grid: {
+                        color: 'rgba(0,0,0,0.08)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        color: '#1a1a1a',
+                        callback: function(value) {
+                            if (value === 0) return '0';
+                            if (value < 1) return value.toFixed(2);
+                            if (value < 10) return value.toFixed(1);
+                            return value.toFixed(0);
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Значение рейтинга',
+                        color: '#1a1a1a',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 800,
+                easing: 'easeOutQuart'
+            },
+            hover: {
+                mode: 'index',
+                intersect: false,
+                animationDuration: 200
+            },
+            elements: {
+                bar: {
+                    backgroundColor: gradient,
+                    borderColor: color,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    hoverBackgroundColor: color,
+                    hoverBorderColor: '#1a1a1a',
+                    hoverBorderWidth: 2
+                }
+            }
+        }
+    });
+
+    // Добавляем заголовок с информацией о количестве
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer) {
+        const existingTitle = chartContainer.querySelector('.chart-title');
+        if (existingTitle) existingTitle.remove();
+
+        const title = document.createElement('div');
+        title.className = 'chart-title';
+        let titleText = '';
+        switch(type) {
+            case 'provided': titleText = 'Рейтинг обеспеченности населенных пунктов'; break;
+            case 'deficit': titleText = 'Рейтинг дефицита населенных пунктов'; break;
+            case 'norms_provided': titleText = 'Нормы обеспеченности населенных пунктов'; break;
+            case 'norms_consumption': titleText = 'Нормы потребления населенных пунктов'; break;
+            default: titleText = 'Рейтинг населенных пунктов';
+        }
+        title.textContent = `${titleText} (показано ${pageData.length} из ${sortedData.length})`;
+        title.style.cssText = `
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0 0 8px 0;
+            flex-shrink: 0;
+        `;
+        chartContainer.prepend(title);
+    }
+
+    isChartMode = true;
+
+    // Добавляем пагинацию для диаграммы
+    renderChartPagination(sortedData.length, page, Math.ceil(sortedData.length / pageSize), pageSize, type);
+}
+
+
+
+function renderChartPagination(total, currentPage, totalPages, pageSize, chartType) {
+    // Удаляем старую пагинацию
+    const oldPagination = document.getElementById('chart-pagination');
+    if (oldPagination) oldPagination.remove();
+
+    const chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) return;
+
+    const container = document.createElement('div');
+    container.id = 'chart-pagination';
+    container.style.cssText = `
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding: 8px 0 !important;
+        flex-shrink: 0 !important;
+        border-top: 1px solid #ddd !important;
+        margin-top: 8px !important;
+        background: #f9f9f9 !important;
+        border-radius: 4px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    `;
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'pagination-info';
+    infoDiv.style.cssText = `
+        font-size: 13px !important;
+        color: black !important;
+        font-weight: 550 !important;
+    `;
+    infoDiv.textContent = `Всего НП: ${total}, Страница ${currentPage + 1} из ${totalPages || 1}`;
+    container.appendChild(infoDiv);
+
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'pagination-controls';
+    controlsDiv.style.cssText = `
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    `;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '◀';
+    prevBtn.className = 'pagination-btn';
+    prevBtn.style.cssText = `
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 0 8px !important;
+        border: 1px solid #333 !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        background: ${currentPage === 0 ? '#eee' : '#fff'} !important;
+        color: ${currentPage === 0 ? '#999' : '#333'} !important;
+        cursor: ${currentPage === 0 ? 'default' : 'pointer'} !important;
+        font-weight: 600 !important;
+        opacity: ${currentPage === 0 ? '0.5' : '1'} !important;
+    `;
+    prevBtn.disabled = currentPage === 0;
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 0) {
+            createRatingChart(chartAllData, chartType, currentPage - 1, pageSize);
+        }
+    });
+    controlsDiv.appendChild(prevBtn);
+
+    const pageInput = document.createElement('input');
+    pageInput.type = 'number';
+    pageInput.className = 'page-input';
+    pageInput.style.cssText = `
+        width: 36px !important;
+        height: 28px !important;
+        padding: 0 4px !important;
+        border: 1px solid #333 !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        background: #fff !important;
+        color: #333 !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+    `;
+    pageInput.min = 1;
+    pageInput.max = totalPages || 1;
+    pageInput.value = currentPage + 1;
+    pageInput.addEventListener('change', function() {
+        let val = parseInt(this.value);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > totalPages) val = totalPages || 1;
+        this.value = val;
+        const pageIndex = val - 1;
+        if (pageIndex !== currentPage) {
+            createRatingChart(chartAllData, chartType, pageIndex, pageSize);
+        }
+    });
+    controlsDiv.appendChild(pageInput);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '▶';
+    nextBtn.className = 'pagination-btn';
+    nextBtn.style.cssText = `
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 0 8px !important;
+        border: 1px solid #333 !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        background: ${currentPage >= totalPages - 1 || totalPages === 0 ? '#eee' : '#fff'} !important;
+        color: ${currentPage >= totalPages - 1 || totalPages === 0 ? '#999' : '#333'} !important;
+        cursor: ${currentPage >= totalPages - 1 || totalPages === 0 ? 'default' : 'pointer'} !important;
+        font-weight: 600 !important;
+        opacity: ${currentPage >= totalPages - 1 || totalPages === 0 ? '0.5' : '1'} !important;
+    `;
+    nextBtn.disabled = currentPage >= totalPages - 1 || totalPages === 0;
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages - 1) {
+            createRatingChart(chartAllData, chartType, currentPage + 1, pageSize);
+        }
+    });
+    controlsDiv.appendChild(nextBtn);
+
+    const pageSizeSelect = document.createElement('select');
+    pageSizeSelect.className = 'page-size-select';
+    pageSizeSelect.style.cssText = `
+        height: 28px !important;
+        padding: 0 6px !important;
+        border: 1px solid #333 !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        background: #fff !important;
+        color: #333 !important;
+        min-width: 44px !important;
+        cursor: pointer !important;
+    `;
+
+    const sizes = [10, 20, 50, 100];
+    sizes.forEach(size => {
+        const opt = document.createElement('option');
+        opt.value = size;
+        opt.textContent = size;
+        if (size === pageSize) opt.selected = true;
+        pageSizeSelect.appendChild(opt);
+    });
+
+    pageSizeSelect.addEventListener('change', function() {
+        const newSize = parseInt(this.value);
+        chartPageSize = newSize;
+        createRatingChart(chartAllData, chartType, 0, newSize);
+    });
+    controlsDiv.appendChild(pageSizeSelect);
+
+    container.appendChild(controlsDiv);
+    chartContainer.appendChild(container);
+}
 // ==================== КНОПКИ ====================
 
 // Кнопка "Рассчитать рейтинг всех НП в таблице"
@@ -178,7 +669,7 @@ function showCalculateAllButton() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    if (!showRatings) {
+    if (!showRatings || isChartMode) {
         hideCalculateAllButton();
         return;
     }
@@ -224,24 +715,26 @@ function showCalculateSelectedButton() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    if (!showRatings || !selectedSettlementId) {
+    if (!showRatings || !selectedSettlementId || isChartMode) {
         hideCalculateSelectedButton();
         return;
     }
 
-    const resBtn = document.getElementById('res-action-btn');
-    if (resBtn) resBtn.remove();
-    const wiredBtn = document.getElementById('wired-action-btn');
-    if (wiredBtn) wiredBtn.remove();
-
+    // Проверяем, существует ли уже кнопка
     let btn = document.getElementById('calculate-selected-btn');
     if (!btn) {
         btn = createCalculateSelectedBtn();
-        const firstBtn = container.querySelector('.grid-btn');
-        if (firstBtn) {
-            container.insertBefore(btn, firstBtn);
+        // Вставляем после кнопки "Рассчитать рейтинг всех НП"
+        const calcAllBtn = document.getElementById('calculate-all-btn');
+        if (calcAllBtn) {
+            container.insertBefore(btn, calcAllBtn.nextSibling);
         } else {
-            container.appendChild(btn);
+            const firstBtn = container.querySelector('.grid-btn');
+            if (firstBtn) {
+                container.insertBefore(btn, firstBtn);
+            } else {
+                container.appendChild(btn);
+            }
         }
     }
 }
@@ -284,17 +777,13 @@ function showSettlementButtons() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    if (showRatings) {
-        const resBtn = document.getElementById('res-action-btn');
-        if (resBtn) resBtn.remove();
-        const wiredBtn = document.getElementById('wired-action-btn');
-        if (wiredBtn) wiredBtn.remove();
-
-        showCalculateAllButton();
-        showCalculateSelectedButton();
+    // Если режим диаграммы - скрываем все
+    if (isChartMode) {
+        hideSettlementButtons();
         return;
     }
 
+    // Удаляем старые кнопки
     const oldRes = document.getElementById('res-action-btn');
     if (oldRes) oldRes.remove();
     const oldWired = document.getElementById('wired-action-btn');
@@ -304,16 +793,32 @@ function showSettlementButtons() {
     const oldCalcSelected = document.getElementById('calculate-selected-btn');
     if (oldCalcSelected) oldCalcSelected.remove();
 
-    const resBtn = createResButton();
-    const wiredBtn = createWiredButton();
+    if (showRatings) {
+        // Показываем кнопки для режима рейтингов
+        const calcAllBtn = createCalculateAllBtn();
+        const calcSelectedBtn = createCalculateSelectedBtn();
 
-    const firstBtn = container.querySelector('.grid-btn');
-    if (firstBtn) {
-        container.insertBefore(resBtn, firstBtn);
-        container.insertBefore(wiredBtn, firstBtn);
+        const firstBtn = container.querySelector('.grid-btn');
+        if (firstBtn) {
+            container.insertBefore(calcAllBtn, firstBtn);
+            container.insertBefore(calcSelectedBtn, firstBtn);
+        } else {
+            container.appendChild(calcAllBtn);
+            container.appendChild(calcSelectedBtn);
+        }
     } else {
-        container.appendChild(resBtn);
-        container.appendChild(wiredBtn);
+        // Показываем кнопки для режима таблицы НП
+        const resBtn = createResButton();
+        const wiredBtn = createWiredButton();
+
+        const firstBtn = container.querySelector('.grid-btn');
+        if (firstBtn) {
+            container.insertBefore(resBtn, firstBtn);
+            container.insertBefore(wiredBtn, firstBtn);
+        } else {
+            container.appendChild(resBtn);
+            container.appendChild(wiredBtn);
+        }
     }
 }
 
@@ -325,8 +830,6 @@ function hideSettlementButtons() {
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 }
-
-// ==================== ЗАГРУЗКА РЕГИОНОВ И ВИДОВ СВЯЗИ ====================
 
 async function loadRegions() {
     const loader = initLoader();
@@ -346,10 +849,52 @@ async function loadRegions() {
 
         regions.forEach(region => {
             const option = document.createElement('option');
-            option.value = region.number;
+            // ОБЯЗАТЕЛЬНО убираем пробелы с помощью trim()
+            option.value = String(region.number).trim();
             option.textContent = region.name;
             select.appendChild(option);
         });
+
+        // Обработка URL параметров
+        const urlParams = new URLSearchParams(window.location.search);
+        const regionsParam = urlParams.get('regions');
+
+        if (regionsParam) {
+            // Разбиваем строку и убираем пробелы
+            const regionIds = regionsParam.split(',').map(id => id.trim());
+            console.log('▶ Запрошенные регионы из URL:', regionIds);
+
+            // Снимаем все выделения
+            const allOptions = select.querySelectorAll('option');
+            allOptions.forEach(opt => opt.selected = false);
+
+            // Ищем и выделяем нужные опции
+            let foundCount = 0;
+            allOptions.forEach(opt => {
+                // Пропускаем "Все регионы"
+                if (opt.value === 'all') return;
+
+                // Приводим значение опции к строке и убираем пробелы
+                const optValue = String(opt.value).trim();
+                console.log(`▶ Проверяем опцию: "${optValue}" vs ${regionIds}`);
+
+                // Проверяем, есть ли значение опции в списке
+                if (regionIds.includes(optValue)) {
+                    opt.selected = true;
+                    foundCount++;
+                    console.log(`▶ Найден регион: ${optValue} - ${opt.textContent}`);
+                }
+            });
+
+            console.log(`▶ Найдено регионов: ${foundCount} из ${regionIds.length}`);
+
+            // Если ничего не найдено, выбираем "Все регионы"
+            if (foundCount === 0) {
+                const allOpt = select.querySelector('option[value="all"]');
+                if (allOpt) allOpt.selected = true;
+                console.log('▶ Регионы не найдены, выбраны все');
+            }
+        }
 
         loader.close();
         return regions;
@@ -407,18 +952,32 @@ function getSelectedRegions() {
     const regionSelect = document.getElementById('region');
     if (!regionSelect) return [];
 
-    const value = regionSelect.value;
-    if (value === 'all') {
-        const allIds = [];
-        const options = regionSelect.querySelectorAll('option');
-        options.forEach(option => {
-            if (option.value !== 'all') {
-                allIds.push(option.value);
-            }
-        });
-        return allIds;
+    const selectedOptions = regionSelect.selectedOptions;
+    const values = [];
+
+    for (let i = 0; i < selectedOptions.length; i++) {
+        let val = selectedOptions[i].value;
+        // Убираем пробелы
+        val = String(val).trim();
+
+        if (val === 'all') {
+            // Если выбрано "Все регионы", возвращаем все ID
+            const allOptions = regionSelect.querySelectorAll('option');
+            const allIds = [];
+            allOptions.forEach(opt => {
+                const optVal = String(opt.value).trim();
+                if (optVal !== 'all' && optVal) {
+                    allIds.push(optVal);
+                }
+            });
+            return allIds;
+        }
+        if (val) {
+            values.push(val);
+        }
     }
-    return [value];
+
+    return values;
 }
 
 function getSelectedKinds() {
@@ -500,6 +1059,7 @@ function filterDataWithRatings(data, ratings, field, value, exactMatch = false) 
     if (!value || !field) return data;
 
     const ratingFields = [
+        'rating', // НОВОЕ ПОЛЕ
         'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
         'count_res_wifi', 'count_res_tetra',
@@ -565,7 +1125,6 @@ async function loadSettlements(page = 0, regions, popRange, pageSize) {
             ]
         };
 
-        // Загружаем все данные (pageSize = 0 означает все записи)
         const result = await getSettlementsPage(0, 1, body);
 
         loader.close();
@@ -677,6 +1236,7 @@ function sortDataWithRatings(data, ratings, sortField, sortOrder) {
     if (!sortField || data.length === 0) return data;
 
     const ratingFields = [
+        'rating', // НОВОЕ ПОЛЕ
         'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
         'count_res_wifi', 'count_res_tetra',
@@ -781,7 +1341,6 @@ async function handleCalculateSelected() {
 
             const pageSize = getPageSize('settlements');
 
-            // Передаём оригинальные данные, фильтрация будет применена внутри
             if (savedFilterField && savedFilterValue) {
                 renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
             } else {
@@ -917,7 +1476,6 @@ async function handleCalculateAll() {
 
     const pageSize = getPageSize('settlements');
 
-    // Передаём оригинальные данные, фильтрация будет применена внутри
     if (savedFilterField && savedFilterValue) {
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
     } else {
@@ -937,7 +1495,7 @@ function setupDoubleClickHandler() {
             const headerCells = this.querySelectorAll('thead th');
             let hasRatingColumns = false;
             headerCells.forEach(th => {
-                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС')) {
+                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Суммарная оценка')) {
                     hasRatingColumns = true;
                 }
             });
@@ -988,7 +1546,7 @@ function setupDoubleClickHandler() {
         const headerCells = table.querySelectorAll('thead th');
         let hasRatingColumns = false;
         headerCells.forEach(th => {
-            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС')) {
+            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Суммарная оценка')) {
                 hasRatingColumns = true;
             }
         });
@@ -1105,7 +1663,21 @@ function showRowDataModal(data, type) {
 
 function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
-    if (!table) return;
+    if (!table) {
+        console.error('Таблица settlements-table не найдена');
+        return;
+    }
+
+    // Скрываем диаграмму
+    hideChartContainer();
+    isChartMode = false;
+
+    // ПОКАЗЫВАЕМ ТАБЛИЦУ
+    table.style.display = 'block';
+
+    // Удаляем старую пагинацию диаграммы
+    const oldChartPagination = document.getElementById('chart-pagination');
+    if (oldChartPagination) oldChartPagination.remove();
 
     hidePlaceholder();
 
@@ -1162,6 +1734,11 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             row.appendChild(cell);
             tbody.appendChild(row);
         }
+        // ПОКАЗЫВАЕМ ПАГИНАЦИЮ даже если данных нет
+        const paginationContainer = document.getElementById('settlements-pagination');
+        if (paginationContainer) {
+            paginationContainer.style.display = 'flex';
+        }
         renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
         return;
     }
@@ -1170,11 +1747,17 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     originalDataForFilter = allData;
     originalTotalForFilter = allTotal;
 
+    // Удаляем старый фильтр
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
 
     const tableContainer = document.querySelector('.table__rating');
+    if (!tableContainer) {
+        console.error('Контейнер .table__rating не найден');
+        return;
+    }
 
+    // СОЗДАЕМ ФИЛЬТР
     const filterContainer = document.createElement('div');
     filterContainer.className = 'filter-container';
 
@@ -1298,17 +1881,16 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
         currentDisplayPage = 0;
 
-        // Очищаем поля фильтра
         fieldSelect.value = '';
         valueInput.value = '';
         exactCheckbox.checked = false;
 
-        // Показываем все данные (оригинальные, без фильтрации)
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
 
+    // СОЗДАЕМ ЗАГОЛОВКИ
     if (thead) {
         const headerRow = document.createElement('tr');
         const headers = [
@@ -1355,6 +1937,7 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
         thead.appendChild(headerRow);
     }
 
+    // ЗАПОЛНЯЕМ ДАННЫМИ
     if (tbody) {
         pageData.forEach(item => {
             const row = document.createElement('tr');
@@ -1419,10 +2002,19 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
                 console.log('▶ Выбран НП:', selectedSettlementId, selectedSettlementName);
                 showResPageSize();
+
+                // ПОКАЗЫВАЕМ КНОПКИ
+                showSettlementButtons();
             });
 
             tbody.appendChild(row);
         });
+    }
+
+    // ПОКАЗЫВАЕМ ПАГИНАЦИЮ
+    const paginationContainer = document.getElementById('settlements-pagination');
+    if (paginationContainer) {
+        paginationContainer.style.display = 'flex';
     }
 
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
@@ -1433,13 +2025,30 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
             firstRow.click();
         }
     }
+
+    // ПОКАЗЫВАЕМ КНОПКИ
+    showSettlementButtons();
 }
 
 // ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ (НП + рейтинги) ====================
 
 function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
-    if (!table) return;
+    if (!table) {
+        console.error('Таблица settlements-table не найдена');
+        return;
+    }
+
+    // Скрываем диаграмму
+    hideChartContainer();
+    isChartMode = false;
+
+    // ПОКАЗЫВАЕМ ТАБЛИЦУ
+    table.style.display = 'block';
+
+    // Удаляем старую пагинацию диаграммы
+    const oldChartPagination = document.getElementById('chart-pagination');
+    if (oldChartPagination) oldChartPagination.remove();
 
     hidePlaceholder();
 
@@ -1477,27 +2086,36 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 57;
+            cell.colSpan = 58;
             cell.textContent = 'Нет населенных пунктов для отображения';
             cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
+        }
+        // ПОКАЗЫВАЕМ ПАГИНАЦИЮ даже если данных нет
+        const paginationContainer = document.getElementById('settlements-pagination');
+        if (paginationContainer) {
+            paginationContainer.style.display = 'flex';
         }
         renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
         return;
     }
 
     currentSettlementsFiltered = sortedData;
-    // originalDataForFilter не перезаписываем, если keepFilter === true,
-    // но мы всегда передаём оригинальные данные, так что перезапись на те же данные безопасна.
     originalDataForFilter = allData;
     originalTotalForFilter = allTotal;
 
+    // Удаляем старый фильтр
     const oldFilter = document.querySelector('.filter-container');
     if (oldFilter) oldFilter.remove();
 
     const tableContainer = document.querySelector('.table__rating');
+    if (!tableContainer) {
+        console.error('Контейнер .table__rating не найден');
+        return;
+    }
 
+    // СОЗДАЕМ ФИЛЬТР
     const filterContainer = document.createElement('div');
     filterContainer.className = 'filter-container';
 
@@ -1514,7 +2132,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     optionNone.textContent = '-- Выберите поле --';
     fieldSelect.appendChild(optionNone);
 
-    // ВСЕ ПОЛЯ С ЧИТАЕМЫМИ НАЗВАНИЯМИ
     const labels = {
         // Поля населенных пунктов
         'id': 'ID',
@@ -1527,6 +2144,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'lon': 'Долгота',
         'population': 'Население',
         'fias_id': 'Код ФИАС',
+        // НОВОЕ ПОЛЕ
+        'rating': 'Суммарная оценка',
         // Поля рейтинга
         'count_res_tv': 'Количество РЭС ТВ',
         'count_res_rv': 'Количество РЭС РВ',
@@ -1576,6 +2195,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     };
 
     const ratingFieldKeys = [
+        'rating',
         'count_res_tv', 'count_res_rv',
         'count_res_lte', 'count_res_gsm', 'count_res_5g',
         'count_res_wifi', 'count_res_tetra',
@@ -1601,7 +2221,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         'traffic_percent_mobile'
     ];
 
-    // Добавляем поля населенных пунктов из данных
     if (allData && allData.length > 0) {
         Object.keys(allData[0]).forEach(key => {
             if (labels[key] && !ratingFieldKeys.includes(key)) {
@@ -1613,7 +2232,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         });
     }
 
-    // Добавляем поля рейтинга
     ratingFieldKeys.forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
@@ -1704,17 +2322,16 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
         currentDisplayPage = 0;
 
-        // Очищаем поля фильтра
         fieldSelect.value = '';
         valueInput.value = '';
         exactCheckbox.checked = false;
 
-        // Показываем все данные (оригинальные, без фильтрации)
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
 
+    // СОЗДАЕМ ЗАГОЛОВКИ
     if (thead) {
         const headerRow = document.createElement('tr');
         const headers = [
@@ -1728,6 +2345,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             { key: 'lon', label: 'Долгота' },
             { key: 'population', label: 'Население' },
             { key: 'fias_id', label: 'Код ФИАС' },
+            { key: 'rating', label: 'Суммарная оценка' },
             { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
             { key: 'count_res_rv', label: 'Количество РЭС РВ' },
             { key: 'count_res_lte', label: 'Количество РЭС LTE' },
@@ -1806,6 +2424,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
+    // ЗАПОЛНЯЕМ ДАННЫМИ
     if (tbody) {
         pageData.forEach(item => {
             const row = document.createElement('tr');
@@ -1816,227 +2435,73 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             row.dataset.name = item.name || '';
             row.className = 'clickable-row';
 
-            const idCell = document.createElement('td');
-            idCell.textContent = item.id;
-            row.appendChild(idCell);
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = item.name || '-';
-            row.appendChild(nameCell);
-
-            const areaCell = document.createElement('td');
-            areaCell.textContent = item.area !== null && item.area !== undefined ? item.area : '-';
-            row.appendChild(areaCell);
-
-            const regionNameCell = document.createElement('td');
-            regionNameCell.textContent = item.region_name || '-';
-            row.appendChild(regionNameCell);
-
-            const regionCodeCell = document.createElement('td');
-            regionCodeCell.textContent = item.region_code || '-';
-            row.appendChild(regionCodeCell);
-
-            const districtCell = document.createElement('td');
-            districtCell.textContent = item.district_name || '-';
-            row.appendChild(districtCell);
-
-            const latCell = document.createElement('td');
-            latCell.textContent = item.lat !== undefined ? item.lat.toFixed(6) : '-';
-            row.appendChild(latCell);
-
-            const lonCell = document.createElement('td');
-            lonCell.textContent = item.lon !== undefined ? item.lon.toFixed(6) : '-';
-            row.appendChild(lonCell);
-
-            const popCell = document.createElement('td');
-            popCell.textContent = item.population || 0;
-            row.appendChild(popCell);
-
-            const fiasCell = document.createElement('td');
-            fiasCell.textContent = item.fias_id || '-';
-            row.appendChild(fiasCell);
-
             const rating = allRatings[item.id] || {};
 
-            const countResTvCell = document.createElement('td');
-            countResTvCell.textContent = rating.count_res_tv !== undefined ? rating.count_res_tv : '-';
-            row.appendChild(countResTvCell);
+            // Создаем все ячейки
+            const cells = [
+                { value: item.id },
+                { value: item.name || '-' },
+                { value: item.area !== null && item.area !== undefined ? item.area : '-' },
+                { value: item.region_name || '-' },
+                { value: item.region_code || '-' },
+                { value: item.district_name || '-' },
+                { value: item.lat !== undefined ? item.lat.toFixed(6) : '-' },
+                { value: item.lon !== undefined ? item.lon.toFixed(6) : '-' },
+                { value: item.population || 0 },
+                { value: item.fias_id || '-' },
+                { value: rating.rating !== undefined ? rating.rating : '-' },
+                { value: rating.count_res_tv !== undefined ? rating.count_res_tv : '-' },
+                { value: rating.count_res_rv !== undefined ? rating.count_res_rv : '-' },
+                { value: rating.count_res_lte !== undefined ? rating.count_res_lte : '-' },
+                { value: rating.count_res_gsm !== undefined ? rating.count_res_gsm : '-' },
+                { value: rating.count_res_5g !== undefined ? rating.count_res_5g : '-' },
+                { value: rating.count_res_wifi !== undefined ? rating.count_res_wifi : '-' },
+                { value: rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-' },
+                { value: rating.count_operators !== undefined ? rating.count_operators : '-' },
+                { value: rating.count_abonents_lte !== undefined ? rating.count_abonents_lte : '-' },
+                { value: rating.population_percent_lte !== undefined ? rating.population_percent_lte : '-' },
+                { value: rating.communication_coverage_lte !== undefined ? rating.communication_coverage_lte : '-' },
+                { value: rating.communication_coverage_percent_lte !== undefined ? rating.communication_coverage_percent_lte : '-' },
+                { value: rating.traffic_lte !== undefined ? rating.traffic_lte : '-' },
+                { value: rating.traffic_percent_lte !== undefined ? rating.traffic_percent_lte : '-' },
+                { value: rating.count_abonents_gsm !== undefined ? rating.count_abonents_gsm : '-' },
+                { value: rating.population_percent_gsm !== undefined ? rating.population_percent_gsm : '-' },
+                { value: rating.communication_coverage_gsm !== undefined ? rating.communication_coverage_gsm : '-' },
+                { value: rating.communication_coverage_percent_gsm !== undefined ? rating.communication_coverage_percent_gsm : '-' },
+                { value: rating.traffic_gsm !== undefined ? rating.traffic_gsm : '-' },
+                { value: rating.traffic_percent_gsm !== undefined ? rating.traffic_percent_gsm : '-' },
+                { value: rating.count_abonents_5g !== undefined ? rating.count_abonents_5g : '-' },
+                { value: rating.population_percent_5g !== undefined ? rating.population_percent_5g : '-' },
+                { value: rating.communication_coverage_5g !== undefined ? rating.communication_coverage_5g : '-' },
+                { value: rating.communication_coverage_percent_5g !== undefined ? rating.communication_coverage_percent_5g : '-' },
+                { value: rating.traffic_5g !== undefined ? rating.traffic_5g : '-' },
+                { value: rating.traffic_percent_5g !== undefined ? rating.traffic_percent_5g : '-' },
+                { value: rating.count_abonents_wifi !== undefined ? rating.count_abonents_wifi : '-' },
+                { value: rating.population_percent_wifi !== undefined ? rating.population_percent_wifi : '-' },
+                { value: rating.communication_coverage_wifi !== undefined ? rating.communication_coverage_wifi : '-' },
+                { value: rating.communication_coverage_percent_wifi !== undefined ? rating.communication_coverage_percent_wifi : '-' },
+                { value: rating.traffic_wifi !== undefined ? rating.traffic_wifi : '-' },
+                { value: rating.traffic_percent_wifi !== undefined ? rating.traffic_percent_wifi : '-' },
+                { value: rating.count_abonents_tetra !== undefined ? rating.count_abonents_tetra : '-' },
+                { value: rating.population_percent_tetra !== undefined ? rating.population_percent_tetra : '-' },
+                { value: rating.communication_coverage_tetra !== undefined ? rating.communication_coverage_tetra : '-' },
+                { value: rating.communication_coverage_percent_tetra !== undefined ? rating.communication_coverage_percent_tetra : '-' },
+                { value: rating.traffic_tetra !== undefined ? rating.traffic_tetra : '-' },
+                { value: rating.traffic_percent_tetra !== undefined ? rating.traffic_percent_tetra : '-' },
+                { value: rating.count_res_mobile !== undefined ? rating.count_res_mobile : '-' },
+                { value: rating.count_abonents_mobile !== undefined ? rating.count_abonents_mobile : '-' },
+                { value: rating.population_percent_mobile !== undefined ? rating.population_percent_mobile : '-' },
+                { value: rating.communication_coverage_mobile !== undefined ? rating.communication_coverage_mobile : '-' },
+                { value: rating.communication_coverage_percent_mobile !== undefined ? rating.communication_coverage_percent_mobile : '-' },
+                { value: rating.traffic_mobile !== undefined ? rating.traffic_mobile : '-' },
+                { value: rating.traffic_percent_mobile !== undefined ? rating.traffic_percent_mobile : '-' }
+            ];
 
-            const countResRvCell = document.createElement('td');
-            countResRvCell.textContent = rating.count_res_rv !== undefined ? rating.count_res_rv : '-';
-            row.appendChild(countResRvCell);
-
-            const countResLteCell = document.createElement('td');
-            countResLteCell.textContent = rating.count_res_lte !== undefined ? rating.count_res_lte : '-';
-            row.appendChild(countResLteCell);
-
-            const countResGsmCell = document.createElement('td');
-            countResGsmCell.textContent = rating.count_res_gsm !== undefined ? rating.count_res_gsm : '-';
-            row.appendChild(countResGsmCell);
-
-            const countRes5gCell = document.createElement('td');
-            countRes5gCell.textContent = rating.count_res_5g !== undefined ? rating.count_res_5g : '-';
-            row.appendChild(countRes5gCell);
-
-            const countResWifiCell = document.createElement('td');
-            countResWifiCell.textContent = rating.count_res_wifi !== undefined ? rating.count_res_wifi : '-';
-            row.appendChild(countResWifiCell);
-
-            const countResTetraCell = document.createElement('td');
-            countResTetraCell.textContent = rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-';
-            row.appendChild(countResTetraCell);
-
-            const countOperatorsCell = document.createElement('td');
-            countOperatorsCell.textContent = rating.count_operators !== undefined ? rating.count_operators : '-';
-            row.appendChild(countOperatorsCell);
-
-            const countAbonentsLteCell = document.createElement('td');
-            countAbonentsLteCell.textContent = rating.count_abonents_lte !== undefined ? rating.count_abonents_lte : '-';
-            row.appendChild(countAbonentsLteCell);
-
-            const populationPercentLteCell = document.createElement('td');
-            populationPercentLteCell.textContent = rating.population_percent_lte !== undefined ? rating.population_percent_lte : '-';
-            row.appendChild(populationPercentLteCell);
-
-            const communicationCoverageLteCell = document.createElement('td');
-            communicationCoverageLteCell.textContent = rating.communication_coverage_lte !== undefined ? rating.communication_coverage_lte : '-';
-            row.appendChild(communicationCoverageLteCell);
-
-            const communicationCoveragePercentLteCell = document.createElement('td');
-            communicationCoveragePercentLteCell.textContent = rating.communication_coverage_percent_lte !== undefined ? rating.communication_coverage_percent_lte : '-';
-            row.appendChild(communicationCoveragePercentLteCell);
-
-            const trafficLteCell = document.createElement('td');
-            trafficLteCell.textContent = rating.traffic_lte !== undefined ? rating.traffic_lte : '-';
-            row.appendChild(trafficLteCell);
-
-            const trafficPercentLteCell = document.createElement('td');
-            trafficPercentLteCell.textContent = rating.traffic_percent_lte !== undefined ? rating.traffic_percent_lte : '-';
-            row.appendChild(trafficPercentLteCell);
-
-            const countAbonentsGsmCell = document.createElement('td');
-            countAbonentsGsmCell.textContent = rating.count_abonents_gsm !== undefined ? rating.count_abonents_gsm : '-';
-            row.appendChild(countAbonentsGsmCell);
-
-            const populationPercentGsmCell = document.createElement('td');
-            populationPercentGsmCell.textContent = rating.population_percent_gsm !== undefined ? rating.population_percent_gsm : '-';
-            row.appendChild(populationPercentGsmCell);
-
-            const communicationCoverageGsmCell = document.createElement('td');
-            communicationCoverageGsmCell.textContent = rating.communication_coverage_gsm !== undefined ? rating.communication_coverage_gsm : '-';
-            row.appendChild(communicationCoverageGsmCell);
-
-            const communicationCoveragePercentGsmCell = document.createElement('td');
-            communicationCoveragePercentGsmCell.textContent = rating.communication_coverage_percent_gsm !== undefined ? rating.communication_coverage_percent_gsm : '-';
-            row.appendChild(communicationCoveragePercentGsmCell);
-
-            const trafficGsmCell = document.createElement('td');
-            trafficGsmCell.textContent = rating.traffic_gsm !== undefined ? rating.traffic_gsm : '-';
-            row.appendChild(trafficGsmCell);
-
-            const trafficPercentGsmCell = document.createElement('td');
-            trafficPercentGsmCell.textContent = rating.traffic_percent_gsm !== undefined ? rating.traffic_percent_gsm : '-';
-            row.appendChild(trafficPercentGsmCell);
-
-            const countAbonents5gCell = document.createElement('td');
-            countAbonents5gCell.textContent = rating.count_abonents_5g !== undefined ? rating.count_abonents_5g : '-';
-            row.appendChild(countAbonents5gCell);
-
-            const populationPercent5gCell = document.createElement('td');
-            populationPercent5gCell.textContent = rating.population_percent_5g !== undefined ? rating.population_percent_5g : '-';
-            row.appendChild(populationPercent5gCell);
-
-            const communicationCoverage5gCell = document.createElement('td');
-            communicationCoverage5gCell.textContent = rating.communication_coverage_5g !== undefined ? rating.communication_coverage_5g : '-';
-            row.appendChild(communicationCoverage5gCell);
-
-            const communicationCoveragePercent5gCell = document.createElement('td');
-            communicationCoveragePercent5gCell.textContent = rating.communication_coverage_percent_5g !== undefined ? rating.communication_coverage_percent_5g : '-';
-            row.appendChild(communicationCoveragePercent5gCell);
-
-            const traffic5gCell = document.createElement('td');
-            traffic5gCell.textContent = rating.traffic_5g !== undefined ? rating.traffic_5g : '-';
-            row.appendChild(traffic5gCell);
-
-            const trafficPercent5gCell = document.createElement('td');
-            trafficPercent5gCell.textContent = rating.traffic_percent_5g !== undefined ? rating.traffic_percent_5g : '-';
-            row.appendChild(trafficPercent5gCell);
-
-            const countAbonentsWifiCell = document.createElement('td');
-            countAbonentsWifiCell.textContent = rating.count_abonents_wifi !== undefined ? rating.count_abonents_wifi : '-';
-            row.appendChild(countAbonentsWifiCell);
-
-            const populationPercentWifiCell = document.createElement('td');
-            populationPercentWifiCell.textContent = rating.population_percent_wifi !== undefined ? rating.population_percent_wifi : '-';
-            row.appendChild(populationPercentWifiCell);
-
-            const communicationCoverageWifiCell = document.createElement('td');
-            communicationCoverageWifiCell.textContent = rating.communication_coverage_wifi !== undefined ? rating.communication_coverage_wifi : '-';
-            row.appendChild(communicationCoverageWifiCell);
-
-            const communicationCoveragePercentWifiCell = document.createElement('td');
-            communicationCoveragePercentWifiCell.textContent = rating.communication_coverage_percent_wifi !== undefined ? rating.communication_coverage_percent_wifi : '-';
-            row.appendChild(communicationCoveragePercentWifiCell);
-
-            const trafficWifiCell = document.createElement('td');
-            trafficWifiCell.textContent = rating.traffic_wifi !== undefined ? rating.traffic_wifi : '-';
-            row.appendChild(trafficWifiCell);
-
-            const trafficPercentWifiCell = document.createElement('td');
-            trafficPercentWifiCell.textContent = rating.traffic_percent_wifi !== undefined ? rating.traffic_percent_wifi : '-';
-            row.appendChild(trafficPercentWifiCell);
-
-            const countAbonentsTetraCell = document.createElement('td');
-            countAbonentsTetraCell.textContent = rating.count_abonents_tetra !== undefined ? rating.count_abonents_tetra : '-';
-            row.appendChild(countAbonentsTetraCell);
-
-            const populationPercentTetraCell = document.createElement('td');
-            populationPercentTetraCell.textContent = rating.population_percent_tetra !== undefined ? rating.population_percent_tetra : '-';
-            row.appendChild(populationPercentTetraCell);
-
-            const communicationCoverageTetraCell = document.createElement('td');
-            communicationCoverageTetraCell.textContent = rating.communication_coverage_tetra !== undefined ? rating.communication_coverage_tetra : '-';
-            row.appendChild(communicationCoverageTetraCell);
-
-            const communicationCoveragePercentTetraCell = document.createElement('td');
-            communicationCoveragePercentTetraCell.textContent = rating.communication_coverage_percent_tetra !== undefined ? rating.communication_coverage_percent_tetra : '-';
-            row.appendChild(communicationCoveragePercentTetraCell);
-
-            const trafficTetraCell = document.createElement('td');
-            trafficTetraCell.textContent = rating.traffic_tetra !== undefined ? rating.traffic_tetra : '-';
-            row.appendChild(trafficTetraCell);
-
-            const trafficPercentTetraCell = document.createElement('td');
-            trafficPercentTetraCell.textContent = rating.traffic_percent_tetra !== undefined ? rating.traffic_percent_tetra : '-';
-            row.appendChild(trafficPercentTetraCell);
-
-            const countResMobileCell = document.createElement('td');
-            countResMobileCell.textContent = rating.count_res_mobile !== undefined ? rating.count_res_mobile : '-';
-            row.appendChild(countResMobileCell);
-
-            const countAbonentsMobileCell = document.createElement('td');
-            countAbonentsMobileCell.textContent = rating.count_abonents_mobile !== undefined ? rating.count_abonents_mobile : '-';
-            row.appendChild(countAbonentsMobileCell);
-
-            const populationPercentMobileCell = document.createElement('td');
-            populationPercentMobileCell.textContent = rating.population_percent_mobile !== undefined ? rating.population_percent_mobile : '-';
-            row.appendChild(populationPercentMobileCell);
-
-            const communicationCoverageMobileCell = document.createElement('td');
-            communicationCoverageMobileCell.textContent = rating.communication_coverage_mobile !== undefined ? rating.communication_coverage_mobile : '-';
-            row.appendChild(communicationCoverageMobileCell);
-
-            const communicationCoveragePercentMobileCell = document.createElement('td');
-            communicationCoveragePercentMobileCell.textContent = rating.communication_coverage_percent_mobile !== undefined ? rating.communication_coverage_percent_mobile : '-';
-            row.appendChild(communicationCoveragePercentMobileCell);
-
-            const trafficMobileCell = document.createElement('td');
-            trafficMobileCell.textContent = rating.traffic_mobile !== undefined ? rating.traffic_mobile : '-';
-            row.appendChild(trafficMobileCell);
-
-            const trafficPercentMobileCell = document.createElement('td');
-            trafficPercentMobileCell.textContent = rating.traffic_percent_mobile !== undefined ? rating.traffic_percent_mobile : '-';
-            row.appendChild(trafficPercentMobileCell);
+            cells.forEach(cell => {
+                const td = document.createElement('td');
+                td.textContent = cell.value;
+                row.appendChild(td);
+            });
 
             row.addEventListener('click', function() {
                 document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
@@ -2060,6 +2525,12 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         });
     }
 
+    // ПОКАЗЫВАЕМ ПАГИНАЦИЮ
+    const paginationContainer = document.getElementById('settlements-pagination');
+    if (paginationContainer) {
+        paginationContainer.style.display = 'flex';
+    }
+
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
     if (pageData && pageData.length > 0) {
@@ -2076,8 +2547,12 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
 function renderSettlementsPagination(total, currentPage, totalPages, pageSize) {
     const container = document.getElementById('settlements-pagination');
-    if (!container) return;
+    if (!container) {
+        console.error('Контейнер пагинации не найден');
+        return;
+    }
 
+    // Очищаем и ПОКАЗЫВАЕМ пагинацию
     container.innerHTML = '';
     container.style.display = 'flex';
     container.style.alignItems = 'center';
@@ -2131,6 +2606,8 @@ function renderSettlementsPagination(total, currentPage, totalPages, pageSize) {
     pageInput.min = 1;
     pageInput.max = totalPages || 1;
     pageInput.value = currentPage + 1;
+    pageInput.style.width = '40px';
+    pageInput.style.textAlign = 'center';
     pageInput.addEventListener('change', function() {
         let val = parseInt(this.value);
         if (isNaN(val) || val < 1) val = 1;
@@ -2184,6 +2661,8 @@ function renderSettlementsPagination(total, currentPage, totalPages, pageSize) {
     // Выбор количества записей на странице
     const pageSizeSelect = document.createElement('select');
     pageSizeSelect.className = 'page-size-select';
+    pageSizeSelect.style.minWidth = '50px';
+    pageSizeSelect.style.padding = '4px 8px';
 
     const sizes = [10, 25, 50, 100, 200, 500];
     sizes.forEach(size => {
@@ -2299,12 +2778,34 @@ function openResModal(data, settlementId) {
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
+    // Добавляем информацию о количестве
+    const countInfo = document.createElement('div');
+    countInfo.style.cssText = `
+        padding: 8px 12px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a1a;
+        border: 1px solid #ddd;
+        flex-shrink: 0;
+    `;
+    countInfo.textContent = `Всего РЭС: ${data.length}`;
+
+
     content.appendChild(title);
     content.appendChild(tableWrapper);
     tableWrapper.appendChild(table);
+    content.appendChild(countInfo);
     content.appendChild(closeBtn);
+
     modal.appendChild(content);
     document.body.appendChild(modal);
+
+    let currentSortField = null;
+    let currentSortOrder = 'asc';
+    let currentData = [...data];
 
     function renderResTable(items) {
         thead.innerHTML = '';
@@ -2313,70 +2814,348 @@ function openResModal(data, settlementId) {
         if (!items || items.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 9;
+            cell.colSpan = 18; // Увеличиваем количество колонок
             cell.textContent = 'Нет РЭС для отображения';
             cell.className = 'empty-message';
+            cell.style.cssText = 'text-align: center; padding: 30px; font-size: 16px; color: #666;';
             row.appendChild(cell);
             tbody.appendChild(row);
             return;
         }
 
+        // Заголовки с новыми полями
         const headerRow = document.createElement('tr');
         const headers = [
-            'ID', 'Тип ID', 'Вид ID', 'Название', 'Оператор',
-            'Местоположение', 'Регион ID', 'Широта', 'Долгота'
+            { key: 'id', label: 'ID' },
+            { key: 'type_id', label: 'Тип ID' },
+            { key: 'kind_id', label: 'Вид ID' },
+            { key: 'name', label: 'Название' },
+            { key: 'number', label: 'Заводской номер' }, // НОВОЕ ПОЛЕ
+            { key: 'network_name', label: 'Сеть связи' }, // НОВОЕ ПОЛЕ
+            { key: 'operator', label: 'Оператор' },
+            { key: 'location', label: 'Местоположение' },
+            { key: 'region_id', label: 'Регион ID' },
+            { key: 'lat_str', label: 'Широта' },
+            { key: 'lon_str', label: 'Долгота' },
+            { key: 'is_active', label: 'Признак действия' },
+            { key: 'certificate_number', label: 'Номер свидетельства' },
+            { key: 'certificate_start_date', label: 'Дата свидетельства' },
+            { key: 'certificate_end_date', label: 'Окончание свидетельства' },
+            { key: 'permission_number', label: 'Номер разрешения' },
+            { key: 'permission_start_date', label: 'Дата разрешения' },
+            { key: 'permission_end_date', label: 'Окончание разрешения' }
         ];
-        headers.forEach(label => {
+
+        headers.forEach(header => {
             const th = document.createElement('th');
-            th.textContent = label;
+            th.textContent = header.label;
+            th.style.cssText = `
+                min-width: 80px;
+                padding: 8px 10px;
+                border: 1px solid #1a1a1a;
+                font-weight: 700;
+                color: #1a1a1a;
+                background: #e8e8e8;
+                font-size: 12px;
+                text-align: left;
+                white-space: nowrap;
+                cursor: pointer;
+                user-select: none;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            `;
+
+            // Добавляем индикатор сортировки
+            const sortIcon = document.createElement('span');
+            sortIcon.style.cssText = 'margin-left: 5px; font-size: 10px;';
+            if (currentSortField === header.key) {
+                sortIcon.textContent = currentSortOrder === 'asc' ? '▲' : '▼';
+            } else {
+                sortIcon.textContent = '▲';
+            }
+            th.appendChild(sortIcon);
+
+            th.addEventListener('click', () => {
+                if (currentSortField === header.key) {
+                    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortField = header.key;
+                    currentSortOrder = 'asc';
+                }
+                sortAndRender();
+            });
+
             headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
 
+        // Форматирование дат
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return dateStr || '-';
+            }
+        };
+
+        // Форматирование координат
+        const formatCoord = (coord) => {
+            if (!coord) return '-';
+            // Убираем лишние пробелы и форматируем
+            return coord.trim();
+        };
+
         items.forEach(item => {
             const row = document.createElement('tr');
 
-            const idCell = document.createElement('td');
-            idCell.textContent = item.id || '-';
-            row.appendChild(idCell);
+            // Создаем все ячейки с данными
+            const cells = [
+                { value: item.id || '-' },
+                { value: item.type_id || '-' },
+                { value: item.kind_id || '-' },
+                { value: item.name || '-' },
+                { value: item.number || '-' }, // Заводской номер
+                { value: item.network_name || '-' }, // Сеть связи
+                { value: item.operator || '-' },
+                { value: item.location || '-' },
+                { value: item.region_id || '-' },
+                { value: formatCoord(item.lat_str) },
+                { value: formatCoord(item.lon_str) },
+                { value: item.is_active || '-' },
+                { value: item.certificate_number || '-' },
+                { value: formatDate(item.certificate_start_date) },
+                { value: formatDate(item.certificate_end_date) },
+                { value: item.permission_number || '-' },
+                { value: formatDate(item.permission_start_date) },
+                { value: formatDate(item.permission_end_date) }
+            ];
 
-            const typeIdCell = document.createElement('td');
-            typeIdCell.textContent = item.type_id || '-';
-            row.appendChild(typeIdCell);
+            cells.forEach(cell => {
+                const td = document.createElement('td');
+                td.textContent = cell.value;
+                td.style.cssText = `
+                    padding: 6px 10px;
+                    border: 1px solid #1a1a1a;
+                    font-size: 12px;
+                    color: #2a2a2a;
+                    word-break: break-word;
+                    max-width: 150px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                `;
+                // Добавляем title для полной информации при наведении
+                if (cell.value && cell.value !== '-') {
+                    td.title = cell.value;
+                }
+                row.appendChild(td);
+            });
 
-            const kindIdCell = document.createElement('td');
-            kindIdCell.textContent = item.kind_id || '-';
-            row.appendChild(kindIdCell);
+            // Проверяем статус разрешения
+            const permissionEnd = item.permission_end_date;
+            const certificateEnd = item.certificate_end_date;
+            const now = new Date();
+            let isExpired = false;
+            let statusColor = '';
 
-            const nameCell = document.createElement('td');
-            nameCell.textContent = item.name || '-';
-            row.appendChild(nameCell);
+            if (permissionEnd) {
+                try {
+                    const endDate = new Date(permissionEnd);
+                    if (!isNaN(endDate.getTime()) && endDate < now) {
+                        isExpired = true;
+                        statusColor = '#fff3f3'; // Светло-красный для просроченных
+                    }
+                } catch (e) {}
+            }
 
-            const operatorCell = document.createElement('td');
-            operatorCell.textContent = item.operator || '-';
-            row.appendChild(operatorCell);
+            if (certificateEnd && !isExpired) {
+                try {
+                    const endDate = new Date(certificateEnd);
+                    if (!isNaN(endDate.getTime()) && endDate < now) {
+                        statusColor = '#fff8e1'; // Светло-желтый для заканчивающихся
+                    }
+                } catch (e) {}
+            }
 
-            const locationCell = document.createElement('td');
-            locationCell.textContent = item.location || '-';
-            row.appendChild(locationCell);
+            if (statusColor) {
+                row.style.backgroundColor = statusColor;
+            }
 
-            const regionIdCell = document.createElement('td');
-            regionIdCell.textContent = item.region_id || '-';
-            row.appendChild(regionIdCell);
-
-            const latStrCell = document.createElement('td');
-            latStrCell.textContent = item.lat_str || '-';
-            row.appendChild(latStrCell);
-
-            const lonStrCell = document.createElement('td');
-            lonStrCell.textContent = item.lon_str || '-';
-            row.appendChild(lonStrCell);
+            // Добавляем обработчик двойного клика для просмотра деталей
+            row.addEventListener('dblclick', () => {
+                showResDetailsModal(item);
+            });
 
             tbody.appendChild(row);
         });
     }
 
-    renderResTable(data);
+    function sortAndRender() {
+        if (!currentSortField) {
+            renderResTable(currentData);
+            return;
+        }
+
+        const sorted = [...currentData].sort((a, b) => {
+            let valA = a[currentSortField] || '';
+            let valB = b[currentSortField] || '';
+
+            // Для дат используем сравнение как даты
+            if (currentSortField.includes('_date')) {
+                valA = valA ? new Date(valA).getTime() : 0;
+                valB = valB ? new Date(valB).getTime() : 0;
+            }
+
+            // Для числовых полей
+            if (currentSortField === 'id' || currentSortField === 'kind_id' || currentSortField === 'type_id') {
+                valA = parseInt(valA) || 0;
+                valB = parseInt(valB) || 0;
+            }
+
+            if (typeof valA === 'string') {
+                valA = valA.toLowerCase().trim();
+                valB = valB.toLowerCase().trim();
+            }
+
+            if (valA < valB) return currentSortOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        renderResTable(sorted);
+    }
+
+    // Функция для показа детальной информации о РЭС
+    function showResDetailsModal(item) {
+        const existing = document.getElementById('res-details-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'res-details-modal';
+        modal.className = 'res-modal-overlay';
+
+        const content = document.createElement('div');
+        content.className = 'res-modal-content';
+        content.style.maxWidth = '600px';
+
+        const title = document.createElement('h3');
+        title.textContent = `Детальная информация о РЭС #${item.id || 'Н/Д'}`;
+        title.className = 'res-modal-title';
+
+        const details = document.createElement('div');
+        details.style.cssText = `
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            max-height: 60vh;
+            overflow-y: auto;
+        `;
+
+        // Список полей для отображения
+        const fields = [
+            { key: 'id', label: 'ID' },
+            { key: 'type_id', label: 'Тип ID' },
+            { key: 'kind_id', label: 'Вид ID' },
+            { key: 'name', label: 'Название' },
+            { key: 'number', label: 'Заводской номер' },
+            { key: 'network_name', label: 'Сеть связи' },
+            { key: 'operator', label: 'Оператор' },
+            { key: 'location', label: 'Местоположение' },
+            { key: 'region_id', label: 'Регион ID' },
+            { key: 'lat_str', label: 'Широта' },
+            { key: 'lon_str', label: 'Долгота' },
+            { key: 'is_active', label: 'Признак действия' },
+            { key: 'certificate_number', label: 'Номер свидетельства' },
+            { key: 'certificate_start_date', label: 'Дата свидетельства' },
+            { key: 'certificate_end_date', label: 'Окончание свидетельства' },
+            { key: 'permission_number', label: 'Номер разрешения' },
+            { key: 'permission_start_date', label: 'Дата разрешения' },
+            { key: 'permission_end_date', label: 'Окончание разрешения' }
+        ];
+
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return dateStr || '-';
+            }
+        };
+
+        fields.forEach(field => {
+            const row = document.createElement('div');
+            row.style.cssText = `
+                display: flex;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+            `;
+
+            const label = document.createElement('div');
+            label.textContent = field.label + ':';
+            label.style.cssText = `
+                font-weight: 600;
+                color: #1a1a1a;
+                min-width: 180px;
+                flex-shrink: 0;
+            `;
+
+            let value = item[field.key];
+            if (field.key.includes('_date')) {
+                value = formatDate(value);
+            } else {
+                value = value || '-';
+            }
+
+            const valueEl = document.createElement('div');
+            valueEl.textContent = value;
+            valueEl.style.cssText = `
+                color: #2a2a2a;
+                word-break: break-word;
+            `;
+
+            row.appendChild(label);
+            row.appendChild(valueEl);
+            details.appendChild(row);
+        });
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.className = 'res-modal-close-btn';
+        closeBtn.addEventListener('click', () => {
+            modal.remove();
+        });
+
+        content.appendChild(title);
+        content.appendChild(details);
+        content.appendChild(closeBtn);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        // Закрытие по клику вне модалки
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+
+    // Начальная отрисовка
+    renderResTable(currentData);
 }
 
 // ==================== МАССОВЫЙ РАСЧЁТ РЕЙТИНГОВ ====================
@@ -2568,10 +3347,83 @@ async function calculateRatingsForData(items) {
     renderCombinedTable(settlementsData.items, settlementsData.total, currentDisplayPage, pageSize);
 }
 
+// ==================== ОБРАБОТЧИКИ НОВЫХ КНОПОК ====================
+async function handleRatingProvided() {
+    isChartMode = true;
+    chartType = 'provided';
+    showRatings = false;
+
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    const kinds = getSelectedKinds();
+
+    if (regions.length === 0) {
+        renderPopup('Выберите хотя бы один регион', true);
+        return;
+    }
+
+    currentRegions = regions;
+    currentPopRange = popRange;
+    currentKinds = kinds;
+
+    const pageSize = getPageSize('settlements');
+    const result = await loadSettlements(0, regions, popRange, pageSize);
+
+    if (!result || result.items.length === 0) {
+        renderPopup('Нет населенных пунктов для выбранных фильтров', true);
+        return;
+    }
+
+    settlementsData.items = result.items || [];
+    settlementsData.total = result.total || 0;
+
+    // Только получаем рейтинги, НЕ рассчитываем (allowPost = false)
+    await loadRatingsForSettlements(settlementsData.items, false);
+
+    // Подготавливаем данные для диаграммы
+    const chartData = settlementsData.items.map(item => {
+        const rating = allRatings[item.id] || {};
+        return {
+            id: item.id,
+            name: item.name,
+            region_name: item.region_name,
+            population: item.population,
+            rating: rating.rating || 0
+        };
+    });
+
+    // Показываем диаграмму с пагинацией
+    showChartContainer();
+    createRatingChart(chartData, 'provided', 0, chartPageSize);
+
+    renderPopup(`Загружено ${settlementsData.total} населенных пунктов, построена диаграмма рейтинга обеспеченности`, false);
+}
+
+// Аналогично для остальных трех функций...
+
+// ЗАГЛУШКА - Рейтинг дефицита НП
+async function handleRatingDeficit() {
+    renderPopup('Функция "Рейтинг дефицита НП" временно недоступна. Используйте кнопку "Рейтинг обеспеченности НП".', true);
+    console.log('▶ handleRatingDeficit: функция в разработке');
+}
+
+// ЗАГЛУШКА - Нормы обеспеченности НП
+async function handleNormProvided() {
+    renderPopup('Функция "Нормы обеспеченности НП" временно недоступна. Используйте кнопку "Рейтинг обеспеченности НП".', true);
+    console.log('▶ handleNormProvided: функция в разработке');
+}
+
+// ЗАГЛУШКА - Нормы потребления
+async function handleNormConsumption() {
+    renderPopup('Функция "Нормы потребления" временно недоступна. Используйте кнопку "Рейтинг обеспеченности НП".', true);
+    console.log('▶ handleNormConsumption: функция в разработке');
+}
+
 // ==================== ОБРАБОТЧИКИ КНОПОК ====================
 
 async function handleSettlementsButton() {
     isCalculateMode = false;
+    isChartMode = false;
 
     savedFilterField = '';
     savedFilterValue = '';
@@ -2612,6 +3464,8 @@ async function handleSettlementsButton() {
         currentFilterExact = false;
         showRatings = false;
         allRatings = {};
+
+        // ВАЖНО: вызываем renderSettlementsTableOnly для отображения
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
         showSettlementButtons();
@@ -2622,6 +3476,7 @@ async function handleSettlementsButton() {
 
 async function handleRatingButton() {
     isCalculateMode = false;
+    isChartMode = false;
 
     savedFilterField = '';
     savedFilterValue = '';
@@ -2670,9 +3525,12 @@ async function handleRatingButton() {
 
     await loadRatingsForSettlements(settlementsData.items, false);
 
+    // ВАЖНО: вызываем renderCombinedTable для отображения
     renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
     showSettlementButtons();
+
+    renderPopup(`Загружено ${settlementsData.total} населенных пунктов с рейтингами`);
 }
 
 async function handleResButton() {
@@ -2695,7 +3553,12 @@ function handleClear() {
         form.reset();
         const regionSelect = document.getElementById('region');
         if (regionSelect) {
-            regionSelect.value = 'all';
+            // Снимаем все выделения
+            const options = regionSelect.querySelectorAll('option');
+            options.forEach(opt => opt.selected = false);
+            // Выбираем "Все регионы" если есть
+            const allOpt = regionSelect.querySelector('option[value="all"]');
+            if (allOpt) allOpt.selected = true;
         }
         const typeConnectSelect = document.getElementById('type-connect');
         if (typeConnectSelect) {
@@ -2714,6 +3577,7 @@ function handleClear() {
     if (toInput) toInput.value = 10000;
 
     isCalculateMode = false;
+    isChartMode = false;
 
     hideSettlementButtons();
     hideCalculateAllButton();
@@ -2726,7 +3590,6 @@ function handleClear() {
     currentFilterValue = '';
     currentFilterExact = false;
 
-    // Удаляем контейнер фильтра
     const filterContainer = document.querySelector('.filter-container');
     if (filterContainer) filterContainer.remove();
 
@@ -2751,6 +3614,13 @@ function handleClear() {
     // Удаляем заголовок
     const settlementsTitle = document.querySelector('.settlements-title');
     if (settlementsTitle) settlementsTitle.remove();
+
+    // Скрываем диаграмму
+    hideChartContainer();
+    chartAllData = [];
+    chartCurrentData = [];
+    chartCurrentPage = 0;
+    chartPageSize = 50;
 
     // Сбрасываем состояние
     settlementsData = { items: [], total: 0, page: 0, pageSize: 100, allItems: [] };
@@ -2788,11 +3658,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     showPlaceholder();
 
+    // НОВЫЕ КНОПКИ
+    document.getElementById('btn-rating-provided').addEventListener('click', handleRatingProvided);
+    document.getElementById('btn-rating-deficit').addEventListener('click', handleRatingDeficit);
+    document.getElementById('btn-norm-provided').addEventListener('click', handleNormProvided);
+    document.getElementById('btn-norm-consumption').addEventListener('click', handleNormConsumption);
+
+    // СТАРЫЕ КНОПКИ
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
     document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
 
-    const clearBtn = document.querySelector('.form__rating + button.grid-btn') ||
-        document.querySelector('button.grid-btn:not([type="submit"])');
+    const clearBtn = document.getElementById('clear-btn');
     if (clearBtn) {
         clearBtn.addEventListener('click', handleClear);
     }
@@ -2811,4 +3687,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     setupDoubleClickHandler();
+
+    // Проверяем URL параметры и автоматически загружаем рейтинг обеспеченности
+    const urlParams = new URLSearchParams(window.location.search);
+    const regionsParam = urlParams.get('regions');
+    if (regionsParam) {
+        // Ждем загрузки регионов и затем выполняем
+        setTimeout(() => {
+            const selectedCount = document.getElementById('region').selectedOptions.length;
+            if (selectedCount > 0) {
+                handleRatingProvided();
+            }
+        }, 500);
+    }
 });

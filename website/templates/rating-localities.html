@@ -11,9 +11,11 @@
     <div class="column__form">
         <form class="form__rating" id="ratingForm">
             <label for="region">Выбор регионов</label>
-            <select name="region" id="region">
-                <option>Выберите регионы</option>
+            <select name="region" id="region" multiple size="5">
+                <option value="all">Все регионы</option>
             </select>
+            <div style="font-size:12px; color:#666; margin-top:4px;">Для выбора нескольких регионов зажмите Ctrl</div>
+
             <div>Выбор населенных пунктов</div>
             <div class="form__div">
                 <div class="form__div__div">
@@ -36,10 +38,15 @@
                         <option value="all">Все виды связи</option>
                     </select>
                 </div>
-
             </div>
 
             <div class="form__buttons">
+                <!-- НОВЫЕ КНОПКИ -->
+                <button class="grid-btn rating-btn" type="button" id="btn-rating-provided">Рейтинг обеспеченности НП</button>
+                <button class="grid-btn rating-btn" type="button" id="btn-rating-deficit">Рейтинг дефицита НП</button>
+                <button class="grid-btn rating-btn" type="button" id="btn-norm-provided">Нормы обеспеченности НП</button>
+                <button class="grid-btn rating-btn" type="button" id="btn-norm-consumption">Нормы потребления</button>
+                <!-- СТАРЫЕ КНОПКИ -->
                 <button class="grid-btn" type="button" id="btn-settlements">Таблица населенных пунктов</button>
                 <button class="grid-btn" type="button" id="btn-rating">Таблица рейтингов НП</button>
             </div>
@@ -50,12 +57,23 @@
     <div class="table__rating">
         <!-- Подсказка при отсутствии данных -->
         <div id="placeholder-message" class="placeholder-message">
-            <p>Выберите регион, а затем:</p>
+            <p>Выберите регион(ы), а затем:</p>
             <ul>
                 <li>для получения таблицы НП нажать на кнопку <strong>«Таблица населенных пунктов»</strong></li>
                 <li>для получения таблицы рейтингов НП нажать на кнопку <strong>«Таблица рейтингов НП»</strong></li>
+                <li>для отображения диаграммы рейтинга нажать на кнопку <strong>«Рейтинг обеспеченности НП»</strong></li>
+                <li>для отображения диаграммы дефицита нажать на кнопку <strong>«Рейтинг дефицита НП»</strong></li>
+                <li>для отображения норм обеспеченности нажать на кнопку <strong>«Нормы обеспеченности НП»</strong></li>
+                <li>для отображения норм потребления нажать на кнопку <strong>«Нормы потребления»</strong></li>
             </ul>
         </div>
+
+        <!-- Контейнер для диаграммы -->
+        <div id="chart-container" style="display: none; width: 100%; height: 500px; position: relative; flex-direction: column;">
+            <canvas id="rating-chart"></canvas>
+        </div>
+        <!-- Пагинация для диаграммы -->
+        <div id="chart-pagination" style="display: none;"></div>
 
         <!-- Таблица НП -->
         <table class="table__rating__table" id="settlements-table" style="display: none">
@@ -90,5 +108,6 @@
 </main>
 
 <script src="{{ url_for('static', filename='js/cityRatings.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/chart.min.js') }}" type="text/javascript"></script>
 
 {% endblock %}
