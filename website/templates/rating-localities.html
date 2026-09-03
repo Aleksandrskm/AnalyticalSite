@@ -41,14 +41,11 @@
             </div>
 
             <div class="form__buttons">
-                <!-- НОВЫЕ КНОПКИ -->
-                <button class="grid-btn rating-btn" type="button" id="btn-rating-provided">Рейтинг обеспеченности НП</button>
+                <!-- Новая кнопка -->
+                <button class="grid-btn" type="button" id="btn-rating">Обеспеченность НП</button>
+                <button class="grid-btn" type="button" id="btn-settlements">Таблица населенных пунктов</button>
                 <button class="grid-btn rating-btn" type="button" id="btn-rating-deficit">Рейтинг дефицита НП</button>
                 <button class="grid-btn rating-btn" type="button" id="btn-norm-provided">Нормы обеспеченности НП</button>
-                <button class="grid-btn rating-btn" type="button" id="btn-norm-consumption">Нормы потребления</button>
-                <!-- СТАРЫЕ КНОПКИ -->
-                <button class="grid-btn" type="button" id="btn-settlements">Таблица населенных пунктов</button>
-                <button class="grid-btn" type="button" id="btn-rating">Таблица рейтингов НП</button>
             </div>
         </form>
         <button type="button" class="grid-btn" id="clear-btn">Очистить</button>
@@ -60,20 +57,16 @@
             <p>Выберите регион(ы), а затем:</p>
             <ul>
                 <li>для получения таблицы НП нажать на кнопку <strong>«Таблица населенных пунктов»</strong></li>
-                <li>для получения таблицы рейтингов НП нажать на кнопку <strong>«Таблица рейтингов НП»</strong></li>
-                <li>для отображения диаграммы рейтинга нажать на кнопку <strong>«Рейтинг обеспеченности НП»</strong></li>
-                <li>для отображения диаграммы дефицита нажать на кнопку <strong>«Рейтинг дефицита НП»</strong></li>
+                <li>для отображения обеспеченности НП нажать на кнопку <strong>«Обеспеченность НП»</strong></li>
+                <li>для отображения рейтинга дефицита нажать на кнопку <strong>«Рейтинг дефицита НП»</strong></li>
                 <li>для отображения норм обеспеченности нажать на кнопку <strong>«Нормы обеспеченности НП»</strong></li>
-                <li>для отображения норм потребления нажать на кнопку <strong>«Нормы потребления»</strong></li>
             </ul>
         </div>
 
         <!-- Контейнер для диаграммы -->
-        <div id="chart-container" style="display: none; width: 100%; height: 500px; position: relative; flex-direction: column;">
+        <div id="chart-container" style="display: none; width: 100%; height: 600px; position: relative; flex-direction: column;">
             <canvas id="rating-chart"></canvas>
         </div>
-        <!-- Пагинация для диаграммы -->
-        <div id="chart-pagination" style="display: none;"></div>
 
         <!-- Таблица НП -->
         <table class="table__rating__table" id="settlements-table" style="display: none">
@@ -109,5 +102,6 @@
 
 <script src="{{ url_for('static', filename='js/cityRatings.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/chart.min.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='js/chartjs-plugin-zoom.min.js') }}"></script>
 
 {% endblock %}
