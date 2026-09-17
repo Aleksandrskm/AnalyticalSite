@@ -363,7 +363,6 @@ let ratingChart = null;
 let isChartMode = false;
 let chartType = 'provided';
 
-let displayMode = 'table';
 
 let chartSearchQuery = '';
 let searchResults = [];
@@ -1278,11 +1277,30 @@ function renderChartControls(currentSortField) {
     });
 
     sortSelect.addEventListener('change', function() {
-        clearChartSelection();
+        // Полный сброс перед пересборкой
+        chartSearchQuery = '';
+        searchResults = [];
+        selectedSearchItem = null;
+        selectedSearchIndex = -1;
+        zoomStartIndex = 0;
+        zoomEndIndex = 0;
+
+        // Очищаем поле поиска и подсказки
         const searchInput = document.getElementById('chart-search-input');
         if (searchInput) {
-            chartSearchQuery = searchInput.value;
+            searchInput.value = '';
         }
+        const resultsContainer = document.getElementById('chart-search-results');
+        if (resultsContainer) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+        }
+
+        // Убираем тултип выделенного элемента
+        const tooltip = document.getElementById('chart-item-tooltip');
+        if (tooltip) tooltip.remove();
+
+        // Пересобираем диаграмму с нуля — без сохранения зума и выделения
         const currentData = chartAllData.length > 0 ? chartAllData : [];
         createRatingChart(currentData, chartType);
     });
@@ -1321,7 +1339,7 @@ function renderChartControls(currentSortField) {
     const searchInput = document.createElement('input');
     searchInput.id = 'chart-search-input';
     searchInput.type = 'text';
-    searchInput.placeholder = 'Введите название НП, регион или район...';
+    searchInput.placeholder = 'Введите название НП...';
     searchInput.value = chartSearchQuery;
     searchInput.style.cssText = `
         flex: 1;
@@ -1365,6 +1383,7 @@ function renderChartControls(currentSortField) {
             resultsContainer.style.display = 'none';
             resultsContainer.innerHTML = '';
             clearChartSelection();
+            rebuildChartPreservingZoom();
             return;
         }
 
@@ -1378,6 +1397,8 @@ function renderChartControls(currentSortField) {
 
         searchResults = results;
         renderSearchResults(results, query, resultsContainer);
+
+        rebuildChartPreservingZoom();
     });
 
     searchInput.addEventListener('keydown', function(e) {
@@ -1426,20 +1447,18 @@ function renderChartControls(currentSortField) {
         chartSearchQuery = '';
         searchInput.value = '';
         searchResults = [];
+
         const resultsContainer = document.getElementById('chart-search-results');
         if (resultsContainer) {
             resultsContainer.style.display = 'none';
             resultsContainer.innerHTML = '';
         }
+
         clearChartSelection();
-        if (chartAllData.length > 0 && ratingChart) {
-            const displayData = getChartDisplayData();
-            const colors = displayData.map(item => getDefaultColor(item.rating || 0));
-            ratingChart.data.datasets[0].backgroundColor = colors;
-            ratingChart.data.datasets[0].borderColor = colors.map(c => c);
-            ratingChart.data.datasets[0].borderWidth = displayData.map(() => 1);
-            ratingChart.update();
-        }
+        selectedSearchItem = null;
+        selectedSearchIndex = -1;
+
+        rebuildChartPreservingZoom();
     });
     searchContainer.appendChild(clearBtn);
 
@@ -1840,14 +1859,7 @@ function createRatingChart(data, type) {
 
         const title = document.createElement('div');
         title.className = 'chart-title';
-        let titleText = '';
-        switch (type) {
-            case 'provided': titleText = 'Обеспеченность населенных пунктов'; break;
-            case 'deficit': titleText = 'Рейтинг дефицита населенных пунктов'; break;
-            case 'norms_provided': titleText = 'Нормы обеспеченности населенных пунктов'; break;
-            default: titleText = 'Рейтинг населенных пунктов';
-        }
-        title.textContent = titleText;
+        title.textContent = 'Диаграмма рейтинга НП';
         title.style.cssText = `
             text-align: center;
             font-size: 22px;
@@ -1928,7 +1940,7 @@ function showCalculateAllButton() {
     const resBtn = document.getElementById('res-action-btn');
     if (resBtn) resBtn.remove();
     const wiredBtn = document.getElementById('wired-action-btn');
-    if (wiredBtn) wiredBtn.remove();
+
 
     let btn = document.getElementById('calculate-all-btn');
     if (!btn) {
@@ -2019,6 +2031,10 @@ function createWiredButton() {
     return btn;
 }
 
+async function handleWiredButton() {
+    //renderPopup('Функция "Проводные УС" в разработке');
+}
+
 function showSettlementButtons() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
@@ -2028,38 +2044,46 @@ function showSettlementButtons() {
         return;
     }
 
-    const oldRes = document.getElementById('res-action-btn');
-    if (oldRes) oldRes.remove();
-    const oldWired = document.getElementById('wired-action-btn');
-    if (oldWired) oldWired.remove();
-    const oldCalcAll = document.getElementById('calculate-all-btn');
-    if (oldCalcAll) oldCalcAll.remove();
-    const oldCalcSelected = document.getElementById('calculate-selected-btn');
-    if (oldCalcSelected) oldCalcSelected.remove();
+    // Удаляем все прежние кнопки
+    ['res-action-btn', 'wired-action-btn', 'calculate-all-btn', 'calculate-selected-btn']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
 
+    // Кнопка РЭС нужна всегда
+    const resBtn = createResButton();
+
+    const firstBtn = container.querySelector('.grid-btn');
+    if (firstBtn) {
+        container.insertBefore(resBtn, firstBtn);
+    } else {
+        container.appendChild(resBtn);
+    }
+
+    // 🔽 Кнопка «Проводные УС» — ТОЛЬКО для таблицы НП (не для рейтингов)
+    if (!showRatings) {
+        const wiredBtn = createWiredButton();
+        const resBtnNow = document.getElementById('res-action-btn');
+        if (resBtnNow) {
+            container.insertBefore(wiredBtn, resBtnNow.nextSibling);
+        } else {
+            container.appendChild(wiredBtn);
+        }
+    }
+
+    // Дополнительные кнопки для режима рейтингов
     if (showRatings) {
         const calcAllBtn = createCalculateAllBtn();
         const calcSelectedBtn = createCalculateSelectedBtn();
 
-        const firstBtn = container.querySelector('.grid-btn');
-        if (firstBtn) {
-            container.insertBefore(calcAllBtn, firstBtn);
-            container.insertBefore(calcSelectedBtn, firstBtn);
+        const resBtnNow = document.getElementById('res-action-btn');
+        if (resBtnNow) {
+            container.insertBefore(calcAllBtn, resBtnNow);
+            container.insertBefore(calcSelectedBtn, resBtnNow);
         } else {
             container.appendChild(calcAllBtn);
             container.appendChild(calcSelectedBtn);
-        }
-    } else {
-        const resBtn = createResButton();
-        const wiredBtn = createWiredButton();
-
-        const firstBtn = container.querySelector('.grid-btn');
-        if (firstBtn) {
-            container.insertBefore(resBtn, firstBtn);
-            container.insertBefore(wiredBtn, firstBtn);
-        } else {
-            container.appendChild(resBtn);
-            container.appendChild(wiredBtn);
         }
     }
 }
@@ -2072,7 +2096,6 @@ function hideSettlementButtons() {
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 }
-
 // ==================== ЗАГРУЗКА РЕГИОНОВ ====================
 
 async function loadRegions() {
@@ -2786,7 +2809,7 @@ function applyLocalUpdates(settlementId, table, updates) {
 function refreshCurrentView(settlementId) {
     const pageSize = getPageSize('settlements');
 
-    if (isChartMode || displayMode === 'chart') {
+    if (isChartMode) {
         const chartData = settlementsData.items.map(item => {
             const rating = allRatings[String(item.id)] || {};
             return {
@@ -2838,6 +2861,98 @@ function refreshCurrentView(settlementId) {
     }
 }
 
+// ==================== НОВЫЕ ОБРАБОТЧИКИ ====================
+
+/**
+ * Общая загрузка данных для режимов "Диаграмма рейтинга НП" и "Цифровой дефицит НП".
+ * Возвращает true при успехе.
+ */
+async function loadRatingsData() {
+    isCalculateMode = false;
+    isChartMode = false;
+
+    savedFilterField = '';
+    savedFilterValue = '';
+    savedFilterExact = false;
+    currentDisplayPage = 0;
+
+    hideResPageSize();
+
+    const regions = getSelectedRegions();
+    const popRange = getPopulationRange();
+    const kinds = getSelectedKinds();
+
+    if (regions.length === 0) {
+        showRegionWarning();
+        return false;
+    }
+
+    currentRegions = regions;
+    currentPopRange = popRange;
+    currentKinds = kinds;
+
+    const pageSize = getPageSize('settlements');
+    const page = getPage();
+    const result = await loadSettlements(page, regions, popRange, pageSize);
+
+    if (!result || result.items.length === 0) {
+        return false;
+    }
+
+    originalDataForFilter = result.items || [];
+    originalTotalForFilter = result.total || 0;
+
+    settlementsData.items = result.items || [];
+    settlementsData.total = result.total || 0;
+    settlementsData.page = page;
+    settlementsData.pageSize = pageSize;
+    currentSortField = null;
+    currentSortOrder = 'asc';
+    currentFilterField = '';
+    currentFilterValue = '';
+    currentFilterExact = false;
+
+    showRatings = true;
+    allRatings = {};
+
+    await loadRatingsForSettlements(settlementsData.items, false);
+
+    return true;
+}
+
+/**
+ * Кнопка «Диаграмма рейтинга НП» — загружает данные и открывает диаграмму.
+ */
+async function handleRatingChartButton() {
+    const ok = await loadRatingsData();
+    if (!ok) return;
+
+    //createViewModeToggle();
+
+    switchToChartMode();
+
+    // Устанавливаем радио "Диаграмма" в активное состояние
+    const chartRadio = document.querySelector('input[name="view-mode"][value="chart"]');
+    if (chartRadio) chartRadio.checked = true;
+}
+
+/**
+ * Кнопка «Цифровой дефицит НП» — загружает данные и открывает таблицу с рейтингами.
+ */
+async function handleRatingTableButton() {
+    const ok = await loadRatingsData();
+    if (!ok) return;
+
+    //createViewModeToggle();
+
+    const pageSize = getPageSize('settlements');
+    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
+
+    showSettlementButtons();
+
+    const tableRadio = document.querySelector('input[name="view-mode"][value="table"]');
+    if (tableRadio) tableRadio.checked = true;
+}
 // ==================== МОДАЛКА РЕДАКТИРОВАНИЯ ====================
 
 async function openEditModal(settlementId, type) {
@@ -2911,8 +3026,8 @@ async function openEditModal(settlementId, type) {
         settlementId;
 
     const titleText = (type === 'rating')
-        ? `Редактирование рейтинга НП: ${nameForTitle}`
-        : `Редактирование НП: ${nameForTitle}`;
+        ? `Рейтинг НП: ${nameForTitle}`
+        : `НП: ${nameForTitle}`;
 
     const title = document.createElement('h3');
     title.textContent = titleText;
@@ -3030,7 +3145,7 @@ async function openEditModal(settlementId, type) {
     buttonsBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;';
 
     const editBtn = document.createElement('button');
-    editBtn.textContent = 'Редактировать';
+    editBtn.textContent = 'Сохранить изменения';
     editBtn.className = 'res-modal-close-btn';
     editBtn.style.background = '#0066ff';
     editBtn.style.color = '#fff';
@@ -3158,7 +3273,7 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
     const settlementsTitle = document.createElement('h3');
     settlementsTitle.className = 'settlements-title';
-    settlementsTitle.textContent = 'Населенные пункты';
+    settlementsTitle.textContent = 'Таблица населенных пунктов';
     table.parentNode.insertBefore(settlementsTitle, table);
 
     const thead = table.querySelector('thead');
@@ -3513,7 +3628,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     const settlementsTitle = document.createElement('h3');
     settlementsTitle.className = 'settlements-title';
-    settlementsTitle.textContent = 'Обеспеченность населенных пунктов';
+    settlementsTitle.textContent = 'Цифровой дефицит НП';
     table.parentNode.insertBefore(settlementsTitle, table);
 
     const thead = table.querySelector('thead');
@@ -4794,9 +4909,8 @@ async function handleRatingButton() {
 
     await loadRatingsForSettlements(settlementsData.items, false);
 
-    createViewModeToggle();
+    //createViewModeToggle();
 
-    displayMode = 'table';
     renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
     showSettlementButtons();
@@ -4804,88 +4918,7 @@ async function handleRatingButton() {
     //renderPopup(`Загружено ${settlementsData.total} населенных пунктов с рейтингами`);
 }
 
-function createViewModeToggle() {
-    const oldToggle = document.getElementById('view-mode-toggle');
-    if (oldToggle) oldToggle.remove();
 
-    const tableContainer = document.querySelector('.table__rating');
-    if (!tableContainer) return;
-
-    const toggleContainer = document.createElement('div');
-    toggleContainer.id = 'view-mode-toggle';
-    toggleContainer.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        gap: 20px !important;
-        padding: 10px 15px !important;
-        background: #f5f5f5 !important;
-        border-radius: 6px !important;
-        margin-bottom: 10px !important;
-        flex-shrink: 0 !important;
-        border: 1px solid #000 !important;
-    `;
-
-    const label = document.createElement('span');
-    label.textContent = 'Режим отображения:';
-    label.style.cssText = `
-        font-weight: 600 !important;
-        color: #1a1a1a !important;
-        font-size: 14px !important;
-    `;
-    toggleContainer.appendChild(label);
-
-    const tableRadio = document.createElement('label');
-    tableRadio.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        cursor: pointer !important;
-        font-size: 13px !important;
-        color: #1a1a1a !important;
-    `;
-    const tableInput = document.createElement('input');
-    tableInput.type = 'radio';
-    tableInput.name = 'view-mode';
-    tableInput.value = 'table';
-    tableInput.checked = displayMode === 'table';
-    tableInput.addEventListener('change', function() {
-        if (this.checked) {
-            displayMode = 'table';
-            showRatings = true;
-            const pageSize = getPageSize('settlements');
-            renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
-        }
-    });
-    tableRadio.appendChild(tableInput);
-    tableRadio.appendChild(document.createTextNode('Таблица'));
-    toggleContainer.appendChild(tableRadio);
-
-    const chartRadio = document.createElement('label');
-    chartRadio.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        cursor: pointer !important;
-        font-size: 13px !important;
-        color: #1a1a1a !important;
-    `;
-    const chartInput = document.createElement('input');
-    chartInput.type = 'radio';
-    chartInput.name = 'view-mode';
-    chartInput.value = 'chart';
-    chartInput.checked = displayMode === 'chart';
-    chartInput.addEventListener('change', function() {
-        if (this.checked) {
-            displayMode = 'chart';
-            switchToChartMode();
-        }
-    });
-    chartRadio.appendChild(chartInput);
-    chartRadio.appendChild(document.createTextNode('Диаграмма'));
-    toggleContainer.appendChild(chartRadio);
-
-    tableContainer.prepend(toggleContainer);
-}
 
 function switchToChartMode() {
     chartType = 'provided';
@@ -4988,9 +5021,7 @@ async function handleResButton() {
     await loadResForModal(selectedSettlementId, selectedSettlementLat, selectedSettlementLon, selectedSettlementArea);
 }
 
-async function handleWiredButton() {
-    //renderPopup('Функция "Проводные УС" в разработке');
-}
+
 
 // ==================== ОЧИСТКА ====================
 
@@ -5002,8 +5033,6 @@ function handleClear() {
         if (regionSelect) {
             const options = regionSelect.querySelectorAll('option');
             options.forEach(opt => opt.selected = false);
-            const allOpt = regionSelect.querySelector('option[value="all"]');
-            if (allOpt) allOpt.selected = true;
         }
         const typeConnectSelect = document.getElementById('type-connect');
         if (typeConnectSelect) {
@@ -5078,7 +5107,6 @@ function handleClear() {
     allRatings = {};
     showRatings = false;
     currentDisplayPage = 0;
-    displayMode = 'table';
     chartSearchQuery = '';
     searchResults = [];
     selectedSearchItem = null;
@@ -5110,8 +5138,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     showPlaceholder();
 
-    document.getElementById('btn-rating').addEventListener('click', handleRatingButton);
-
+    document.getElementById('btn-rating-chart').addEventListener('click', handleRatingChartButton);
+    document.getElementById('btn-rating-table').addEventListener('click', handleRatingTableButton);
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
 
     const btnNormConsumption = document.getElementById('btn-norm-consumption');
@@ -5143,13 +5171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(async () => {
             const selectedCount = document.getElementById('region').selectedOptions.length;
             if (selectedCount > 0) {
-                await handleRatingButton();
-                displayMode = 'chart';
-                const chartRadio = document.querySelector('input[name="view-mode"][value="chart"]');
-                if (chartRadio) {
-                    chartRadio.checked = true;
-                }
-                switchToChartMode();
+                await handleRatingChartButton();
             }
         }, 500);
     }

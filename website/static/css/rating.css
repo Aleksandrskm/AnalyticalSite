@@ -108,7 +108,7 @@ header h2 {
 }
 
 .form__rating select[multiple] option:checked {
-    background: #1a1a1a;
+    background: #808080;
     color: #fff;
 }
 
@@ -144,7 +144,7 @@ header h2 {
     width: 14px;
     height: 14px;
     margin-right: 4px;
-    accent-color: #1a1a1a;
+    accent-color: #8a8a8a;
     vertical-align: middle;
 }
 
@@ -181,15 +181,15 @@ header h2 {
 /* ===== КНОПКИ ===== */
 .grid-btn {
     width: 100%;
-    background: #2a2a2a;
-    color: #fff;
-    border: 1.5px solid #1a1a1a;
+    background: #d9d9d9;
+    color: #1a1a1a;
+    border: 1.5px solid #8a8a8a;
     padding: 6px 10px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     margin-top: 4px;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s;
     border-radius: 3px;
     white-space: nowrap;
     overflow: hidden;
@@ -198,29 +198,36 @@ header h2 {
 }
 
 .grid-btn:hover {
-    background: #1a1a1a;
+    background: #c4c4c4;
+    border-color: #6a6a6a;
 }
 
-/* Все кнопки формы - черные */
+.grid-btn:active {
+    background: #b5b5b5;
+}
+
+/* Все кнопки формы - серые */
 .rating-btn {
-    background: #2a2a2a;
-    border-color: #1a1a1a;
+    background: #d9d9d9;
+    border-color: #8a8a8a;
+    color: #1a1a1a;
 }
 
 .rating-btn:hover {
-    background: #1a1a1a;
+    background: #c4c4c4;
 }
 
 /* Кнопки-заглушки */
 .rating-btn-disabled {
-    background: #666 !important;
-    border-color: #555 !important;
+    background: #cfcfcf !important;
+    border-color: #a0a0a0 !important;
+    color: #7a7a7a !important;
     cursor: not-allowed !important;
-    opacity: 0.7 !important;
+    opacity: 0.8 !important;
 }
 
 .rating-btn-disabled:hover {
-    background: #666 !important;
+    background: #cfcfcf !important;
     cursor: not-allowed !important;
 }
 
@@ -782,18 +789,20 @@ header h2 {
 .res-modal-close-btn {
     margin-top: 12px;
     padding: 6px 20px;
-    background: #2a2a2a;
-    color: white;
-    border: none;
+    background: #d9d9d9;
+    color: #1a1a1a;
+    border: 1.5px solid #8a8a8a;
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
     align-self: flex-end;
     flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .res-modal-close-btn:hover {
-    background: #1a1a1a;
+    background: #c4c4c4;
+    border-color: #6a6a6a;
 }
 
 /* === ФИЛЬТР === */
@@ -857,32 +866,34 @@ header h2 {
 
 .filter-apply-btn {
     padding: 4px 14px;
-    background: #4caf50;
-    color: white;
-    border: none;
+    background: #cfcfcf;
+    color: #1a1a1a;
+    border: 1px solid #8a8a8a;
     border-radius: 3px;
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
+    transition: background 0.2s;
 }
 
 .filter-apply-btn:hover {
-    background: #45a049;
+    background: #a6a6a6;
 }
 
 .filter-reset-btn {
     padding: 4px 14px;
-    background: #f44336;
-    color: white;
-    border: none;
+    background: #cfcfcf;
+    color: #1a1a1a;
+    border: 1px solid #8a8a8a;
     border-radius: 3px;
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
+    transition: background 0.2s;
 }
 
 .filter-reset-btn:hover {
-    background: #da190b;
+    background: #bfbfbf;
 }
 
 /* === ВЫДЕЛЕНИЕ ВЫБРАННОГО НАСЕЛЁННОГО ПУНКТА === */
@@ -942,7 +953,7 @@ header h2 {
 .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background: #4CAF50;
+    background: #8a8a8a;
     transition: width 0.3s;
 }
 
@@ -954,9 +965,9 @@ header h2 {
 
 .progress-cancel-btn {
     padding: 6px 20px;
-    background: #ff4444;
-    color: white;
-    border: none;
+    background: #cfcfcf;
+    color: #1a1a1a;
+    border: 1.5px solid #8a8a8a;
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
@@ -964,12 +975,14 @@ header h2 {
 }
 
 .progress-cancel-btn:hover:not(.disabled) {
-    background: #cc0000;
+    background: #bfbfbf;
 }
 
 .progress-cancel-btn.disabled {
-    background: #999;
+    background: #e0e0e0;
+    color: #888;
     cursor: default;
+    border-color: #c0c0c0;
 }
 
 /* ============================================================ */
