@@ -483,6 +483,9 @@ function getValueByDbColumn(obj, dbColumn, map) {
 // ==================== МАССОВАЯ ЗАГРУЗКА РЕЙТИНГОВ ====================
 
 async function loadRatingsBulk(regions, popRange) {
+    const loader = initLoader();
+    loader.show('Загрузка рейтингов...');
+
     const result = {};
     try {
         await loadTableStructures();
@@ -498,7 +501,10 @@ async function loadRatingsBulk(regions, popRange) {
         };
 
         const response = await getRatingsPage(0, 1, body);
-        if (!response) return result;
+        if (!response) {
+            loader.close();
+            return result;
+        }
 
         const ratings = Array.isArray(response)
             ? response
@@ -511,8 +517,10 @@ async function loadRatingsBulk(regions, popRange) {
         });
 
         console.log(`Массово загружено рейтингов: ${Object.keys(result).length}`);
+        loader.close();
         return result;
     } catch (error) {
+        loader.close();
         console.error('Ошибка массовой загрузки рейтингов:', error);
         return result;
     }
