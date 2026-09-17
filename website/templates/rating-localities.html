@@ -33,7 +33,7 @@
                     <label for="numbers-settlements">до</label>
                     <input type="number" id="numbers-settlements" name="number-settlements" step="1" value="10000">
                 </div>
-                <div class="form__div__div">
+                <div class="form__div__div" style="display: none">
                     <label for="type-connect">Вид связи</label>
                     <select id="type-connect" name="type-connect">
                         <option value="all">Все виды связи</option>
@@ -42,10 +42,9 @@
             </div>
 
             <div class="form__buttons">
-                <!-- Новая кнопка -->
-                <button class="grid-btn" type="button" id="btn-rating">Обеспеченность НП</button>
+                <button class="grid-btn" type="button" id="btn-rating-chart">Диаграмма рейтинга НП</button>
+                <button class="grid-btn" type="button" id="btn-rating-table">Цифровой дефицит НП</button>
                 <button class="grid-btn" type="button" id="btn-settlements">Таблица населенных пунктов</button>
-                <button class="grid-btn rating-btn" type="button" id="btn-rating-deficit">Рейтинг дефицита НП</button>
                 <button class="grid-btn rating-btn" type="button" id="btn-norm-provided">Нормы обеспеченности НП</button>
             </div>
         </form>
@@ -57,9 +56,9 @@
         <div id="placeholder-message" class="placeholder-message">
             <p>Выберите регион(ы), а затем:</p>
             <ul>
+                <li>для отображения диаграммы рейтинга нажать на кнопку <strong>«Диаграмма рейтинга НП»</strong></li>
+                <li>для отображения цифрового дефицита нажать на кнопку <strong>«Цифровой дефицит НП»</strong></li>
                 <li>для получения таблицы НП нажать на кнопку <strong>«Таблица населенных пунктов»</strong></li>
-                <li>для отображения обеспеченности НП нажать на кнопку <strong>«Обеспеченность НП»</strong></li>
-                <li>для отображения рейтинга дефицита нажать на кнопку <strong>«Рейтинг дефицита НП»</strong></li>
                 <li>для отображения норм обеспеченности нажать на кнопку <strong>«Нормы обеспеченности НП»</strong></li>
             </ul>
         </div>
