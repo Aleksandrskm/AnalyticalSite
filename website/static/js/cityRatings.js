@@ -106,98 +106,6 @@ const SETTLEMENTS_COLUMN_LABELS = {
     'REGION_CODE': 'Код региона'
 };
 
-// ---- Русские названия колонок A_NAS_P_RANKING ----
-const RANKING_COLUMN_LABELS = {
-    'ID': 'ID',
-    'KOL_OPERATOR': 'Количество операторов',
-    'TV_KOL_RES': 'Количество РЭС ТВ',
-    'TV_KOL_CHANNELS': 'Количество каналов ТВ',
-    'TV_POKRITIE': 'Покрытие ТВ',
-    'TV_PROC_POKRITIE': 'Процент покрытия ТВ',
-    'RV_KOL_RES': 'Количество РЭС РВ',
-    'RV_WIDTH': 'Ширина полосы РВ',
-    'RV_KOL_CHANNELS': 'Количество каналов РВ',
-    'RV_POKRITIE': 'Покрытие РВ',
-    'RV_PROC_POKRITIE': 'Процент покрытия РВ',
-    'LTE_KOL_RES': 'Количество РЭС LTE',
-    'LTE_KOL_AB': 'Количество абонентов LTE',
-    'LTE_PROC_NAS': 'Процент охвата населения LTE',
-    'LTE_POKRITIE': 'Покрытие связи LTE',
-    'LTE_PROC_POKRITIE': 'Процент покрытия связи LTE',
-    'LTE_TRAFIK': 'Объем трафика LTE',
-    'LTE_PROC_TRAFIK': 'Процент трафика LTE',
-    'GSM_KOL_RES': 'Количество РЭС GSM',
-    'GSM_KOL_AB': 'Количество абонентов GSM',
-    'GSM_PROC_NAS': 'Процент охвата населения GSM',
-    'GSM_POKRITIE': 'Покрытие связи GSM',
-    'GSM_PROC_POKRITIE': 'Процент покрытия связи GSM',
-    'GSM_TRAFIK': 'Объем трафика GSM',
-    'GSM_PROC_TRAFIK': 'Процент трафика GSM',
-    'G5_KOL_RES': 'Количество РЭС 5G',
-    'G5_KOL_AB': 'Количество абонентов 5G',
-    'G5_PROC_NAS': 'Процент охвата населения 5G',
-    'G5_POKRITIE': 'Покрытие связи 5G',
-    'G5_PROC_POKRITIE': 'Процент покрытия связи 5G',
-    'G5_TRAFIK': 'Объем трафика 5G',
-    'G5_PROC_TRAFIK': 'Процент трафика 5G',
-    'WIFI_KOL_RES': 'Количество РЭС Wi-Fi',
-    'WIFI_KOL_AB': 'Количество абонентов Wi-Fi',
-    'WIFI_PROC_NAS': 'Процент охвата населения Wi-Fi',
-    'WIFI_POKRITIE': 'Покрытие связи Wi-Fi',
-    'WIFI_PROC_POKRITIE': 'Процент покрытия связи Wi-Fi',
-    'WIFI_TRAFIK': 'Объем трафика Wi-Fi',
-    'WIFI_PROC_TRAFIK': 'Процент трафика Wi-Fi',
-    'TETRA_KOL_RES': 'Количество РЭС Tetra',
-    'TETRA_KOL_AB': 'Количество абонентов Tetra',
-    'TETRA_PROC_NAS': 'Процент охвата населения Tetra',
-    'TETRA_POKRITIE': 'Покрытие связи Tetra',
-    'TETRA_PROC_POKRITIE': 'Процент покрытия связи Tetra',
-    'TETRA_TRAFIK': 'Объем трафика Tetra',
-    'TETRA_PROC_TRAFIK': 'Процент трафика Tetra',
-    'US_KOL_US': 'Количество УС',
-    'US_KOL_AB': 'Количество абонентов УС',
-    'US_PROC_NAS': 'Процент охвата населения УС',
-    'US_POKRITIE': 'Покрытие УС',
-    'US_PROC_POKRITIE': 'Процент покрытия УС',
-    'US_TRAFIK': 'Объем трафика УС',
-    'US_PROC_TRAFIK': 'Процент трафика УС',
-    'POST_KOL_POST': 'Количество почтовых отделений',
-    'POST_KOL_AB': 'Количество абонентов почты',
-    'POST_PROC_NAS': 'Процент охвата населения почтой',
-    'POST_POKRITIE': 'Покрытие почты',
-    'POST_PROC_POKRITIE': 'Процент покрытия почты',
-    'POST_TRAFIK': 'Объем трафика почты',
-    'POST_PROC_TRAFIK': 'Процент трафика почты',
-    'VOLS_KOL_VOLS': 'Количество ВОЛС',
-    'VOLS_KOL_AB': 'Количество абонентов ВОЛС',
-    'VOLS_PROC_NAS': 'Процент охвата населения ВОЛС',
-    'VOLS_POKRITIE': 'Покрытие ВОЛС',
-    'VOLS_PROC_POKRITIE': 'Процент покрытия ВОЛС',
-    'VOLS_TRAFIK': 'Объем трафика ВОЛС',
-    'VOLS_PROC_TRAFIK': 'Процент трафика ВОЛС',
-    'TAKS_KOL_TAKS': 'Количество таксофонов',
-    'TAKS_KOL_AB': 'Количество абонентов таксофонов',
-    'TAKS_PROC_NAS': 'Процент охвата населения таксофонами',
-    'TAKS_POKRITIE': 'Покрытие таксофонов',
-    'TAKS_PROC_POKRITIE': 'Процент покрытия таксофонов',
-    'TAKS_TRAFIK': 'Объем трафика таксофонов',
-    'TAKS_PROC_TRAFIK': 'Процент трафика таксофонов',
-    'MOB_KOL_RES': 'Количество РЭС моб. связи',
-    'MOB_KOL_AB': 'Количество абонентов моб. связи',
-    'MOB_PROC_NAS': 'Процент охвата населения моб. связи',
-    'MOB_POKRITIE': 'Покрытие моб. связи',
-    'MOB_PROC_POKRITIE': 'Процент покрытия моб. связи',
-    'MOB_TRAFIK': 'Объем трафика моб. связи',
-    'MOB_PROC_TRAFIK': 'Процент трафика моб. связи',
-    'RAT_NP_KOL_AB': 'Рейтинг: количество абонентов',
-    'RAT_NP_PROC_NAS': 'Рейтинг: процент охвата населения',
-    'RAT_NP_POKRITIE': 'Рейтинг: покрытие',
-    'RAT_NP_PROC_POKRITIE': 'Рейтинг: процент покрытия',
-    'RAT_NP_TRAFIK': 'Рейтинг: трафик',
-    'RAT_NP_PROC_TRAFIK': 'Рейтинг: процент трафика',
-    'RAT_SUM_NP': 'Рейтинг'
-};
-
 // ---- Соответствия DB-колонка A_NAS_P -> ключ в объекте НП ----
 const SETTLEMENTS_DB_TO_OBJECT_KEY = {
     'ID': 'id',
@@ -213,18 +121,30 @@ const SETTLEMENTS_DB_TO_OBJECT_KEY = {
 };
 
 // ---- Соответствия DB-колонка A_NAS_P_RANKING -> ключ в объекте ratings ----
+// ---- Соответствия DB-колонка A_NAS_P_RANKING -> ключ в объекте ratings ----
 const RANKING_DB_TO_OBJECT_KEY = {
     'ID': 'id',
-    'KOL_OPERATOR': 'count_operators',
+
+    // ТВ
     'TV_KOL_RES': 'count_res_tv',
     'TV_KOL_CHANNELS': 'count_channels_tv',
     'TV_POKRITIE': 'communication_coverage_tv',
     'TV_PROC_POKRITIE': 'communication_coverage_percent_tv',
+    'TV_KOL_OPERATOR': 'count_operators_tv',
+    'TV_PROC_OPERATOR': 'operators_percent_tv',
+    'TV_SCORE': 'rating_tv',
+
+    // РВ
     'RV_KOL_RES': 'count_res_rv',
     'RV_WIDTH': 'frequency_width_rv',
     'RV_KOL_CHANNELS': 'count_channels_rv',
     'RV_POKRITIE': 'communication_coverage_rv',
     'RV_PROC_POKRITIE': 'communication_coverage_percent_rv',
+    'RV_KOL_OPERATOR': 'count_operators_rv',
+    'RV_PROC_OPERATOR': 'operators_percent_rv',
+    'RV_SCORE': 'rating_rv',
+
+    // LTE
     'LTE_KOL_RES': 'count_res_lte',
     'LTE_KOL_AB': 'count_abonents_lte',
     'LTE_PROC_NAS': 'population_percent_lte',
@@ -232,6 +152,9 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'LTE_PROC_POKRITIE': 'communication_coverage_percent_lte',
     'LTE_TRAFIK': 'traffic_lte',
     'LTE_PROC_TRAFIK': 'traffic_percent_lte',
+    'LTE_KOL_OPERATOR': 'count_operators_lte',
+
+    // GSM
     'GSM_KOL_RES': 'count_res_gsm',
     'GSM_KOL_AB': 'count_abonents_gsm',
     'GSM_PROC_NAS': 'population_percent_gsm',
@@ -239,6 +162,9 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'GSM_PROC_POKRITIE': 'communication_coverage_percent_gsm',
     'GSM_TRAFIK': 'traffic_gsm',
     'GSM_PROC_TRAFIK': 'traffic_percent_gsm',
+    'GSM_KOL_OPERATOR': 'count_operators_gsm',
+
+    // 5G
     'G5_KOL_RES': 'count_res_5g',
     'G5_KOL_AB': 'count_abonents_5g',
     'G5_PROC_NAS': 'population_percent_5g',
@@ -246,6 +172,9 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'G5_PROC_POKRITIE': 'communication_coverage_percent_5g',
     'G5_TRAFIK': 'traffic_5g',
     'G5_PROC_TRAFIK': 'traffic_percent_5g',
+    'G5_KOL_OPERATOR': 'count_operators_5g',
+
+    // Wi-Fi
     'WIFI_KOL_RES': 'count_res_wifi',
     'WIFI_KOL_AB': 'count_abonents_wifi',
     'WIFI_PROC_NAS': 'population_percent_wifi',
@@ -253,6 +182,11 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'WIFI_PROC_POKRITIE': 'communication_coverage_percent_wifi',
     'WIFI_TRAFIK': 'traffic_wifi',
     'WIFI_PROC_TRAFIK': 'traffic_percent_wifi',
+    'WIFI_KOL_OPERATOR': 'count_operators_wifi',
+    'WIFI_PROC_OPERATOR': 'operators_percent_wifi',
+    'WIFI_SCORE': 'rating_wifi',
+
+    // Tetra
     'TETRA_KOL_RES': 'count_res_tetra',
     'TETRA_KOL_AB': 'count_abonents_tetra',
     'TETRA_PROC_NAS': 'population_percent_tetra',
@@ -260,6 +194,9 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'TETRA_PROC_POKRITIE': 'communication_coverage_percent_tetra',
     'TETRA_TRAFIK': 'traffic_tetra',
     'TETRA_PROC_TRAFIK': 'traffic_percent_tetra',
+    'TETRA_KOL_OPERATOR': 'count_operators_tetra',
+
+    // УС
     'US_KOL_US': 'count_comm_hubs',
     'US_KOL_AB': 'count_abonents_comm_hubs',
     'US_PROC_NAS': 'population_percent_comm_hubs',
@@ -267,6 +204,11 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'US_PROC_POKRITIE': 'communication_coverage_percent_comm_hubs',
     'US_TRAFIK': 'traffic_comm_hubs',
     'US_PROC_TRAFIK': 'traffic_percent_comm_hubs',
+    'US_KOL_OPERATOR': 'count_operators_comm_hubs',
+    'US_PROC_OPERATOR': 'operators_percent_comm_hubs',
+    'US_SCORE': 'rating_comm_hubs',
+
+    // Почта
     'POST_KOL_POST': 'count_posts',
     'POST_KOL_AB': 'count_abonents_posts',
     'POST_PROC_NAS': 'population_percent_posts',
@@ -274,6 +216,11 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'POST_PROC_POKRITIE': 'communication_coverage_percent_posts',
     'POST_TRAFIK': 'traffic_posts',
     'POST_PROC_TRAFIK': 'traffic_percent_posts',
+    'POST_KOL_OPERATOR': 'count_operators_posts',
+    'POST_PROC_OPERATOR': 'operators_percent_posts',
+    'POST_SCORE': 'rating_posts',
+
+    // ВОЛС
     'VOLS_KOL_VOLS': 'count_focl',
     'VOLS_KOL_AB': 'count_abonents_focl',
     'VOLS_PROC_NAS': 'population_percent_focl',
@@ -281,6 +228,11 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'VOLS_PROC_POKRITIE': 'communication_coverage_percent_focl',
     'VOLS_TRAFIK': 'traffic_focl',
     'VOLS_PROC_TRAFIK': 'traffic_percent_focl',
+    'VOLS_KOL_OPERATOR': 'count_operators_focl',
+    'VOLS_PROC_OPERATOR': 'operators_percent_focl',
+    'VOLS_SCORE': 'rating_focl',
+
+    // Таксофоны
     'TAKS_KOL_TAKS': 'count_payphones',
     'TAKS_KOL_AB': 'count_abonents_payphones',
     'TAKS_PROC_NAS': 'population_percent_payphones',
@@ -288,6 +240,11 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'TAKS_PROC_POKRITIE': 'communication_coverage_percent_payphones',
     'TAKS_TRAFIK': 'traffic_payphones',
     'TAKS_PROC_TRAFIK': 'traffic_percent_payphones',
+    'TAKS_KOL_OPERATOR': 'count_operators_payphones',
+    'TAKS_PROC_OPERATOR': 'operators_percent_payphones',
+    'TAKS_SCORE': 'rating_payphones',
+
+    // Мобильная связь
     'MOB_KOL_RES': 'count_res_mobile',
     'MOB_KOL_AB': 'count_abonents_mobile',
     'MOB_PROC_NAS': 'population_percent_mobile',
@@ -295,13 +252,154 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'MOB_PROC_POKRITIE': 'communication_coverage_percent_mobile',
     'MOB_TRAFIK': 'traffic_mobile',
     'MOB_PROC_TRAFIK': 'traffic_percent_mobile',
+    'MOB_KOL_OPERATOR': 'count_operators_mobile',
+    'MOB_PROC_OPERATOR': 'operators_percent_mobile',
+    'MOB_SCORE': 'rating_mobile',
+
+    // Суммарные
     'RAT_NP_KOL_AB': 'count_abonents_summary',
     'RAT_NP_PROC_NAS': 'population_percent_summary',
     'RAT_NP_POKRITIE': 'communication_coverage_summary',
     'RAT_NP_PROC_POKRITIE': 'communication_coverage_percent_summary',
     'RAT_NP_TRAFIK': 'traffic_summary',
     'RAT_NP_PROC_TRAFIK': 'traffic_percent_summary',
+    'RAT_NP_PROC_OPERATOR': 'operators_percent_summary',
+
     'RAT_SUM_NP': 'rating'
+};
+
+// ---- Русские названия колонок A_NAS_P_RANKING ----
+const RANKING_COLUMN_LABELS = {
+    'ID': 'ID',
+
+    'TV_KOL_RES': 'Количество РЭС ТВ',
+    'TV_KOL_CHANNELS': 'Количество каналов ТВ',
+    'TV_POKRITIE': 'Покрытие связи ТВ',
+    'TV_PROC_POKRITIE': 'Процент покрытия связи ТВ',
+    'TV_KOL_OPERATOR': 'Количество операторов ТВ',
+    'TV_PROC_OPERATOR': 'Процент операторов ТВ',
+    'TV_SCORE': 'Оценка ТВ',
+
+    'RV_KOL_RES': 'Количество РЭС РВ',
+    'RV_WIDTH': 'Общая ширина полосы РВ, МГц',
+    'RV_KOL_CHANNELS': 'Количество каналов РВ',
+    'RV_POKRITIE': 'Покрытие связи РВ',
+    'RV_PROC_POKRITIE': 'Процент покрытия связи РВ',
+    'RV_KOL_OPERATOR': 'Количество операторов РВ',
+    'RV_PROC_OPERATOR': 'Процент операторов РВ',
+    'RV_SCORE': 'Оценка РВ',
+
+    'LTE_KOL_RES': 'Количество РЭС LTE',
+    'LTE_KOL_AB': 'Количество абонентов LTE',
+    'LTE_PROC_NAS': 'Процент охвата населения LTE',
+    'LTE_POKRITIE': 'Покрытие связи LTE',
+    'LTE_PROC_POKRITIE': 'Процент покрытия связи LTE',
+    'LTE_TRAFIK': 'Объем трафика LTE',
+    'LTE_PROC_TRAFIK': 'Процент трафика LTE',
+    'LTE_KOL_OPERATOR': 'Количество операторов LTE',
+
+    'GSM_KOL_RES': 'Количество РЭС GSM',
+    'GSM_KOL_AB': 'Количество абонентов GSM',
+    'GSM_PROC_NAS': 'Процент охвата населения GSM',
+    'GSM_POKRITIE': 'Покрытие связи GSM',
+    'GSM_PROC_POKRITIE': 'Процент покрытия связи GSM',
+    'GSM_TRAFIK': 'Объем трафика GSM',
+    'GSM_PROC_TRAFIK': 'Процент трафика GSM',
+    'GSM_KOL_OPERATOR': 'Количество операторов GSM',
+
+    'G5_KOL_RES': 'Количество РЭС 5G',
+    'G5_KOL_AB': 'Количество абонентов 5G',
+    'G5_PROC_NAS': 'Процент охвата населения 5G',
+    'G5_POKRITIE': 'Покрытие связи 5G',
+    'G5_PROC_POKRITIE': 'Процент покрытия связи 5G',
+    'G5_TRAFIK': 'Объем трафика 5G',
+    'G5_PROC_TRAFIK': 'Процент трафика 5G',
+    'G5_KOL_OPERATOR': 'Количество операторов 5G',
+
+    'WIFI_KOL_RES': 'Количество РЭС Wi-Fi',
+    'WIFI_KOL_AB': 'Количество абонентов Wi-Fi',
+    'WIFI_PROC_NAS': 'Процент охвата населения Wi-Fi',
+    'WIFI_POKRITIE': 'Покрытие связи Wi-Fi',
+    'WIFI_PROC_POKRITIE': 'Процент покрытия связи Wi-Fi',
+    'WIFI_TRAFIK': 'Объем трафика Wi-Fi',
+    'WIFI_PROC_TRAFIK': 'Процент трафика Wi-Fi',
+    'WIFI_KOL_OPERATOR': 'Количество операторов Wi-Fi',
+    'WIFI_PROC_OPERATOR': 'Процент операторов Wi-Fi',
+    'WIFI_SCORE': 'Оценка Wi-Fi',
+
+    'TETRA_KOL_RES': 'Количество РЭС Tetra',
+    'TETRA_KOL_AB': 'Количество абонентов Tetra',
+    'TETRA_PROC_NAS': 'Процент охвата населения Tetra',
+    'TETRA_POKRITIE': 'Покрытие связи Tetra',
+    'TETRA_PROC_POKRITIE': 'Процент покрытия связи Tetra',
+    'TETRA_TRAFIK': 'Объем трафика Tetra',
+    'TETRA_PROC_TRAFIK': 'Процент трафика Tetra',
+    'TETRA_KOL_OPERATOR': 'Количество операторов Tetra',
+
+    'US_KOL_US': 'Количество узлов связи',
+    'US_KOL_AB': 'Количество абонентов узлов связи',
+    'US_PROC_NAS': 'Процент охвата населения узлов связи',
+    'US_POKRITIE': 'Покрытие узлов связи',
+    'US_PROC_POKRITIE': 'Процент покрытия узлов связи',
+    'US_TRAFIK': 'Объем трафика узлов связи',
+    'US_PROC_TRAFIK': 'Процент трафика узлов связи',
+    'US_KOL_OPERATOR': 'Количество операторов узлов связи',
+    'US_PROC_OPERATOR': 'Процент операторов узлов связи',
+    'US_SCORE': 'Оценка узлов связи',
+
+    'POST_KOL_POST': 'Количество почтовых отделений',
+    'POST_KOL_AB': 'Количество абонентов почтовых отделений',
+    'POST_PROC_NAS': 'Процент охвата населения почтовых отделений',
+    'POST_POKRITIE': 'Покрытие почтовых отделений',
+    'POST_PROC_POKRITIE': 'Процент покрытия почтовых отделений',
+    'POST_TRAFIK': 'Объем трафика почтовых отделений',
+    'POST_PROC_TRAFIK': 'Процент трафика почтовых отделений',
+    'POST_KOL_OPERATOR': 'Количество операторов почтовых отделений',
+    'POST_PROC_OPERATOR': 'Процент операторов почтовых отделений',
+    'POST_SCORE': 'Оценка почтовых отделений',
+
+    'VOLS_KOL_VOLS': 'Количество ВОЛС',
+    'VOLS_KOL_AB': 'Количество абонентов ВОЛС',
+    'VOLS_PROC_NAS': 'Процент охвата населения ВОЛС',
+    'VOLS_POKRITIE': 'Покрытие ВОЛС',
+    'VOLS_PROC_POKRITIE': 'Процент покрытия ВОЛС',
+    'VOLS_TRAFIK': 'Объем трафика ВОЛС',
+    'VOLS_PROC_TRAFIK': 'Процент трафика ВОЛС',
+    'VOLS_KOL_OPERATOR': 'Количество операторов ВОЛС',
+    'VOLS_PROC_OPERATOR': 'Процент операторов ВОЛС',
+    'VOLS_SCORE': 'Оценка ВОЛС',
+
+    'TAKS_KOL_TAKS': 'Количество таксофонов',
+    'TAKS_KOL_AB': 'Количество абонентов таксофонов',
+    'TAKS_PROC_NAS': 'Процент охвата населения таксофонами',
+    'TAKS_POKRITIE': 'Покрытие таксофонов',
+    'TAKS_PROC_POKRITIE': 'Процент покрытия таксофонов',
+    'TAKS_TRAFIK': 'Объем трафика таксофонов',
+    'TAKS_PROC_TRAFIK': 'Процент трафика таксофонов',
+    'TAKS_KOL_OPERATOR': 'Количество операторов таксофонов',
+    'TAKS_PROC_OPERATOR': 'Процент операторов таксофонов',
+    'TAKS_SCORE': 'Оценка таксофонов',
+
+    'MOB_KOL_RES': 'Количество РЭС моб. связи',
+    'MOB_KOL_AB': 'Количество абонентов моб. связи',
+    'MOB_PROC_NAS': 'Процент охвата населения моб. связи',
+    'MOB_POKRITIE': 'Покрытие моб. связи',
+    'MOB_PROC_POKRITIE': 'Процент покрытия моб. связи',
+    'MOB_TRAFIK': 'Объем трафика моб. связи',
+    'MOB_PROC_TRAFIK': 'Процент трафика моб. связи',
+    'MOB_KOL_OPERATOR': 'Количество операторов моб. связи',
+    'MOB_PROC_OPERATOR': 'Процент операторов моб. связи',
+    'MOB_SCORE': 'Оценка моб. связи',
+
+    'RAT_NP_KOL_AB': 'Общее количество абонентов',
+    'RAT_NP_PROC_NAS': 'Общий процент охвата населения',
+    'RAT_NP_POKRITIE': 'Общее покрытие',
+    'RAT_NP_PROC_POKRITIE': 'Общий процент покрытия',
+    'RAT_NP_TRAFIK': 'Общий объем трафика',
+    'RAT_NP_PROC_TRAFIK': 'Общий процент трафика',
+    'RAT_NP_PROC_OPERATOR': 'Общий процент операторов',
+
+    'RAT_SUM_NP': 'Рейтинг'
 };
 
 // ==================== ДАННЫЕ ====================
@@ -1726,7 +1824,6 @@ function createRatingChart(data, type) {
                     titleFont: { size: 14, weight: 'bold' },
                     bodyFont: { size: 13 },
                     callbacks: {
-                        // Только значение серии, без повторения общих данных
                         label: function(context) {
                             const item = displayData[context.dataIndex];
                             const rating = item ? (item.rating || 0) : 0;
@@ -1735,7 +1832,6 @@ function createRatingChart(data, type) {
                             }
                             return `Дефицит: ${(100 - rating).toFixed(2)}`;
                         },
-                        // Общие данные — только для первой серии, чтобы не дублировались
                         afterLabel: function(context) {
                             if (context.datasetIndex !== 0) return '';
                             const item = displayData[context.dataIndex];
@@ -1913,67 +2009,64 @@ async function openSettlementInfoModal(item) {
     tableWrapper.className = 'res-table-wrapper';
     tableWrapper.style.maxHeight = '60vh';
     tableWrapper.style.overflowY = 'auto';
-    // важно: относительное позиционирование для sticky внутри
     tableWrapper.style.position = 'relative';
 
     const table = document.createElement('table');
     table.className = 'res-modal-table';
     table.style.width = '100%';
-    // убираем border-collapse, чтобы sticky работал корректно
     table.style.borderCollapse = 'separate';
     table.style.borderSpacing = '0';
 
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
-    // Заголовок секции — БЕЗ sticky (чтобы не наезжал на данные при скролле)
+    // Заголовок секции — БЕЗ sticky (чтобы не наезжал на данные)
     const addSection = (sectionTitle) => {
         const tr = document.createElement('tr');
         const th = document.createElement('th');
         th.colSpan = 2;
         th.textContent = sectionTitle;
         th.style.cssText = `
-        text-align: left;
-        padding: 8px 12px;
-        background: #4a90e2;
-        color: #fff;
-        font-weight: 700;
-        border: 1px solid #000;
-        font-size: 14px;
-        /* sticky убран специально */
-    `;
+            text-align: left;
+            padding: 8px 12px;
+            background: #4a90e2;
+            color: #fff;
+            font-weight: 700;
+            border: 1px solid #000;
+            font-size: 14px;
+        `;
         tr.appendChild(th);
         tbody.appendChild(tr);
     };
 
-// Строка: подпись — sticky, значение — обычное
+    // Строка: подпись слева, значение справа
     const addRow = (label, value) => {
         if (value === undefined || value === null || value === '') value = '-';
         const tr = document.createElement('tr');
         const th = document.createElement('th');
         th.textContent = label;
         th.style.cssText = `
-        text-align: left;
-        padding: 6px 12px;
-        border: 1px solid #000;
-        background: #f2f2f2;
-        width: 45%;
-        font-weight: 600;
-        color: #1a1a1a;
-        font-size: 13px;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    `;
+            text-align: left;
+            padding: 6px 12px;
+            border: 1px solid #000;
+            background: #f2f2f2;
+            width: 45%;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        `;
         const td = document.createElement('td');
         td.textContent = value;
         td.style.cssText = `
-        padding: 6px 12px;
-        border: 1px solid #000;
-        font-size: 13px;
-        color: #2a2a2a;
-        background: #fff;
-    `;
+            padding: 6px 12px;
+            border: 1px solid #000;
+            font-size: 13px;
+            color: #2a2a2a;
+            background: #fff;
+        `;
         tr.appendChild(th);
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -1995,7 +2088,16 @@ async function openSettlementInfoModal(item) {
     // --- Рейтинг ---
     addSection('Рейтинг');
     addRow('Рейтинг', rating.rating);
-    addRow('Количество операторов', rating.count_operators);
+
+    // --- Суммарные показатели ---
+    addSection('Суммарные показатели');
+    addRow('Общее количество абонентов', rating.count_abonents_summary);
+    addRow('Общий процент охвата населения', rating.population_percent_summary);
+    addRow('Общее покрытие', rating.communication_coverage_summary);
+    addRow('Общий процент покрытия', rating.communication_coverage_percent_summary);
+    addRow('Общий объем трафика', rating.traffic_summary);
+    addRow('Общий процент трафика', rating.traffic_percent_summary);
+    addRow('Общий процент операторов', rating.operators_percent_summary);
 
     // --- Сгруппированные данные по видам связи ---
     const groups = buildRatingGroups();
@@ -2028,6 +2130,10 @@ async function openSettlementInfoModal(item) {
  * Описание групп полей рейтинга по видам связи.
  * Используется и в модалке, и в таблице.
  */
+/**
+ * Описание групп полей рейтинга по видам связи.
+ * Используется и в модалке, и в таблице.
+ */
 function buildRatingGroups() {
     return [
         {
@@ -2039,7 +2145,10 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_mobile', label: 'Покрытие моб. связи' },
                 { key: 'communication_coverage_percent_mobile', label: 'Процент покрытия моб. связи' },
                 { key: 'traffic_mobile', label: 'Объем трафика моб. связи' },
-                { key: 'traffic_percent_mobile', label: 'Процент трафика моб. связи' }
+                { key: 'traffic_percent_mobile', label: 'Процент трафика моб. связи' },
+                { key: 'count_operators_mobile', label: 'Количество операторов моб. связи' },
+                { key: 'operators_percent_mobile', label: 'Процент операторов моб. связи' },
+                { key: 'rating_mobile', label: 'Оценка моб. связи' }
             ]
         },
         {
@@ -2051,7 +2160,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_lte', label: 'Покрытие связи LTE' },
                 { key: 'communication_coverage_percent_lte', label: 'Процент покрытия связи LTE' },
                 { key: 'traffic_lte', label: 'Объем трафика LTE' },
-                { key: 'traffic_percent_lte', label: 'Процент трафика LTE' }
+                { key: 'traffic_percent_lte', label: 'Процент трафика LTE' },
+                { key: 'count_operators_lte', label: 'Количество операторов LTE' }
             ]
         },
         {
@@ -2063,7 +2173,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_gsm', label: 'Покрытие связи GSM' },
                 { key: 'communication_coverage_percent_gsm', label: 'Процент покрытия связи GSM' },
                 { key: 'traffic_gsm', label: 'Объем трафика GSM' },
-                { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' }
+                { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' },
+                { key: 'count_operators_gsm', label: 'Количество операторов GSM' }
             ]
         },
         {
@@ -2075,7 +2186,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_5g', label: 'Покрытие связи 5G' },
                 { key: 'communication_coverage_percent_5g', label: 'Процент покрытия связи 5G' },
                 { key: 'traffic_5g', label: 'Объем трафика 5G' },
-                { key: 'traffic_percent_5g', label: 'Процент трафика 5G' }
+                { key: 'traffic_percent_5g', label: 'Процент трафика 5G' },
+                { key: 'count_operators_5g', label: 'Количество операторов 5G' }
             ]
         },
         {
@@ -2087,7 +2199,10 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_wifi', label: 'Покрытие связи Wi-Fi' },
                 { key: 'communication_coverage_percent_wifi', label: 'Процент покрытия связи Wi-Fi' },
                 { key: 'traffic_wifi', label: 'Объем трафика Wi-Fi' },
-                { key: 'traffic_percent_wifi', label: 'Процент трафика Wi-Fi' }
+                { key: 'traffic_percent_wifi', label: 'Процент трафика Wi-Fi' },
+                { key: 'count_operators_wifi', label: 'Количество операторов Wi-Fi' },
+                { key: 'operators_percent_wifi', label: 'Процент операторов Wi-Fi' },
+                { key: 'rating_wifi', label: 'Оценка Wi-Fi' }
             ]
         },
         {
@@ -2099,7 +2214,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_tetra', label: 'Покрытие связи Tetra' },
                 { key: 'communication_coverage_percent_tetra', label: 'Процент покрытия связи Tetra' },
                 { key: 'traffic_tetra', label: 'Объем трафика Tetra' },
-                { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' }
+                { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' },
+                { key: 'count_operators_tetra', label: 'Количество операторов Tetra' }
             ]
         },
         {
@@ -2107,42 +2223,54 @@ function buildRatingGroups() {
             fields: [
                 { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
                 { key: 'count_channels_tv', label: 'Количество каналов ТВ' },
-                { key: 'communication_coverage_tv', label: 'Покрытие ТВ' },
-                { key: 'communication_coverage_percent_tv', label: 'Процент покрытия ТВ' }
+                { key: 'communication_coverage_tv', label: 'Покрытие связи ТВ' },
+                { key: 'communication_coverage_percent_tv', label: 'Процент покрытия связи ТВ' },
+                { key: 'count_operators_tv', label: 'Количество операторов ТВ' },
+                { key: 'operators_percent_tv', label: 'Процент операторов ТВ' },
+                { key: 'rating_tv', label: 'Оценка ТВ' }
             ]
         },
         {
             title: 'Радиовещание (РВ)',
             fields: [
                 { key: 'count_res_rv', label: 'Количество РЭС РВ' },
-                { key: 'frequency_width_rv', label: 'Ширина полосы РВ' },
+                { key: 'frequency_width_rv', label: 'Общая ширина полосы РВ, МГц' },
                 { key: 'count_channels_rv', label: 'Количество каналов РВ' },
-                { key: 'communication_coverage_rv', label: 'Покрытие РВ' },
-                { key: 'communication_coverage_percent_rv', label: 'Процент покрытия РВ' }
+                { key: 'communication_coverage_rv', label: 'Покрытие связи РВ' },
+                { key: 'communication_coverage_percent_rv', label: 'Процент покрытия связи РВ' },
+                { key: 'count_operators_rv', label: 'Количество операторов РВ' },
+                { key: 'operators_percent_rv', label: 'Процент операторов РВ' },
+                { key: 'rating_rv', label: 'Оценка РВ' }
             ]
         },
         {
             title: 'Универсальные услуги (УС)',
             fields: [
-                { key: 'count_comm_hubs', label: 'Количество УС' },
-                { key: 'count_abonents_comm_hubs', label: 'Количество абонентов УС' },
-                { key: 'population_percent_comm_hubs', label: 'Процент охвата населения УС' },
-                { key: 'communication_coverage_comm_hubs', label: 'Покрытие УС' },
-                { key: 'communication_coverage_percent_comm_hubs', label: 'Процент покрытия УС' },
-                { key: 'traffic_comm_hubs', label: 'Объем трафика УС' },
-                { key: 'traffic_percent_comm_hubs', label: 'Процент трафика УС' }
+                { key: 'count_comm_hubs', label: 'Количество узлов связи' },
+                { key: 'count_abonents_comm_hubs', label: 'Количество абонентов узлов связи' },
+                { key: 'population_percent_comm_hubs', label: 'Процент охвата населения узлов связи' },
+                { key: 'communication_coverage_comm_hubs', label: 'Покрытие узлов связи' },
+                { key: 'communication_coverage_percent_comm_hubs', label: 'Процент покрытия узлов связи' },
+                { key: 'traffic_comm_hubs', label: 'Объем трафика узлов связи' },
+                { key: 'traffic_percent_comm_hubs', label: 'Процент трафика узлов связи' },
+                { key: 'count_operators_comm_hubs', label: 'Количество операторов узлов связи' },
+                { key: 'operators_percent_comm_hubs', label: 'Процент операторов узлов связи' },
+                { key: 'rating_comm_hubs', label: 'Оценка узлов связи' }
             ]
         },
         {
             title: 'Почтовая связь',
             fields: [
                 { key: 'count_posts', label: 'Количество почтовых отделений' },
-                { key: 'count_abonents_posts', label: 'Количество абонентов почты' },
-                { key: 'population_percent_posts', label: 'Процент охвата населения почтой' },
-                { key: 'communication_coverage_posts', label: 'Покрытие почты' },
-                { key: 'communication_coverage_percent_posts', label: 'Процент покрытия почты' },
-                { key: 'traffic_posts', label: 'Объем трафика почты' },
-                { key: 'traffic_percent_posts', label: 'Процент трафика почты' }
+                { key: 'count_abonents_posts', label: 'Количество абонентов почтовых отделений' },
+                { key: 'population_percent_posts', label: 'Процент охвата населения почтовых отделений' },
+                { key: 'communication_coverage_posts', label: 'Покрытие почтовых отделений' },
+                { key: 'communication_coverage_percent_posts', label: 'Процент покрытия почтовых отделений' },
+                { key: 'traffic_posts', label: 'Объем трафика почтовых отделений' },
+                { key: 'traffic_percent_posts', label: 'Процент трафика почтовых отделений' },
+                { key: 'count_operators_posts', label: 'Количество операторов почтовых отделений' },
+                { key: 'operators_percent_posts', label: 'Процент операторов почтовых отделений' },
+                { key: 'rating_posts', label: 'Оценка почтовых отделений' }
             ]
         },
         {
@@ -2154,7 +2282,10 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_focl', label: 'Покрытие ВОЛС' },
                 { key: 'communication_coverage_percent_focl', label: 'Процент покрытия ВОЛС' },
                 { key: 'traffic_focl', label: 'Объем трафика ВОЛС' },
-                { key: 'traffic_percent_focl', label: 'Процент трафика ВОЛС' }
+                { key: 'traffic_percent_focl', label: 'Процент трафика ВОЛС' },
+                { key: 'count_operators_focl', label: 'Количество операторов ВОЛС' },
+                { key: 'operators_percent_focl', label: 'Процент операторов ВОЛС' },
+                { key: 'rating_focl', label: 'Оценка ВОЛС' }
             ]
         },
         {
@@ -2166,7 +2297,10 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_payphones', label: 'Покрытие таксофонов' },
                 { key: 'communication_coverage_percent_payphones', label: 'Процент покрытия таксофонов' },
                 { key: 'traffic_payphones', label: 'Объем трафика таксофонов' },
-                { key: 'traffic_percent_payphones', label: 'Процент трафика таксофонов' }
+                { key: 'traffic_percent_payphones', label: 'Процент трафика таксофонов' },
+                { key: 'count_operators_payphones', label: 'Количество операторов таксофонов' },
+                { key: 'operators_percent_payphones', label: 'Процент операторов таксофонов' },
+                { key: 'rating_payphones', label: 'Оценка таксофонов' }
             ]
         }
     ];
@@ -3221,9 +3355,6 @@ async function openEditModal(settlementId, type) {
 
     await loadTableStructures();
 
-    const settlementsColumns = settlementsColumnsCache || [];
-    const rankingColumns = rankingColumnsCache || [];
-
     const settlement = settlementsData.items.find(it => String(it.id) === String(settlementId)) || {};
     const ranking = allRatings[String(settlementId)] || {};
 
@@ -3257,7 +3388,7 @@ async function openEditModal(settlementId, type) {
     });
 
     // --- Карты названий ---
-    const settlementsLabelByKey = {}; // object-ключ -> русское название
+    const settlementsLabelByKey = {};
     Object.keys(SETTLEMENTS_COLUMN_LABELS).forEach(db => {
         const key = settlementsDbToKey[db] || db;
         settlementsLabelByKey[key] = SETTLEMENTS_COLUMN_LABELS[db];
@@ -3269,18 +3400,17 @@ async function openEditModal(settlementId, type) {
     });
 
     // --- Упорядоченный список полей по таблице ---
-    const orderedFields = []; // { table, dbColumn, objectKey, label, value }
+    const orderedFields = [];
     const seen = new Set();
 
     tableHeaderOrder.forEach(key => {
-        // пропускаем дубли
         if (seen.has(key)) return;
         seen.add(key);
 
         // Ищем в рейтингах
         if (rankingKeyToDb[key]) {
             const dbColumn = rankingKeyToDb[key];
-            if (dbColumn === 'ID') return; // ID только один раз
+            if (dbColumn === 'ID') return;
             orderedFields.push({
                 table: 'ranking',
                 dbColumn: dbColumn,
@@ -3304,7 +3434,7 @@ async function openEditModal(settlementId, type) {
             return;
         }
 
-        // Если колонка из headers, но не найдена в маппингах (например 'rating')
+        // Колонка 'rating' — суммарная оценка из A_NAS_P_RANKING
         if (key === 'rating') {
             orderedFields.push({
                 table: 'ranking',
@@ -3345,6 +3475,8 @@ async function openEditModal(settlementId, type) {
     const table = document.createElement('table');
     table.className = 'res-modal-table';
     table.style.width = '100%';
+    table.style.borderCollapse = 'separate';
+    table.style.borderSpacing = '0';
 
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
@@ -3356,15 +3488,22 @@ async function openEditModal(settlementId, type) {
 
         const th = document.createElement('th');
         th.textContent = field.label;
-        th.style.cssText = 'text-align: left; padding: 8px 12px; border: 1px solid #000; background: #f2f2f2; width: 40%; font-weight: 600; color: #1a1a1a;';
-        // sticky-заголовки столбца подписи
-        th.style.position = 'sticky';
-        th.style.top = '0';
-        th.style.zIndex = '2';
-        th.style.background = '#f2f2f2';
+        th.style.cssText = `
+            text-align: left;
+            padding: 8px 12px;
+            border: 1px solid #000;
+            background: #f2f2f2;
+            width: 40%;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        `;
 
         const td = document.createElement('td');
-        td.style.cssText = 'padding: 8px 12px; border: 1px solid #000;';
+        td.style.cssText = 'padding: 8px 12px; border: 1px solid #000; background: #fff;';
 
         if (field.dbColumn === 'ID') {
             td.textContent = field.value !== '' ? field.value : '-';
@@ -3396,7 +3535,6 @@ async function openEditModal(settlementId, type) {
         tbody.appendChild(tr);
     });
 
-    // --- Кнопки ---
     const buttonsBar = document.createElement('div');
     buttonsBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;';
 
@@ -3913,7 +4051,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 60;
+            cell.colSpan = 100;
             cell.textContent = 'Нет населенных пунктов для отображения';
             cell.className = 'empty-message';
             row.appendChild(cell);
@@ -3941,26 +4079,39 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     // ========== Формирование описания колонок ==========
     const ratingGroups = buildRatingGroups();
 
-    // Базовые колонки НП (порядок: ID, Название, Регион, Код региона, ..., Рейтинг вставляется после кода региона)
     const settlementBaseHeaders = [
         { key: 'id', label: 'ID' },
         { key: 'name', label: 'Название' },
         { key: 'region_name', label: 'Регион' },
-        { key: 'region_code', label: 'Код региона' }
+        { key: 'region_code', label: 'Код региона' },
+        { key: 'district_name', label: 'Муниципальное образование' }
     ];
+
+
 
     const ratingColumn = { key: 'rating', label: 'Рейтинг' };
 
+// Остальные поля НП — ПОСЛЕ рейтинга
     const settlementRestHeaders = [
         { key: 'area', label: 'Площадь (км²)' },
-        { key: 'district_name', label: 'Муниципальное образование' },
         { key: 'lat', label: 'Широта' },
         { key: 'lon', label: 'Долгота' },
         { key: 'population', label: 'Население' },
         { key: 'fias_id', label: 'Код ФИАС' }
     ];
 
-    // Сгруппированные поля рейтинга
+// Суммарные показатели — после полей НП
+    const summaryHeaders = [
+        { key: 'count_abonents_summary', label: 'Общее количество абонентов' },
+        { key: 'population_percent_summary', label: 'Общий процент охвата населения' },
+        { key: 'communication_coverage_summary', label: 'Общее покрытие' },
+        { key: 'communication_coverage_percent_summary', label: 'Общий процент покрытия' },
+        { key: 'traffic_summary', label: 'Общий объем трафика' },
+        { key: 'traffic_percent_summary', label: 'Общий процент трафика' },
+        { key: 'operators_percent_summary', label: 'Общий процент операторов' }
+    ];
+
+// Сгруппированные поля рейтинга по видам связи
     const ratingHeaders = [];
     ratingGroups.forEach(group => {
         group.fields.forEach(f => {
@@ -3969,10 +4120,11 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     });
 
     const headers = [
-        ...settlementBaseHeaders,
-        ratingColumn,
-        ...settlementRestHeaders,
-        ...ratingHeaders
+        ...settlementBaseHeaders,   // ID, Название, Регион, Код региона, МО
+        ratingColumn,               // Рейтинг
+        ...settlementRestHeaders,   // Площадь, Широта, Долгота, Население, ФИАС
+        ...summaryHeaders,          // Суммарные показатели
+        ...ratingHeaders            // Группы по видам связи
     ];
 
     // ========== Фильтр ==========
@@ -4077,14 +4229,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     // ========== Заголовки ==========
     if (thead) {
         const headerRow = document.createElement('tr');
-
-        // Карта названий групп для заголовков-подписей
-        const ratingFieldGroupMap = {};
-        ratingGroups.forEach(g => {
-            g.fields.forEach(f => {
-                ratingFieldGroupMap[f.key] = g.title;
-            });
-        });
 
         headers.forEach(h => {
             const th = document.createElement('th');
@@ -4669,7 +4813,7 @@ function openResModal(data, settlementId) {
         content.style.maxWidth = '600px';
 
         const title = document.createElement('h3');
-        title.textContent = `Детальная информация о РЭС #${item.id || 'Н/Д'}`;
+        title.textContent = `РЭС #${item.id || 'Н/Д'}`;
         title.className = 'res-modal-title';
 
         const details = document.createElement('div');
