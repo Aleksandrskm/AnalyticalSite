@@ -195,7 +195,7 @@ const RANKING_COLUMN_LABELS = {
     'RAT_NP_PROC_POKRITIE': 'Рейтинг: процент покрытия',
     'RAT_NP_TRAFIK': 'Рейтинг: трафик',
     'RAT_NP_PROC_TRAFIK': 'Рейтинг: процент трафика',
-    'RAT_SUM_NP': 'Суммарная оценка'
+    'RAT_SUM_NP': 'Рейтинг'
 };
 
 // ---- Соответствия DB-колонка A_NAS_P -> ключ в объекте НП ----
@@ -771,29 +771,30 @@ function selectSearchResult(item, index) {
     }
     if (chartIndex === -1) chartIndex = index;
 
-    const bgColors = displayData.map(d => getDefaultColor(d.rating || 0));
-
-    const borderColors = displayData.map(d => {
-        const isSelected = (d.id !== undefined && item.id !== undefined && d.id === item.id) ||
+    const isSelectedAt = (i) => {
+        const d = displayData[i];
+        return (d.id !== undefined && item.id !== undefined && d.id === item.id) ||
             (d.name && item.name && d.name === item.name);
-        return isSelected ? '#cc0000' : getDefaultColor(d.rating || 0);
-    });
+    };
 
-    const borderWidths = displayData.map(d => {
-        const isSelected = (d.id !== undefined && item.id !== undefined && d.id === item.id) ||
-            (d.name && item.name && d.name === item.name);
-        return isSelected ? 3 : 1;
-    });
+    // Серия 0 — Рейтинг
+    const ds0 = ratingChart.data.datasets[0];
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff4d4d' : '#4a90e2');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#4a90e2');
+    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
 
-    ratingChart.data.datasets[0].backgroundColor = bgColors;
-    ratingChart.data.datasets[0].borderColor = borderColors;
-    ratingChart.data.datasets[0].borderWidth = borderWidths;
+    // Серия 1 — Дефицит
+    if (ratingChart.data.datasets[1]) {
+        const ds1 = ratingChart.data.datasets[1];
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#e67e22');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#e67e22');
+        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+    }
+
     ratingChart.update();
 
     const container = document.getElementById('chart-search-results');
-    if (container) {
-        container.style.display = 'none';
-    }
+    if (container) container.style.display = 'none';
 
     showItemTooltip(item, chartIndex);
 
@@ -1034,11 +1035,18 @@ function clearChartSelection() {
     const displayData = getChartDisplayData();
     if (!displayData || displayData.length === 0) return;
 
-    const colors = displayData.map(item => getDefaultColor(item.rating || 0));
+    // Серия 0 — Рейтинг (светло-синий)
+    ratingChart.data.datasets[0].backgroundColor = displayData.map(() => '#4a90e2');
+    ratingChart.data.datasets[0].borderColor     = displayData.map(() => '#4a90e2');
+    ratingChart.data.datasets[0].borderWidth     = displayData.map(() => 1);
 
-    ratingChart.data.datasets[0].backgroundColor = colors;
-    ratingChart.data.datasets[0].borderColor = colors.map(c => c);
-    ratingChart.data.datasets[0].borderWidth = displayData.map(() => 1);
+    // Серия 1 — Дефицит (оранжевый)
+    if (ratingChart.data.datasets[1]) {
+        ratingChart.data.datasets[1].backgroundColor = displayData.map(() => '#e67e22');
+        ratingChart.data.datasets[1].borderColor     = displayData.map(() => '#e67e22');
+        ratingChart.data.datasets[1].borderWidth     = displayData.map(() => 1);
+    }
+
     ratingChart.update();
 
     const tooltip = document.getElementById('chart-item-tooltip');
@@ -1063,23 +1071,26 @@ function restoreSelectionAfterUpdate() {
 
     if (foundIndex === -1) return;
 
-    const bgColors = displayData.map(d => getDefaultColor(d.rating || 0));
-
-    const borderColors = displayData.map(d => {
-        const isSelected = (d.id !== undefined && selectedSearchItem.id !== undefined && d.id === selectedSearchItem.id) ||
+    const isSelectedAt = (i) => {
+        const d = displayData[i];
+        return (d.id !== undefined && selectedSearchItem.id !== undefined && d.id === selectedSearchItem.id) ||
             (d.name && selectedSearchItem.name && d.name === selectedSearchItem.name);
-        return isSelected ? '#cc0000' : getDefaultColor(d.rating || 0);
-    });
+    };
 
-    const borderWidths = displayData.map(d => {
-        const isSelected = (d.id !== undefined && selectedSearchItem.id !== undefined && d.id === selectedSearchItem.id) ||
-            (d.name && selectedSearchItem.name && d.name === selectedSearchItem.name);
-        return isSelected ? 3 : 1;
-    });
+    // Серия 0 — Рейтинг
+    const ds0 = ratingChart.data.datasets[0];
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff4d4d' : '#4a90e2');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#4a90e2');
+    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
 
-    ratingChart.data.datasets[0].backgroundColor = bgColors;
-    ratingChart.data.datasets[0].borderColor = borderColors;
-    ratingChart.data.datasets[0].borderWidth = borderWidths;
+    // Серия 1 — Дефицит
+    if (ratingChart.data.datasets[1]) {
+        const ds1 = ratingChart.data.datasets[1];
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#e67e22');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#e67e22');
+        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+    }
+
     ratingChart.update();
 
     showItemTooltip(selectedSearchItem, foundIndex);
@@ -1576,6 +1587,8 @@ function renderChartControls(currentSortField) {
 
 // ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
 
+// ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
+
 function createRatingChart(data, type) {
     const canvas = document.getElementById('rating-chart');
     if (!canvas) {
@@ -1618,49 +1631,42 @@ function createRatingChart(data, type) {
     chartDisplayData = displayData;
 
     const labels = displayData.map(item => item.name || `ID: ${item.id}`);
-    const values = displayData.map(item => item.rating || 0);
+    const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
+    const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    const bgColors = displayData.map(item => getDefaultColor(item.rating || 0));
-
-    const borderColors = displayData.map(item => {
-        if (selectedSearchItem &&
-            (item.id === selectedSearchItem.id || item.name === selectedSearchItem.name)) {
-            return '#cc0000';
-        }
-        return getDefaultColor(item.rating || 0);
-    });
-
-    const borderWidths = displayData.map(item => {
-        if (selectedSearchItem &&
-            (item.id === selectedSearchItem.id || item.name === selectedSearchItem.name)) {
-            return 3;
-        }
-        return 1;
-    });
-
-    let labelText = '';
-    switch (type) {
-        case 'provided': labelText = 'Обеспеченность НП'; break;
-        case 'deficit': labelText = 'Рейтинг дефицита'; break;
-        case 'norms_provided': labelText = 'Нормы обеспеченности'; break;
-        default: labelText = 'Рейтинг';
-    }
+    const providedColors = displayData.map(() => '#4a90e2');   // светло-синий — рейтинг
+    const deficitColors  = displayData.map(() => '#e67e22');   // оранжевый — дефицит
 
     ratingChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: labelText,
-                data: values,
-                backgroundColor: bgColors,
-                borderColor: borderColors,
-                borderWidth: borderWidths,
-                borderRadius: 0,
-                barPercentage: 0.8,
-                categoryPercentage: 0.9,
-                minBarLength: 3
-            }]
+            datasets: [
+                {
+                    label: 'Рейтинг',
+                    data: providedValues,
+                    backgroundColor: providedColors,
+                    borderColor: providedColors,
+                    borderWidth: 1,
+                    borderRadius: 0,
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9,
+                    stack: 'total',
+                    minBarLength: 0
+                },
+                {
+                    label: 'Дефицит',
+                    data: deficitValues,
+                    backgroundColor: deficitColors,
+                    borderColor: deficitColors,
+                    borderWidth: 1,
+                    borderRadius: 0,
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9,
+                    stack: 'total',
+                    minBarLength: 0
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -1670,9 +1676,41 @@ function createRatingChart(data, type) {
                 intersect: false,
                 axis: 'x'
             },
+            onClick: function(evt, elements) {
+                if (!elements || elements.length === 0) return;
+                const idx = elements[0].index;
+                const item = displayData[idx];
+                if (!item) return;
+                openSettlementInfoModal(item);
+            },
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { size: 14, weight: 'bold' },
+                        color: '#1a1a1a',
+                        generateLabels: function(chart) {
+                            return [
+                                {
+                                    text: 'Рейтинг',
+                                    fillStyle: '#4a90e2',
+                                    strokeStyle: '#4a90e2',
+                                    lineWidth: 1,
+                                    hidden: false,
+                                    index: 0
+                                },
+                                {
+                                    text: 'Дефицит',
+                                    fillStyle: '#e67e22',
+                                    strokeStyle: '#e67e22',
+                                    lineWidth: 1,
+                                    hidden: false,
+                                    index: 1
+                                }
+                            ];
+                        }
+                    }
                 },
                 tooltip: {
                     enabled: true,
@@ -1685,27 +1723,29 @@ function createRatingChart(data, type) {
                     borderWidth: 2,
                     padding: 12,
                     cornerRadius: 8,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
                     callbacks: {
+                        // Только значение серии, без повторения общих данных
                         label: function(context) {
                             const item = displayData[context.dataIndex];
-                            const rating = item.rating;
-                            const ratingText = (rating !== undefined && rating !== null && !isNaN(rating)) ?
-                                rating.toFixed(2) : 'не получен';
-                            let label = `${context.dataset.label}: ${ratingText}`;
-                            if (item) {
-                                label += `\nНаселение: ${item.population || 0}`;
-                                label += `\nРегион: ${item.region_name || 'Н/Д'}`;
-                                label += `\nРайон: ${item.district_name || 'Н/Д'}`;
-                                label += `\nID: ${item.id}`;
+                            const rating = item ? (item.rating || 0) : 0;
+                            if (context.datasetIndex === 0) {
+                                return `Рейтинг: ${rating.toFixed(2)}`;
                             }
-                            return label;
+                            return `Дефицит: ${(100 - rating).toFixed(2)}`;
+                        },
+                        // Общие данные — только для первой серии, чтобы не дублировались
+                        afterLabel: function(context) {
+                            if (context.datasetIndex !== 0) return '';
+                            const item = displayData[context.dataIndex];
+                            if (!item) return '';
+                            let extra = '';
+                            extra += `\nНаселение: ${item.population || 0}`;
+                            extra += `\nРегион: ${item.region_name || 'Н/Д'}`;
+                            extra += `\nРайон: ${item.district_name || 'Н/Д'}`;
+                            extra += `\nID: ${item.id}`;
+                            return extra;
                         },
                         title: function(context) {
                             const item = displayData[context[0].dataIndex];
@@ -1714,37 +1754,25 @@ function createRatingChart(data, type) {
                     }
                 },
                 zoom: {
-                    zoom: {
-                        wheel: { enabled: false },
-                        pinch: { enabled: false },
-                        mode: 'x'
-                    },
-                    pan: {
-                        enabled: false
-                    }
+                    zoom: { wheel: { enabled: false }, pinch: { enabled: false }, mode: 'x' },
+                    pan: { enabled: false }
                 }
             },
             scales: {
                 x: {
-                    grid: {
-                        display: false
-                    },
+                    stacked: true,
+                    grid: { display: false },
                     title: {
                         display: true,
                         text: 'Населенные пункты',
                         color: '#000000',
-                        font: {
-                            size: 15,
-                            weight: 'bold'
-                        }
+                        font: { size: 15, weight: 'bold' }
                     },
                     ticks: { display: false },
-                    border: {
-                        color: '#000000',
-                        width: 2
-                    }
+                    border: { color: '#000000', width: 2 }
                 },
                 y: {
+                    stacked: true,
                     beginAtZero: true,
                     min: 0,
                     max: 100,
@@ -1754,106 +1782,25 @@ function createRatingChart(data, type) {
                     },
                     ticks: {
                         stepSize: 5,
-                        font: {
-                            size: 13
-                        },
+                        font: { size: 13 },
                         color: '#000000',
-                        callback: function(value) {
-                            return value.toFixed(0);
-                        }
+                        callback: function(value) { return value.toFixed(0); }
                     },
                     title: {
                         display: true,
-                        text: 'Значение рейтинга',
+                        text: 'Значение (0–100)',
                         color: '#000000',
-                        font: {
-                            size: 15,
-                            weight: 'bold'
-                        }
+                        font: { size: 15, weight: 'bold' }
                     },
-                    border: {
-                        color: '#000000',
-                        width: 2
-                    }
+                    border: { color: '#000000', width: 2 }
                 }
             },
-            animation: {
-                duration: 800,
-                easing: 'easeOutQuart'
-            },
-            hover: {
-                mode: 'index',
-                intersect: false,
-                animationDuration: 200
-            },
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            hover: { mode: 'index', intersect: false, animationDuration: 200 },
             elements: {
-                bar: {
-                    borderRadius: 0,
-                    hoverBackgroundColor: function(context) {
-                        const index = context.dataIndex;
-                        const item = displayData[index];
-                        if (item) {
-                            const value = item.rating || 0;
-                            if (value > 50) return '#009933';
-                            if (value > 25) return '#0055cc';
-                            return '#cc5500';
-                        }
-                        return '#ff6600';
-                    },
-                    hoverBorderColor: '#000000',
-                    hoverBorderWidth: 2
-                }
+                bar: { borderRadius: 0 }
             }
-        },
-        plugins: [{
-            id: 'thresholdLines',
-            afterDraw: function(chart) {
-                const yScale = chart.scales.y;
-                const xScale = chart.scales.x;
-
-                if (!yScale || !xScale) return;
-
-                const ctx2 = chart.ctx;
-                const y25 = yScale.getPixelForValue(25);
-                const y50 = yScale.getPixelForValue(50);
-
-                ctx2.save();
-                ctx2.beginPath();
-                ctx2.setLineDash([]);
-                ctx2.strokeStyle = '#0055cc';
-                ctx2.lineWidth = 2.5;
-                ctx2.moveTo(xScale.left, y25);
-                ctx2.lineTo(xScale.right, y25);
-                ctx2.stroke();
-                ctx2.restore();
-
-                ctx2.save();
-                ctx2.fillStyle = '#0055cc';
-                ctx2.font = 'bold 12px Arial';
-                ctx2.textAlign = 'right';
-                ctx2.textBaseline = 'bottom';
-                ctx2.fillText('25', xScale.right - 5, y25 - 3);
-                ctx2.restore();
-
-                ctx2.save();
-                ctx2.beginPath();
-                ctx2.setLineDash([]);
-                ctx2.strokeStyle = '#00cc44';
-                ctx2.lineWidth = 2.5;
-                ctx2.moveTo(xScale.left, y50);
-                ctx2.lineTo(xScale.right, y50);
-                ctx2.stroke();
-                ctx2.restore();
-
-                ctx2.save();
-                ctx2.fillStyle = '#00cc44';
-                ctx2.font = 'bold 12px Arial';
-                ctx2.textAlign = 'right';
-                ctx2.textBaseline = 'bottom';
-                ctx2.fillText('50', xScale.right - 5, y50 - 3);
-                ctx2.restore();
-            }
-        }]
+        }
     });
 
     isChartMode = true;
@@ -1880,8 +1827,7 @@ function createRatingChart(data, type) {
 
         const countEl = document.createElement('div');
         countEl.className = 'chart-count';
-        const totalCount = sortedData.length;
-        countEl.textContent = `Всего НП: ${totalCount}`;
+        countEl.textContent = `Всего НП: ${sortedData.length}`;
         countEl.style.cssText = `
             text-align: center;
             font-size: 14px;
@@ -1919,7 +1865,312 @@ function createRatingChart(data, type) {
         setTimeout(() => restoreSelectionAfterUpdate(), 100);
     }
 }
+// ==================== МОДАЛКА: ИНФОРМАЦИЯ О НП (по клику на диаграмме) ====================
 
+async function openSettlementInfoModal(item) {
+    if (!item || item.id === undefined) return;
+
+    await loadTableStructures();
+
+    const settlement = settlementsData.items.find(
+        it => String(it.id) === String(item.id)
+    ) || item;
+
+    const rating = allRatings[String(item.id)] || {};
+
+    const existing = document.getElementById('settlement-info-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'settlement-info-modal';
+    modal.className = 'res-modal-overlay';
+
+    const content = document.createElement('div');
+    content.className = 'res-modal-content';
+    content.style.maxWidth = '800px';
+
+    const title = document.createElement('h3');
+    title.textContent = `НП: ${settlement.name || settlement.NAME || item.id}`;
+    title.className = 'res-modal-title';
+
+    const ratingBadge = document.createElement('div');
+    const ratingValue = rating.rating !== undefined && rating.rating !== null
+        ? Number(rating.rating).toFixed(2)
+        : 'не рассчитан';
+    ratingBadge.textContent = `Рейтинг: ${ratingValue}`;
+    ratingBadge.style.cssText = `
+        display: inline-block;
+        padding: 6px 14px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        background: #4a90e2;
+    `;
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'res-table-wrapper';
+    tableWrapper.style.maxHeight = '60vh';
+    tableWrapper.style.overflowY = 'auto';
+    // важно: относительное позиционирование для sticky внутри
+    tableWrapper.style.position = 'relative';
+
+    const table = document.createElement('table');
+    table.className = 'res-modal-table';
+    table.style.width = '100%';
+    // убираем border-collapse, чтобы sticky работал корректно
+    table.style.borderCollapse = 'separate';
+    table.style.borderSpacing = '0';
+
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+
+    // Заголовок секции — БЕЗ sticky (чтобы не наезжал на данные при скролле)
+    const addSection = (sectionTitle) => {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.colSpan = 2;
+        th.textContent = sectionTitle;
+        th.style.cssText = `
+        text-align: left;
+        padding: 8px 12px;
+        background: #4a90e2;
+        color: #fff;
+        font-weight: 700;
+        border: 1px solid #000;
+        font-size: 14px;
+        /* sticky убран специально */
+    `;
+        tr.appendChild(th);
+        tbody.appendChild(tr);
+    };
+
+// Строка: подпись — sticky, значение — обычное
+    const addRow = (label, value) => {
+        if (value === undefined || value === null || value === '') value = '-';
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = label;
+        th.style.cssText = `
+        text-align: left;
+        padding: 6px 12px;
+        border: 1px solid #000;
+        background: #f2f2f2;
+        width: 45%;
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 13px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    `;
+        const td = document.createElement('td');
+        td.textContent = value;
+        td.style.cssText = `
+        padding: 6px 12px;
+        border: 1px solid #000;
+        font-size: 13px;
+        color: #2a2a2a;
+        background: #fff;
+    `;
+        tr.appendChild(th);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    };
+
+    // --- Общие сведения о НП ---
+    addSection('Населённый пункт');
+    addRow('ID', settlement.id);
+    addRow('Название', settlement.name);
+    addRow('Регион', settlement.region_name);
+    addRow('Код региона', settlement.region_code);
+    addRow('Муниципальное образование', settlement.district_name);
+    addRow('Население', settlement.population);
+    addRow('Площадь (км²)', settlement.area);
+    addRow('Широта', settlement.lat);
+    addRow('Долгота', settlement.lon);
+    addRow('Код ФИАС', settlement.fias_id);
+
+    // --- Рейтинг ---
+    addSection('Рейтинг');
+    addRow('Рейтинг', rating.rating);
+    addRow('Количество операторов', rating.count_operators);
+
+    // --- Сгруппированные данные по видам связи ---
+    const groups = buildRatingGroups();
+    groups.forEach(group => {
+        addSection(group.title);
+        group.fields.forEach(f => {
+            addRow(f.label, rating[f.key]);
+        });
+    });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Закрыть';
+    closeBtn.className = 'res-modal-close-btn';
+    closeBtn.addEventListener('click', () => modal.remove());
+
+    content.appendChild(title);
+    content.appendChild(ratingBadge);
+    content.appendChild(tableWrapper);
+    tableWrapper.appendChild(table);
+    content.appendChild(closeBtn);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+/**
+ * Описание групп полей рейтинга по видам связи.
+ * Используется и в модалке, и в таблице.
+ */
+function buildRatingGroups() {
+    return [
+        {
+            title: 'Мобильная связь',
+            fields: [
+                { key: 'count_res_mobile', label: 'Количество РЭС моб. связи' },
+                { key: 'count_abonents_mobile', label: 'Количество абонентов моб. связи' },
+                { key: 'population_percent_mobile', label: 'Процент охвата населения моб. связи' },
+                { key: 'communication_coverage_mobile', label: 'Покрытие моб. связи' },
+                { key: 'communication_coverage_percent_mobile', label: 'Процент покрытия моб. связи' },
+                { key: 'traffic_mobile', label: 'Объем трафика моб. связи' },
+                { key: 'traffic_percent_mobile', label: 'Процент трафика моб. связи' }
+            ]
+        },
+        {
+            title: 'LTE',
+            fields: [
+                { key: 'count_res_lte', label: 'Количество РЭС LTE' },
+                { key: 'count_abonents_lte', label: 'Количество абонентов LTE' },
+                { key: 'population_percent_lte', label: 'Процент охвата населения LTE' },
+                { key: 'communication_coverage_lte', label: 'Покрытие связи LTE' },
+                { key: 'communication_coverage_percent_lte', label: 'Процент покрытия связи LTE' },
+                { key: 'traffic_lte', label: 'Объем трафика LTE' },
+                { key: 'traffic_percent_lte', label: 'Процент трафика LTE' }
+            ]
+        },
+        {
+            title: 'GSM',
+            fields: [
+                { key: 'count_res_gsm', label: 'Количество РЭС GSM' },
+                { key: 'count_abonents_gsm', label: 'Количество абонентов GSM' },
+                { key: 'population_percent_gsm', label: 'Процент охвата населения GSM' },
+                { key: 'communication_coverage_gsm', label: 'Покрытие связи GSM' },
+                { key: 'communication_coverage_percent_gsm', label: 'Процент покрытия связи GSM' },
+                { key: 'traffic_gsm', label: 'Объем трафика GSM' },
+                { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' }
+            ]
+        },
+        {
+            title: '5G',
+            fields: [
+                { key: 'count_res_5g', label: 'Количество РЭС 5G' },
+                { key: 'count_abonents_5g', label: 'Количество абонентов 5G' },
+                { key: 'population_percent_5g', label: 'Процент охвата населения 5G' },
+                { key: 'communication_coverage_5g', label: 'Покрытие связи 5G' },
+                { key: 'communication_coverage_percent_5g', label: 'Процент покрытия связи 5G' },
+                { key: 'traffic_5g', label: 'Объем трафика 5G' },
+                { key: 'traffic_percent_5g', label: 'Процент трафика 5G' }
+            ]
+        },
+        {
+            title: 'Wi-Fi',
+            fields: [
+                { key: 'count_res_wifi', label: 'Количество РЭС Wi-Fi' },
+                { key: 'count_abonents_wifi', label: 'Количество абонентов Wi-Fi' },
+                { key: 'population_percent_wifi', label: 'Процент охвата населения Wi-Fi' },
+                { key: 'communication_coverage_wifi', label: 'Покрытие связи Wi-Fi' },
+                { key: 'communication_coverage_percent_wifi', label: 'Процент покрытия связи Wi-Fi' },
+                { key: 'traffic_wifi', label: 'Объем трафика Wi-Fi' },
+                { key: 'traffic_percent_wifi', label: 'Процент трафика Wi-Fi' }
+            ]
+        },
+        {
+            title: 'Tetra',
+            fields: [
+                { key: 'count_res_tetra', label: 'Количество РЭС Tetra' },
+                { key: 'count_abonents_tetra', label: 'Количество абонентов Tetra' },
+                { key: 'population_percent_tetra', label: 'Процент охвата населения Tetra' },
+                { key: 'communication_coverage_tetra', label: 'Покрытие связи Tetra' },
+                { key: 'communication_coverage_percent_tetra', label: 'Процент покрытия связи Tetra' },
+                { key: 'traffic_tetra', label: 'Объем трафика Tetra' },
+                { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' }
+            ]
+        },
+        {
+            title: 'Телевидение (ТВ)',
+            fields: [
+                { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
+                { key: 'count_channels_tv', label: 'Количество каналов ТВ' },
+                { key: 'communication_coverage_tv', label: 'Покрытие ТВ' },
+                { key: 'communication_coverage_percent_tv', label: 'Процент покрытия ТВ' }
+            ]
+        },
+        {
+            title: 'Радиовещание (РВ)',
+            fields: [
+                { key: 'count_res_rv', label: 'Количество РЭС РВ' },
+                { key: 'frequency_width_rv', label: 'Ширина полосы РВ' },
+                { key: 'count_channels_rv', label: 'Количество каналов РВ' },
+                { key: 'communication_coverage_rv', label: 'Покрытие РВ' },
+                { key: 'communication_coverage_percent_rv', label: 'Процент покрытия РВ' }
+            ]
+        },
+        {
+            title: 'Универсальные услуги (УС)',
+            fields: [
+                { key: 'count_comm_hubs', label: 'Количество УС' },
+                { key: 'count_abonents_comm_hubs', label: 'Количество абонентов УС' },
+                { key: 'population_percent_comm_hubs', label: 'Процент охвата населения УС' },
+                { key: 'communication_coverage_comm_hubs', label: 'Покрытие УС' },
+                { key: 'communication_coverage_percent_comm_hubs', label: 'Процент покрытия УС' },
+                { key: 'traffic_comm_hubs', label: 'Объем трафика УС' },
+                { key: 'traffic_percent_comm_hubs', label: 'Процент трафика УС' }
+            ]
+        },
+        {
+            title: 'Почтовая связь',
+            fields: [
+                { key: 'count_posts', label: 'Количество почтовых отделений' },
+                { key: 'count_abonents_posts', label: 'Количество абонентов почты' },
+                { key: 'population_percent_posts', label: 'Процент охвата населения почтой' },
+                { key: 'communication_coverage_posts', label: 'Покрытие почты' },
+                { key: 'communication_coverage_percent_posts', label: 'Процент покрытия почты' },
+                { key: 'traffic_posts', label: 'Объем трафика почты' },
+                { key: 'traffic_percent_posts', label: 'Процент трафика почты' }
+            ]
+        },
+        {
+            title: 'ВОЛС',
+            fields: [
+                { key: 'count_focl', label: 'Количество ВОЛС' },
+                { key: 'count_abonents_focl', label: 'Количество абонентов ВОЛС' },
+                { key: 'population_percent_focl', label: 'Процент охвата населения ВОЛС' },
+                { key: 'communication_coverage_focl', label: 'Покрытие ВОЛС' },
+                { key: 'communication_coverage_percent_focl', label: 'Процент покрытия ВОЛС' },
+                { key: 'traffic_focl', label: 'Объем трафика ВОЛС' },
+                { key: 'traffic_percent_focl', label: 'Процент трафика ВОЛС' }
+            ]
+        },
+        {
+            title: 'Таксофоны',
+            fields: [
+                { key: 'count_payphones', label: 'Количество таксофонов' },
+                { key: 'count_abonents_payphones', label: 'Количество абонентов таксофонов' },
+                { key: 'population_percent_payphones', label: 'Процент охвата населения таксофонами' },
+                { key: 'communication_coverage_payphones', label: 'Покрытие таксофонов' },
+                { key: 'communication_coverage_percent_payphones', label: 'Процент покрытия таксофонов' },
+                { key: 'traffic_payphones', label: 'Объем трафика таксофонов' },
+                { key: 'traffic_percent_payphones', label: 'Процент трафика таксофонов' }
+            ]
+        }
+    ];
+}
 // ==================== КНОПКИ ====================
 
 function createCalculateAllBtn() {
@@ -2695,7 +2946,7 @@ function setupDoubleClickHandler() {
             const headerCells = this.querySelectorAll('thead th');
             let hasRatingColumns = false;
             headerCells.forEach(th => {
-                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Суммарная оценка')) {
+                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Рейтинг')) {
                     hasRatingColumns = true;
                 }
             });
@@ -2732,7 +2983,7 @@ function setupDoubleClickHandler() {
         const headerCells = table.querySelectorAll('thead th');
         let hasRatingColumns = false;
         headerCells.forEach(th => {
-            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Суммарная оценка')) {
+            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Рейтинг')) {
                 hasRatingColumns = true;
             }
         });
@@ -2963,6 +3214,8 @@ async function handleRatingTableButton() {
 }
 // ==================== МОДАЛКА РЕДАКТИРОВАНИЯ ====================
 
+// ==================== МОДАЛКА РЕДАКТИРОВАНИЯ ====================
+
 async function openEditModal(settlementId, type) {
     if (!settlementId) return;
 
@@ -2974,48 +3227,94 @@ async function openEditModal(settlementId, type) {
     const settlement = settlementsData.items.find(it => String(it.id) === String(settlementId)) || {};
     const ranking = allRatings[String(settlementId)] || {};
 
-    // ---- Порядок колонок такой же, как в отображаемой таблице ----
+    // ---- Берём порядок колонок прямо из отображаемой таблицы ----
     const getColumnOrderFromTable = (tableSelector) => {
         const order = [];
         const table = document.querySelector(tableSelector);
         if (!table) return order;
         const ths = table.querySelectorAll('thead th');
         ths.forEach(th => {
-            let text = th.textContent || '';
-            text = text.replace(/[▲▼]/g, '').trim();
-            if (text) order.push(text);
+            let key = th.dataset.key;
+            if (key) order.push(key);
         });
         return order;
     };
 
-    const settlementsLabelToColumn = {};
-    Object.keys(SETTLEMENTS_COLUMN_LABELS).forEach(col => {
-        settlementsLabelToColumn[SETTLEMENTS_COLUMN_LABELS[col]] = col;
-    });
-
-    const rankingLabelToColumn = {};
-    Object.keys(RANKING_COLUMN_LABELS).forEach(col => {
-        rankingLabelToColumn[RANKING_COLUMN_LABELS[col]] = col;
-    });
-
     const tableHeaderOrder = getColumnOrderFromTable('#settlements-table');
 
-    const sortColumnsByTableOrder = (columns, labelToColumn) => {
-        const orderMap = {};
-        tableHeaderOrder.forEach((label, idx) => {
-            const colName = labelToColumn[label];
-            if (colName) orderMap[colName] = idx;
-        });
+    // --- Карты: DB-колонка -> object-ключ ---
+    const settlementsDbToKey = SETTLEMENTS_DB_TO_OBJECT_KEY;
+    const rankingDbToKey = RANKING_DB_TO_OBJECT_KEY;
 
-        return [...columns].sort((a, b) => {
-            const idxA = orderMap[a.name] !== undefined ? orderMap[a.name] : Number.MAX_SAFE_INTEGER;
-            const idxB = orderMap[b.name] !== undefined ? orderMap[b.name] : Number.MAX_SAFE_INTEGER;
-            return idxA - idxB;
-        });
-    };
+    // --- Карты: object-ключ -> DB-колонка ---
+    const settlementsKeyToDb = {};
+    Object.keys(settlementsDbToKey).forEach(db => {
+        settlementsKeyToDb[settlementsDbToKey[db]] = db;
+    });
+    const rankingKeyToDb = {};
+    Object.keys(rankingDbToKey).forEach(db => {
+        rankingKeyToDb[rankingDbToKey[db]] = db;
+    });
 
-    const settlementsColumnsSorted = sortColumnsByTableOrder(settlementsColumns, settlementsLabelToColumn);
-    const rankingColumnsSorted = sortColumnsByTableOrder(rankingColumns, rankingLabelToColumn);
+    // --- Карты названий ---
+    const settlementsLabelByKey = {}; // object-ключ -> русское название
+    Object.keys(SETTLEMENTS_COLUMN_LABELS).forEach(db => {
+        const key = settlementsDbToKey[db] || db;
+        settlementsLabelByKey[key] = SETTLEMENTS_COLUMN_LABELS[db];
+    });
+    const rankingLabelByKey = {};
+    Object.keys(RANKING_COLUMN_LABELS).forEach(db => {
+        const key = rankingDbToKey[db] || db;
+        rankingLabelByKey[key] = RANKING_COLUMN_LABELS[db];
+    });
+
+    // --- Упорядоченный список полей по таблице ---
+    const orderedFields = []; // { table, dbColumn, objectKey, label, value }
+    const seen = new Set();
+
+    tableHeaderOrder.forEach(key => {
+        // пропускаем дубли
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        // Ищем в рейтингах
+        if (rankingKeyToDb[key]) {
+            const dbColumn = rankingKeyToDb[key];
+            if (dbColumn === 'ID') return; // ID только один раз
+            orderedFields.push({
+                table: 'ranking',
+                dbColumn: dbColumn,
+                objectKey: key,
+                label: rankingLabelByKey[key] || dbColumn,
+                value: getValueByDbColumn(ranking, dbColumn, rankingDbToKey)
+            });
+            return;
+        }
+
+        // Иначе в НП
+        if (settlementsKeyToDb[key]) {
+            const dbColumn = settlementsKeyToDb[key];
+            orderedFields.push({
+                table: 'settlements',
+                dbColumn: dbColumn,
+                objectKey: key,
+                label: settlementsLabelByKey[key] || dbColumn,
+                value: getValueByDbColumn(settlement, dbColumn, settlementsDbToKey)
+            });
+            return;
+        }
+
+        // Если колонка из headers, но не найдена в маппингах (например 'rating')
+        if (key === 'rating') {
+            orderedFields.push({
+                table: 'ranking',
+                dbColumn: 'RAT_SUM_NP',
+                objectKey: 'rating',
+                label: 'Рейтинг',
+                value: getValueByDbColumn(ranking, 'RAT_SUM_NP', rankingDbToKey)
+            });
+        }
+    });
 
     const existing = document.getElementById('row-data-modal');
     if (existing) existing.remove();
@@ -3028,11 +3327,7 @@ async function openEditModal(settlementId, type) {
     content.className = 'res-modal-content';
     content.style.maxWidth = '800px';
 
-    const nameForTitle =
-        settlement['name'] ||
-        settlement['NAME'] ||
-        settlementId;
-
+    const nameForTitle = settlement['name'] || settlement['NAME'] || settlementId;
     const titleText = (type === 'rating')
         ? `Рейтинг НП: ${nameForTitle}`
         : `НП: ${nameForTitle}`;
@@ -3045,6 +3340,7 @@ async function openEditModal(settlementId, type) {
     tableWrapper.className = 'res-table-wrapper';
     tableWrapper.style.maxHeight = '65vh';
     tableWrapper.style.overflowY = 'auto';
+    tableWrapper.style.position = 'relative';
 
     const table = document.createElement('table');
     table.className = 'res-modal-table';
@@ -3055,32 +3351,29 @@ async function openEditModal(settlementId, type) {
 
     const fieldRefs = [];
 
-    // --- Поля НП (A_NAS_P) ---
-    settlementsColumnsSorted.forEach(col => {
-        if (col.name === 'OTHER_NAME') return;
-        if (col.name === 'APPROX') return;
-
+    orderedFields.forEach(field => {
         const tr = document.createElement('tr');
 
-        const label = SETTLEMENTS_COLUMN_LABELS[col.name] || col.name;
-
         const th = document.createElement('th');
-        th.textContent = label;
+        th.textContent = field.label;
         th.style.cssText = 'text-align: left; padding: 8px 12px; border: 1px solid #000; background: #f2f2f2; width: 40%; font-weight: 600; color: #1a1a1a;';
+        // sticky-заголовки столбца подписи
+        th.style.position = 'sticky';
+        th.style.top = '0';
+        th.style.zIndex = '2';
+        th.style.background = '#f2f2f2';
 
         const td = document.createElement('td');
         td.style.cssText = 'padding: 8px 12px; border: 1px solid #000;';
 
-        const value = getValueByDbColumn(settlement, col.name, SETTLEMENTS_DB_TO_OBJECT_KEY);
-
-        if (col.name === 'ID') {
-            td.textContent = value !== '' ? value : '-';
+        if (field.dbColumn === 'ID') {
+            td.textContent = field.value !== '' ? field.value : '-';
         } else {
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = value;
-            input.dataset.dbColumn = col.name;
-            input.dataset.tableName = 'settlements';
+            input.value = field.value;
+            input.dataset.dbColumn = field.dbColumn;
+            input.dataset.tableName = field.table;
             input.style.cssText = `
                 width: 100%;
                 box-sizing: border-box;
@@ -3091,10 +3384,10 @@ async function openEditModal(settlementId, type) {
             `;
             td.appendChild(input);
             fieldRefs.push({
-                table: 'settlements',
-                dbColumn: col.name,
+                table: field.table,
+                dbColumn: field.dbColumn,
                 input: input,
-                originalValue: String(value)
+                originalValue: String(field.value)
             });
         }
 
@@ -3102,51 +3395,6 @@ async function openEditModal(settlementId, type) {
         tr.appendChild(td);
         tbody.appendChild(tr);
     });
-
-    // --- Поля рейтинга (A_NAS_P_RANKING) — только если открыта таблица с рейтингами ---
-    if (type === 'rating' || showRatings) {
-        rankingColumnsSorted.forEach(col => {
-            if (col.name === 'ID') return;
-
-            const tr = document.createElement('tr');
-
-            const label = RANKING_COLUMN_LABELS[col.name] || col.name;
-
-            const th = document.createElement('th');
-            th.textContent = label;
-            th.style.cssText = 'text-align: left; padding: 8px 12px; border: 1px solid #000; background: #f2f2f2; width: 40%; font-weight: 600; color: #1a1a1a;';
-
-            const td = document.createElement('td');
-            td.style.cssText = 'padding: 8px 12px; border: 1px solid #000;';
-
-            const value = getValueByDbColumn(ranking, col.name, RANKING_DB_TO_OBJECT_KEY);
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = value;
-            input.dataset.dbColumn = col.name;
-            input.dataset.tableName = 'ranking';
-            input.style.cssText = `
-                width: 100%;
-                box-sizing: border-box;
-                padding: 6px 8px;
-                border: 1px solid #000;
-                border-radius: 4px;
-                font-size: 13px;
-            `;
-            td.appendChild(input);
-            fieldRefs.push({
-                table: 'ranking',
-                dbColumn: col.name,
-                input: input,
-                originalValue: String(value)
-            });
-
-            tr.appendChild(th);
-            tr.appendChild(td);
-            tbody.appendChild(tr);
-        });
-    }
 
     // --- Кнопки ---
     const buttonsBar = document.createElement('div');
@@ -3164,9 +3412,7 @@ async function openEditModal(settlementId, type) {
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
-    closeBtn.addEventListener('click', () => {
-        modal.remove();
-    });
+    closeBtn.addEventListener('click', () => modal.remove());
 
     buttonsBar.appendChild(editBtn);
     buttonsBar.appendChild(closeBtn);
@@ -3617,6 +3863,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
 // ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ ====================
 
+// ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ ====================
+
 function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     const table = document.getElementById('settlements-table');
     if (!table) {
@@ -3665,16 +3913,14 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         if (tbody) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 58;
+            cell.colSpan = 60;
             cell.textContent = 'Нет населенных пунктов для отображения';
             cell.className = 'empty-message';
             row.appendChild(cell);
             tbody.appendChild(row);
         }
         const paginationContainer = document.getElementById('settlements-pagination');
-        if (paginationContainer) {
-            paginationContainer.style.display = 'flex';
-        }
+        if (paginationContainer) paginationContainer.style.display = 'flex';
         renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
         return;
     }
@@ -3692,6 +3938,44 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         return;
     }
 
+    // ========== Формирование описания колонок ==========
+    const ratingGroups = buildRatingGroups();
+
+    // Базовые колонки НП (порядок: ID, Название, Регион, Код региона, ..., Рейтинг вставляется после кода региона)
+    const settlementBaseHeaders = [
+        { key: 'id', label: 'ID' },
+        { key: 'name', label: 'Название' },
+        { key: 'region_name', label: 'Регион' },
+        { key: 'region_code', label: 'Код региона' }
+    ];
+
+    const ratingColumn = { key: 'rating', label: 'Рейтинг' };
+
+    const settlementRestHeaders = [
+        { key: 'area', label: 'Площадь (км²)' },
+        { key: 'district_name', label: 'Муниципальное образование' },
+        { key: 'lat', label: 'Широта' },
+        { key: 'lon', label: 'Долгота' },
+        { key: 'population', label: 'Население' },
+        { key: 'fias_id', label: 'Код ФИАС' }
+    ];
+
+    // Сгруппированные поля рейтинга
+    const ratingHeaders = [];
+    ratingGroups.forEach(group => {
+        group.fields.forEach(f => {
+            ratingHeaders.push({ key: f.key, label: f.label, group: group.title });
+        });
+    });
+
+    const headers = [
+        ...settlementBaseHeaders,
+        ratingColumn,
+        ...settlementRestHeaders,
+        ...ratingHeaders
+    ];
+
+    // ========== Фильтр ==========
     const filterContainer = document.createElement('div');
     filterContainer.className = 'filter-container';
 
@@ -3708,113 +3992,13 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     optionNone.textContent = '-- Выберите поле --';
     fieldSelect.appendChild(optionNone);
 
-    const labels = {
-        'id': 'ID',
-        'name': 'Название',
-        'area': 'Площадь (км²)',
-        'region_name': 'Регион',
-        'region_code': 'Код региона',
-        'district_name': 'Муниципальное образование',
-        'lat': 'Широта',
-        'lon': 'Долгота',
-        'population': 'Население',
-        'fias_id': 'Код ФИАС',
-        'rating': 'Суммарная оценка',
-        'count_res_tv': 'Количество РЭС ТВ',
-        'count_res_rv': 'Количество РЭС РВ',
-        'count_res_lte': 'Количество РЭС LTE',
-        'count_res_gsm': 'Количество РЭС GSM',
-        'count_res_5g': 'Количество РЭС 5G',
-        'count_res_wifi': 'Количество РЭС Wi-Fi',
-        'count_res_tetra': 'Количество РЭС Tetra',
-        'count_operators': 'Количество РЭС',
-        'count_abonents_lte': 'Количество абонентов LTE',
-        'population_percent_lte': 'Процент охвата населения LTE',
-        'communication_coverage_lte': 'Покрытие связи LTE',
-        'communication_coverage_percent_lte': 'Процент покрытия связи LTE',
-        'traffic_lte': 'Объем трафика LTE',
-        'traffic_percent_lte': 'Процент трафика LTE',
-        'count_abonents_gsm': 'Количество абонентов GSM',
-        'population_percent_gsm': 'Процент охвата населения GSM',
-        'communication_coverage_gsm': 'Покрытие связи GSM',
-        'communication_coverage_percent_gsm': 'Процент покрытия связи GSM',
-        'traffic_gsm': 'Объем трафика GSM',
-        'traffic_percent_gsm': 'Процент трафика GSM',
-        'count_abonents_5g': 'Количество абонентов 5G',
-        'population_percent_5g': 'Процент охвата населения 5G',
-        'communication_coverage_5g': 'Покрытие связи 5G',
-        'communication_coverage_percent_5g': 'Процент покрытия связи 5G',
-        'traffic_5g': 'Объем трафика 5G',
-        'traffic_percent_5g': 'Процент трафика 5G',
-        'count_abonents_wifi': 'Количество абонентов Wi-Fi',
-        'population_percent_wifi': 'Процент охвата населения Wi-Fi',
-        'communication_coverage_wifi': 'Покрытие связи Wi-Fi',
-        'communication_coverage_percent_wifi': 'Процент покрытия связи Wi-Fi',
-        'traffic_wifi': 'Объем трафика Wi-Fi',
-        'traffic_percent_wifi': 'Процент трафика Wi-Fi',
-        'count_abonents_tetra': 'Количество абонентов Tetra',
-        'population_percent_tetra': 'Процент охвата населения Tetra',
-        'communication_coverage_tetra': 'Покрытие связи Tetra',
-        'communication_coverage_percent_tetra': 'Процент покрытия связи Tetra',
-        'traffic_tetra': 'Объем трафика Tetra',
-        'traffic_percent_tetra': 'Процент трафика Tetra',
-        'count_res_mobile': 'Количество РЭС моб. связи',
-        'count_abonents_mobile': 'Количество абонентов моб. связи',
-        'population_percent_mobile': 'Процент охвата населения моб. связи',
-        'communication_coverage_mobile': 'Покрытие моб. связи',
-        'communication_coverage_percent_mobile': 'Процент покрытия моб. связи',
-        'traffic_mobile': 'Объем трафика моб. связи',
-        'traffic_percent_mobile': 'Процент трафика моб. связи'
-    };
-
-    const ratingFieldKeys = [
-        'rating',
-        'count_res_tv', 'count_res_rv',
-        'count_res_lte', 'count_res_gsm', 'count_res_5g',
-        'count_res_wifi', 'count_res_tetra',
-        'count_operators',
-        'count_abonents_lte', 'population_percent_lte',
-        'communication_coverage_lte', 'communication_coverage_percent_lte',
-        'traffic_lte', 'traffic_percent_lte',
-        'count_abonents_gsm', 'population_percent_gsm',
-        'communication_coverage_gsm', 'communication_coverage_percent_gsm',
-        'traffic_gsm', 'traffic_percent_gsm',
-        'count_abonents_5g', 'population_percent_5g',
-        'communication_coverage_5g', 'communication_coverage_percent_5g',
-        'traffic_5g', 'traffic_percent_5g',
-        'count_abonents_wifi', 'population_percent_wifi',
-        'communication_coverage_wifi', 'communication_coverage_percent_wifi',
-        'traffic_wifi', 'traffic_percent_wifi',
-        'count_abonents_tetra', 'population_percent_tetra',
-        'communication_coverage_tetra', 'communication_coverage_percent_tetra',
-        'traffic_tetra', 'traffic_percent_tetra',
-        'count_res_mobile', 'count_abonents_mobile',
-        'population_percent_mobile', 'communication_coverage_mobile',
-        'communication_coverage_percent_mobile', 'traffic_mobile',
-        'traffic_percent_mobile'
-    ];
-
-    if (allData && allData.length > 0) {
-        Object.keys(allData[0]).forEach(key => {
-            if (labels[key] && !ratingFieldKeys.includes(key)) {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.textContent = labels[key];
-                fieldSelect.appendChild(opt);
-            }
-        });
-    }
-
-    ratingFieldKeys.forEach(key => {
+    headers.forEach(h => {
         const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = labels[key] || key;
+        opt.value = h.key;
+        opt.textContent = h.label;
         fieldSelect.appendChild(opt);
     });
-    fieldSelect.value = 'name';
-    if (keepFilter && savedFilterField) {
-        fieldSelect.value = savedFilterField;
-    }
+    fieldSelect.value = keepFilter && savedFilterField ? savedFilterField : 'name';
 
     fieldDiv.appendChild(fieldLabel);
     fieldDiv.appendChild(fieldSelect);
@@ -3829,11 +4013,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     valueInput.className = 'filter-value-input';
     valueInput.type = 'text';
     valueInput.placeholder = 'Введите значение...';
-
-    if (keepFilter && savedFilterValue) {
-        valueInput.value = savedFilterValue;
-    }
-
+    if (keepFilter && savedFilterValue) valueInput.value = savedFilterValue;
     valueDiv.appendChild(valueLabel);
     valueDiv.appendChild(valueInput);
     filterContainer.appendChild(valueDiv);
@@ -3848,10 +4028,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     exactDiv.appendChild(exactCheckbox);
     exactDiv.appendChild(exactLabel);
     filterContainer.appendChild(exactDiv);
-
-    if (keepFilter && savedFilterExact) {
-        exactCheckbox.checked = true;
-    }
+    if (keepFilter && savedFilterExact) exactCheckbox.checked = true;
 
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'filter-buttons-group';
@@ -3861,7 +4038,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     const resetBtn = document.createElement('button');
     resetBtn.textContent = 'Сбросить';
     resetBtn.className = 'filter-reset-btn';
-
     buttonsDiv.appendChild(applyBtn);
     buttonsDiv.appendChild(resetBtn);
     filterContainer.appendChild(buttonsDiv);
@@ -3874,11 +4050,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             savedFilterField = field;
             savedFilterValue = value;
             savedFilterExact = exactMatch;
-
             currentFilterField = field;
             currentFilterValue = value;
             currentFilterExact = exactMatch;
-
             currentDisplayPage = 0;
             renderCombinedTable(allData, allTotal, 0, pageSize, true);
         }
@@ -3888,88 +4062,36 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         savedFilterField = '';
         savedFilterValue = '';
         savedFilterExact = false;
-
         currentFilterField = '';
         currentFilterValue = '';
         currentFilterExact = false;
-
         currentDisplayPage = 0;
-
         fieldSelect.value = '';
         valueInput.value = '';
         exactCheckbox.checked = false;
-
         renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
     });
 
     tableContainer.prepend(filterContainer);
 
+    // ========== Заголовки ==========
     if (thead) {
         const headerRow = document.createElement('tr');
-        const headers = [
-            { key: 'id', label: 'ID' },
-            { key: 'name', label: 'Название' },
-            { key: 'area', label: 'Площадь (км²)' },
-            { key: 'region_name', label: 'Регион' },
-            { key: 'region_code', label: 'Код региона' },
-            { key: 'district_name', label: 'Муниципальное образование' },
-            { key: 'lat', label: 'Широта' },
-            { key: 'lon', label: 'Долгота' },
-            { key: 'population', label: 'Население' },
-            { key: 'fias_id', label: 'Код ФИАС' },
-            { key: 'rating', label: 'Суммарная оценка' },
-            { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
-            { key: 'count_res_rv', label: 'Количество РЭС РВ' },
-            { key: 'count_res_lte', label: 'Количество РЭС LTE' },
-            { key: 'count_res_gsm', label: 'Количество РЭС GSM' },
-            { key: 'count_res_5g', label: 'Количество РЭС 5G' },
-            { key: 'count_res_wifi', label: 'Количество РЭС Wi-Fi' },
-            { key: 'count_res_tetra', label: 'Количество РЭС Tetra' },
-            { key: 'count_operators', label: 'Количество РЭС' },
-            { key: 'count_abonents_lte', label: 'Количество абонентов LTE' },
-            { key: 'population_percent_lte', label: 'Процент охвата населения LTE' },
-            { key: 'communication_coverage_lte', label: 'Покрытие связи LTE' },
-            { key: 'communication_coverage_percent_lte', label: 'Процент покрытия связи LTE' },
-            { key: 'traffic_lte', label: 'Объем трафика LTE' },
-            { key: 'traffic_percent_lte', label: 'Процент трафика LTE' },
-            { key: 'count_abonents_gsm', label: 'Количество абонентов GSM' },
-            { key: 'population_percent_gsm', label: 'Процент охвата населения GSM' },
-            { key: 'communication_coverage_gsm', label: 'Покрытие связи GSM' },
-            { key: 'communication_coverage_percent_gsm', label: 'Процент покрытия связи GSM' },
-            { key: 'traffic_gsm', label: 'Объем трафика GSM' },
-            { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' },
-            { key: 'count_abonents_5g', label: 'Количество абонентов 5G' },
-            { key: 'population_percent_5g', label: 'Процент охвата населения 5G' },
-            { key: 'communication_coverage_5g', label: 'Покрытие связи 5G' },
-            { key: 'communication_coverage_percent_5g', label: 'Процент покрытия связи 5G' },
-            { key: 'traffic_5g', label: 'Объем трафика 5G' },
-            { key: 'traffic_percent_5g', label: 'Процент трафика 5G' },
-            { key: 'count_abonents_wifi', label: 'Количество абонентов Wi-Fi' },
-            { key: 'population_percent_wifi', label: 'Процент охвата населения Wi-Fi' },
-            { key: 'communication_coverage_wifi', label: 'Покрытие связи Wi-Fi' },
-            { key: 'communication_coverage_percent_wifi', label: 'Процент покрытия связи Wi-Fi' },
-            { key: 'traffic_wifi', label: 'Объем трафика Wi-Fi' },
-            { key: 'traffic_percent_wifi', label: 'Процент трафика Wi-Fi' },
-            { key: 'count_abonents_tetra', label: 'Количество абонентов Tetra' },
-            { key: 'population_percent_tetra', label: 'Процент охвата населения Tetra' },
-            { key: 'communication_coverage_tetra', label: 'Покрытие связи Tetra' },
-            { key: 'communication_coverage_percent_tetra', label: 'Процент покрытия связи Tetra' },
-            { key: 'traffic_tetra', label: 'Объем трафика Tetra' },
-            { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' },
-            { key: 'count_res_mobile', label: 'Количество РЭС моб. связи' },
-            { key: 'count_abonents_mobile', label: 'Количество абонентов моб. связи' },
-            { key: 'population_percent_mobile', label: 'Процент охвата населения моб. связи' },
-            { key: 'communication_coverage_mobile', label: 'Покрытие моб. связи' },
-            { key: 'communication_coverage_percent_mobile', label: 'Процент покрытия моб. связи' },
-            { key: 'traffic_mobile', label: 'Объем трафика моб. связи' },
-            { key: 'traffic_percent_mobile', label: 'Процент трафика моб. связи' }
-        ];
+
+        // Карта названий групп для заголовков-подписей
+        const ratingFieldGroupMap = {};
+        ratingGroups.forEach(g => {
+            g.fields.forEach(f => {
+                ratingFieldGroupMap[f.key] = g.title;
+            });
+        });
 
         headers.forEach(h => {
             const th = document.createElement('th');
             th.textContent = h.label;
             th.className = 'sortable-header';
             th.dataset.key = h.key;
+            if (h.group) th.dataset.group = h.group;
 
             const icon = document.createElement('span');
             icon.className = 'sort-icon';
@@ -3996,6 +4118,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         thead.appendChild(headerRow);
     }
 
+    // ========== Тело таблицы ==========
     if (tbody) {
         pageData.forEach(item => {
             const row = document.createElement('tr');
@@ -4008,68 +4131,23 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
             const rating = allRatings[String(item.id)] || {};
 
-            const cells = [
-                { value: item.id },
-                { value: item.name || '-' },
-                { value: item.area !== null && item.area !== undefined ? item.area : '-' },
-                { value: item.region_name || '-' },
-                { value: item.region_code || '-' },
-                { value: item.district_name || '-' },
-                { value: item.lat !== undefined ? item.lat.toFixed(6) : '-' },
-                { value: item.lon !== undefined ? item.lon.toFixed(6) : '-' },
-                { value: item.population || 0 },
-                { value: item.fias_id || '-' },
-                { value: rating.rating !== undefined ? rating.rating : '-' },
-                { value: rating.count_res_tv !== undefined ? rating.count_res_tv : '-' },
-                { value: rating.count_res_rv !== undefined ? rating.count_res_rv : '-' },
-                { value: rating.count_res_lte !== undefined ? rating.count_res_lte : '-' },
-                { value: rating.count_res_gsm !== undefined ? rating.count_res_gsm : '-' },
-                { value: rating.count_res_5g !== undefined ? rating.count_res_5g : '-' },
-                { value: rating.count_res_wifi !== undefined ? rating.count_res_wifi : '-' },
-                { value: rating.count_res_tetra !== undefined ? rating.count_res_tetra : '-' },
-                { value: rating.count_operators !== undefined ? rating.count_operators : '-' },
-                { value: rating.count_abonents_lte !== undefined ? rating.count_abonents_lte : '-' },
-                { value: rating.population_percent_lte !== undefined ? rating.population_percent_lte : '-' },
-                { value: rating.communication_coverage_lte !== undefined ? rating.communication_coverage_lte : '-' },
-                { value: rating.communication_coverage_percent_lte !== undefined ? rating.communication_coverage_percent_lte : '-' },
-                { value: rating.traffic_lte !== undefined ? rating.traffic_lte : '-' },
-                { value: rating.traffic_percent_lte !== undefined ? rating.traffic_percent_lte : '-' },
-                { value: rating.count_abonents_gsm !== undefined ? rating.count_abonents_gsm : '-' },
-                { value: rating.population_percent_gsm !== undefined ? rating.population_percent_gsm : '-' },
-                { value: rating.communication_coverage_gsm !== undefined ? rating.communication_coverage_gsm : '-' },
-                { value: rating.communication_coverage_percent_gsm !== undefined ? rating.communication_coverage_percent_gsm : '-' },
-                { value: rating.traffic_gsm !== undefined ? rating.traffic_gsm : '-' },
-                { value: rating.traffic_percent_gsm !== undefined ? rating.traffic_percent_gsm : '-' },
-                { value: rating.count_abonents_5g !== undefined ? rating.count_abonents_5g : '-' },
-                { value: rating.population_percent_5g !== undefined ? rating.population_percent_5g : '-' },
-                { value: rating.communication_coverage_5g !== undefined ? rating.communication_coverage_5g : '-' },
-                { value: rating.communication_coverage_percent_5g !== undefined ? rating.communication_coverage_percent_5g : '-' },
-                { value: rating.traffic_5g !== undefined ? rating.traffic_5g : '-' },
-                { value: rating.traffic_percent_5g !== undefined ? rating.traffic_percent_5g : '-' },
-                { value: rating.count_abonents_wifi !== undefined ? rating.count_abonents_wifi : '-' },
-                { value: rating.population_percent_wifi !== undefined ? rating.population_percent_wifi : '-' },
-                { value: rating.communication_coverage_wifi !== undefined ? rating.communication_coverage_wifi : '-' },
-                { value: rating.communication_coverage_percent_wifi !== undefined ? rating.communication_coverage_percent_wifi : '-' },
-                { value: rating.traffic_wifi !== undefined ? rating.traffic_wifi : '-' },
-                { value: rating.traffic_percent_wifi !== undefined ? rating.traffic_percent_wifi : '-' },
-                { value: rating.count_abonents_tetra !== undefined ? rating.count_abonents_tetra : '-' },
-                { value: rating.population_percent_tetra !== undefined ? rating.population_percent_tetra : '-' },
-                { value: rating.communication_coverage_tetra !== undefined ? rating.communication_coverage_tetra : '-' },
-                { value: rating.communication_coverage_percent_tetra !== undefined ? rating.communication_coverage_percent_tetra : '-' },
-                { value: rating.traffic_tetra !== undefined ? rating.traffic_tetra : '-' },
-                { value: rating.traffic_percent_tetra !== undefined ? rating.traffic_percent_tetra : '-' },
-                { value: rating.count_res_mobile !== undefined ? rating.count_res_mobile : '-' },
-                { value: rating.count_abonents_mobile !== undefined ? rating.count_abonents_mobile : '-' },
-                { value: rating.population_percent_mobile !== undefined ? rating.population_percent_mobile : '-' },
-                { value: rating.communication_coverage_mobile !== undefined ? rating.communication_coverage_mobile : '-' },
-                { value: rating.communication_coverage_percent_mobile !== undefined ? rating.communication_coverage_percent_mobile : '-' },
-                { value: rating.traffic_mobile !== undefined ? rating.traffic_mobile : '-' },
-                { value: rating.traffic_percent_mobile !== undefined ? rating.traffic_percent_mobile : '-' }
-            ];
-
-            cells.forEach(cell => {
+            headers.forEach(h => {
                 const td = document.createElement('td');
-                td.textContent = cell.value;
+                let value;
+
+                if (h.key in item) {
+                    value = item[h.key];
+                } else if (h.key in rating) {
+                    value = rating[h.key];
+                } else {
+                    value = '-';
+                }
+
+                if (value === undefined || value === null) value = '-';
+                if ((h.key === 'lat' || h.key === 'lon') && typeof value === 'number') {
+                    value = value.toFixed(6);
+                }
+                td.textContent = value;
                 row.appendChild(td);
             });
 
@@ -4102,9 +4180,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     if (pageData && pageData.length > 0) {
         const firstRow = tbody.querySelector('tr');
-        if (firstRow) {
-            firstRow.click();
-        }
+        if (firstRow) firstRow.click();
     }
 
     showSettlementButtons();
