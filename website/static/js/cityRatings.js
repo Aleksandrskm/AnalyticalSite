@@ -4066,7 +4066,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     const settlementsTitle = document.createElement('h3');
     settlementsTitle.className = 'settlements-title';
-    settlementsTitle.textContent = 'Цифровой дефицит рейтинга НП';
+    settlementsTitle.textContent = 'Цифровой  рейтинг НП';
     table.parentNode.insertBefore(settlementsTitle, table);
 
     const thead = table.querySelector('thead');
