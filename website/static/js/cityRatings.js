@@ -1916,7 +1916,7 @@ function createRatingChart(data, type) {
                     },
                     title: {
                         display: true,
-                        text: 'Значение (0–100)',
+                        text: 'Рейтинг',
                         color: '#000000',
                         font: { size: 15, weight: 'bold' }
                     },
