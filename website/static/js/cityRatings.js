@@ -1942,7 +1942,7 @@ function createRatingChart(data, type) {
 
         const title = document.createElement('div');
         title.className = 'chart-title';
-        title.textContent = 'Диаграмма обеспеченности НП';
+        title.textContent = 'Диаграмма рейтинга НП';
         title.style.cssText = `
             text-align: center;
             font-size: 22px;
