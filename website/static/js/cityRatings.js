@@ -105,7 +105,9 @@ const SETTLEMENTS_COLUMN_LABELS = {
     'FIAS_GUID': 'Код ФИАС',
     'REGION_CODE': 'Код региона'
 };
-
+// Карта мест в рейтинге: id -> место (1-based)
+let ratingPlacesMap = new Map();
+let ratingPlacesTotal = 0;
 // ---- Соответствия DB-колонка A_NAS_P -> ключ в объекте НП ----
 const SETTLEMENTS_DB_TO_OBJECT_KEY = {
     'ID': 'id',
@@ -802,7 +804,7 @@ function renderSearchResults(results, query, container) {
         const ratingText = (rating !== undefined && rating !== null && !isNaN(rating)) ?
             rating.toFixed(1) : 'не получен';
         const regionText = item.region_name || '—';
-        infoSpan.textContent = `Рейтинг: ${ratingText} | ${regionText}`;
+        infoSpan.textContent = `Обеспеченность: ${ratingText} | ${regionText}`;
         infoSpan.style.cssText = `
             font-size: 12px;
             color: #666;
@@ -936,13 +938,31 @@ function showItemTooltip(item, chartIndex) {
 
     const ratingColor = (rating !== undefined && rating !== null && !isNaN(rating)) ? '#ffd700' : '#ff6b6b';
 
+    // ---- Место в рейтинге ----
+    let placeText = '—';
+    let totalPlaces = ratingPlacesTotal;
+    if (ratingPlacesMap && ratingPlacesMap.size > 0) {
+        const found = ratingPlacesMap.get(String(item.id));
+        if (found !== undefined) placeText = found;
+    } else if (chartAllData.length > 0) {
+        const ordered = [...chartAllData].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        totalPlaces = ordered.length;
+        const idx = ordered.findIndex(d =>
+            (d.id !== undefined && item.id !== undefined && d.id === item.id) ||
+            (d.name && item.name && d.name === item.name)
+        );
+        if (idx !== -1) placeText = idx + 1;
+    }
+
     tooltip.innerHTML = `
         <div style="font-weight: bold; font-size: 16px; color: #ff6b6b; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 6px;">
              ${name}
         </div>
         <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 15px; font-size: 13px;">
-            <span style="color: #aaa;">Рейтинг:</span>
+            <span style="color: #aaa;">Обеспеченность:</span>
             <span style="color: ${ratingColor}; font-weight: bold;">${ratingText}</span>
+            <span style="color: #aaa;">Место в рейтинге:</span>
+            <span style="color: #ffd700; font-weight: bold;">${placeText} из ${totalPlaces}</span>
             <span style="color: #aaa;">Население:</span>
             <span style="color: #fff;">${population.toLocaleString()}</span>
             <span style="color: #aaa;">Регион:</span>
@@ -1715,6 +1735,15 @@ function createRatingChart(data, type) {
         sortedData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
 
+    // ---- Карта мест в рейтинге (по убыванию рейтинга, по ВСЕМ данным) ----
+    const globalRatingOrder = [...chartAllData]
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    ratingPlacesMap = new Map();
+    globalRatingOrder.forEach((it, idx) => {
+        ratingPlacesMap.set(String(it.id), idx + 1);
+    });
+    ratingPlacesTotal = globalRatingOrder.length;
+
     let displayData = sortedData;
     if (chartSearchQuery.trim()) {
         const query = chartSearchQuery.trim().toLowerCase();
@@ -1732,8 +1761,8 @@ function createRatingChart(data, type) {
     const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
     const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    const providedColors = displayData.map(() => '#4a90e2');   // светло-синий — рейтинг
-    const deficitColors  = displayData.map(() => '#e67e22');   // оранжевый — дефицит
+    const providedColors = displayData.map(() => '#4a90e2');
+    const deficitColors  = displayData.map(() => '#e67e22');
 
     ratingChart = new Chart(ctx, {
         type: 'bar',
@@ -1741,7 +1770,7 @@ function createRatingChart(data, type) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Рейтинг',
+                    label: 'Обеспеченность',
                     data: providedValues,
                     backgroundColor: providedColors,
                     borderColor: providedColors,
@@ -1791,7 +1820,7 @@ function createRatingChart(data, type) {
                         generateLabels: function(chart) {
                             return [
                                 {
-                                    text: 'Рейтинг',
+                                    text: 'Обеспеченность',
                                     fillStyle: '#4a90e2',
                                     strokeStyle: '#4a90e2',
                                     lineWidth: 1,
@@ -1828,7 +1857,7 @@ function createRatingChart(data, type) {
                             const item = displayData[context.dataIndex];
                             const rating = item ? (item.rating || 0) : 0;
                             if (context.datasetIndex === 0) {
-                                return `Рейтинг: ${rating.toFixed(2)}`;
+                                return `Обеспеченность: ${rating.toFixed(2)}`;
                             }
                             return `Дефицит: ${(100 - rating).toFixed(2)}`;
                         },
@@ -1836,7 +1865,10 @@ function createRatingChart(data, type) {
                             if (context.datasetIndex !== 0) return '';
                             const item = displayData[context.dataIndex];
                             if (!item) return '';
+                            const place = ratingPlacesMap.get(String(item.id)) || '—';
+                            const total = ratingPlacesTotal || 0;
                             let extra = '';
+                            extra += `\nМесто в рейтинге: ${place} из ${total}`;
                             extra += `\nНаселение: ${item.population || 0}`;
                             extra += `\nРегион: ${item.region_name || 'Н/Д'}`;
                             extra += `\nРайон: ${item.district_name || 'Н/Д'}`;
@@ -1910,7 +1942,7 @@ function createRatingChart(data, type) {
 
         const title = document.createElement('div');
         title.className = 'chart-title';
-        title.textContent = 'Диаграмма рейтинга НП';
+        title.textContent = 'Диаграмма обеспеченности НП';
         title.style.cssText = `
             text-align: center;
             font-size: 22px;
@@ -1974,6 +2006,19 @@ async function openSettlementInfoModal(item) {
 
     const rating = allRatings[String(item.id)] || {};
 
+    // ---- Место в рейтинге по всем НП текущей выборки (по убыванию рейтинга) ----
+    const ratedItems = settlementsData.items
+        .map(it => ({
+            id: it.id,
+            rating: (allRatings[String(it.id)] && allRatings[String(it.id)].rating) || 0
+        }))
+        .sort((a, b) => b.rating - a.rating);
+
+    let placeInRating = '—';
+    const foundIdx = ratedItems.findIndex(r => String(r.id) === String(item.id));
+    if (foundIdx !== -1) placeInRating = foundIdx + 1;
+    const totalInRating = ratedItems.length;
+
     const existing = document.getElementById('settlement-info-modal');
     if (existing) existing.remove();
 
@@ -1993,7 +2038,7 @@ async function openSettlementInfoModal(item) {
     const ratingValue = rating.rating !== undefined && rating.rating !== null
         ? Number(rating.rating).toFixed(2)
         : 'не рассчитан';
-    ratingBadge.textContent = `Рейтинг: ${ratingValue}`;
+    ratingBadge.textContent = `Обеспеченность: ${ratingValue}`;
     ratingBadge.style.cssText = `
         display: inline-block;
         padding: 6px 14px;
@@ -2020,7 +2065,6 @@ async function openSettlementInfoModal(item) {
     const tbody = document.createElement('tbody');
     table.appendChild(tbody);
 
-    // Заголовок секции — БЕЗ sticky (чтобы не наезжал на данные)
     const addSection = (sectionTitle) => {
         const tr = document.createElement('tr');
         const th = document.createElement('th');
@@ -2039,7 +2083,6 @@ async function openSettlementInfoModal(item) {
         tbody.appendChild(tr);
     };
 
-    // Строка: подпись слева, значение справа
     const addRow = (label, value) => {
         if (value === undefined || value === null || value === '') value = '-';
         const tr = document.createElement('tr');
@@ -2085,9 +2128,10 @@ async function openSettlementInfoModal(item) {
     addRow('Долгота', settlement.lon);
     addRow('Код ФИАС', settlement.fias_id);
 
-    // --- Рейтинг ---
-    addSection('Рейтинг');
-    addRow('Рейтинг', rating.rating);
+    // --- Обеспеченность ---
+    addSection('Обеспеченность');
+    addRow('Обеспеченность', rating.rating);
+    addRow('Место в рейтинге', `${placeInRating} из ${totalInRating}`);
 
     // --- Суммарные показатели ---
     addSection('Суммарные показатели');

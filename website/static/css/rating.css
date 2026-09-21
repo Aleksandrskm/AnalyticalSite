@@ -165,7 +165,7 @@ header h2 {
 }
 
 .form__div__div:nth-child(2) input[type="number"] {
-    width: 65px;
+    width: 110px;
     padding: 3px 5px;
     font-size: 13px;
 }
@@ -988,7 +988,7 @@ header h2 {
 /* ============================================================ */
 /* ===== АДАПТИВНОСТЬ С УВЕЛИЧЕННЫМИ ШРИФТАМИ ===== */
 
-/* Большие экраны (デスクトップ) */
+/* Большие экраны  */
 @media (min-width: 1400px) {
     .container__forms {
         grid-template-columns: 400px 1fr;
@@ -1051,7 +1051,7 @@ header h2 {
     }
 
     .form__div__div:nth-child(2) input[type="number"] {
-        width: 80px;
+        width: 115px;
         padding: 5px 8px;
         font-size: 15px;
         height: 32px;
@@ -1322,7 +1322,7 @@ header h2 {
     }
 
     .form__div__div:nth-child(2) input[type="number"] {
-        width: 75px;
+        width: 120px;
         font-size: 14px;
         height: 30px;
     }
@@ -1554,7 +1554,9 @@ header h2 {
     }
 
     .form__div__div:nth-child(2) input[type="number"] {
-        width: 100%;
+        width: 120px;
+        font-size: 14px;
+        height: 30px;
     }
 
     .table__rating {
@@ -1887,7 +1889,7 @@ header h2 {
     }
 
     .form__div__div:nth-child(2) input[type="number"] {
-        width: 50px;
+        width: 80px;
         padding: 2px 4px;
         font-size: 11px;
     }
@@ -2103,7 +2105,7 @@ header h2 {
     }
 
     .form__div__div:nth-child(2) input[type="number"] {
-        width: 45px;
+        width: 80px;
         padding: 2px 4px;
         font-size: 11px;
     }
