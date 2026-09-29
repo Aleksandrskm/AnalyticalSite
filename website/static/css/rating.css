@@ -2314,3 +2314,14 @@ header h2 {
         padding: 3px 6px;
     }
 }
+.table__rating {
+    height: calc(100vh - 200px); /* подгони под свой layout */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#analytics-dashboard {
+    flex: 1 1 auto;
+    min-height: 0;
+}
