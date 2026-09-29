@@ -856,15 +856,15 @@ function selectSearchResult(item, index) {
     };
 
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff4d4d' : '#0066ff');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#0066ff');
-    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff1a1a' : '#1a73e8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#1a73e8');
+    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6600');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6600');
-        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6a00');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
     ratingChart.update();
@@ -940,11 +940,11 @@ function showItemTooltip(item, chartIndex) {
         </div>
         <div style="font-size: 13px; font-weight: bold; color: #000000; line-height: 1.8;">
                         <div>
-                <span style="display:inline-block; width:10px; height:10px; background:#0066ff; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
+                <span style="display:inline-block; width:10px; height:10px; background:#1a73e8; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
                 Обеспеченность: ${ratingText}
             </div>
             <div>
-                <span style="display:inline-block; width:10px; height:10px; background:#ff6600; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
+                <span style="display:inline-block; width:10px; height:10px; background:#ff6a00; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
                 Дефицит: ${deficitText}
             </div>
             <div>Место в рейтинге: ${placeText} из ${totalPlaces}</div>
@@ -1130,14 +1130,14 @@ function clearChartSelection() {
     const displayData = getChartDisplayData();
     if (!displayData || displayData.length === 0) return;
 
-        ratingChart.data.datasets[0].backgroundColor = displayData.map(() => '#0066ff');
-    ratingChart.data.datasets[0].borderColor     = displayData.map(() => '#0066ff');
-    ratingChart.data.datasets[0].borderWidth     = displayData.map(() => 1);
+    ratingChart.data.datasets[0].backgroundColor = '#1a73e8';
+    ratingChart.data.datasets[0].borderColor     = '#1a73e8';
+    ratingChart.data.datasets[0].borderWidth     = 0;
 
     if (ratingChart.data.datasets[1]) {
-        ratingChart.data.datasets[1].backgroundColor = displayData.map(() => '#ff6600');
-        ratingChart.data.datasets[1].borderColor     = displayData.map(() => '#ff6600');
-        ratingChart.data.datasets[1].borderWidth     = displayData.map(() => 1);
+        ratingChart.data.datasets[1].backgroundColor = '#ff6a00';
+        ratingChart.data.datasets[1].borderColor     = '#ff6a00';
+        ratingChart.data.datasets[1].borderWidth     = 0;
     }
 
     ratingChart.update();
@@ -1179,16 +1179,17 @@ function restoreSelectionAfterUpdate() {
         return (d.name && selectedSearchItem.name && d.name === selectedSearchItem.name);
     };
 
-        const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff4d4d' : '#0066ff');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#0066ff');
-    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+
+    const ds0 = ratingChart.data.datasets[0];
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff1a1a' : '#1a73e8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#1a73e8');
+    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6600');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6600');
-        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 1);
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6a00');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
     ratingChart.update();
@@ -1720,11 +1721,11 @@ function rebuildChartPreservingZoom() {
     // Обновляем данные прямо в существующей диаграмме
     ratingChart.data.labels = labels;
     ratingChart.data.datasets[0].data = providedValues;
-    ratingChart.data.datasets[0].backgroundColor = displayData.map(() => '#0066ff');
-    ratingChart.data.datasets[0].borderColor = displayData.map(() => '#0066ff');
+    ratingChart.data.datasets[0].backgroundColor = '#1a73e8';
+    ratingChart.data.datasets[0].borderColor = '#1a73e8';
     ratingChart.data.datasets[1].data = deficitValues;
-    ratingChart.data.datasets[1].backgroundColor = displayData.map(() => '#ff6600');
-    ratingChart.data.datasets[1].borderColor = displayData.map(() => '#ff6600');
+    ratingChart.data.datasets[1].backgroundColor = '#ff6a00';
+    ratingChart.data.datasets[1].borderColor = '#ff6a00';
 
     // Восстанавливаем зум
     if (savedMin !== undefined && savedMax !== undefined) {
@@ -1803,8 +1804,8 @@ function createRatingChart(data, type) {
     const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
     const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    const providedColors = displayData.map(() => '#0066ff');
-    const deficitColors  = displayData.map(() => '#ff6600');
+    const providedColors = displayData.map(() => '#1a73e8');
+    const deficitColors  = displayData.map(() => '#ff6a00');
 
     // Сохраняем начальный zoom-индекс для локальных подписей оси X
     const baseIndex = zoomStartIndex;
@@ -1819,24 +1820,30 @@ function createRatingChart(data, type) {
                     data: providedValues,
                     backgroundColor: providedColors,
                     borderColor: providedColors,
-                    borderWidth: 1,
+                    borderWidth: 0,
                     borderRadius: 0,
-                    barPercentage: 0.8,
-                    categoryPercentage: 0.9,
+                    barPercentage: 0.97,
+                    categoryPercentage: 0.97,
                     stack: 'total',
-                    minBarLength: 0
+                    minBarLength: 0,
+                    hoverBackgroundColor: '#1a73e8',
+                    hoverBorderColor: '#1a73e8',
+                    hoverBorderWidth: 0
                 },
                 {
                     label: 'Дефицит',
                     data: deficitValues,
                     backgroundColor: deficitColors,
                     borderColor: deficitColors,
-                    borderWidth: 1,
+                    borderWidth: 0,
                     borderRadius: 0,
-                    barPercentage: 0.8,
-                    categoryPercentage: 0.9,
+                    barPercentage: 0.97,
+                    categoryPercentage: 0.97,
                     stack: 'total',
-                    minBarLength: 0
+                    minBarLength: 0,
+                    hoverBackgroundColor: '#ff6a00',
+                    hoverBorderColor: '#ff6a00',
+                    hoverBorderWidth: 0
                 }
             ]
         },
@@ -1866,16 +1873,16 @@ function createRatingChart(data, type) {
                             return [
                                 {
                                     text: 'Обеспеченность',
-                                    fillStyle: '#0066ff',
-                                    strokeStyle: '#0066ff',
+                                    fillStyle: '#1a73e8',
+                                    strokeStyle: '#1a73e8',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 0
                                 },
                                 {
                                     text: 'Дефицит',
-                                    fillStyle: '#ff6600',
-                                    strokeStyle: '#ff6600',
+                                    fillStyle: '#ff6a00',
+                                    strokeStyle: '#ff6a00',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 1
@@ -1912,22 +1919,11 @@ function createRatingChart(data, type) {
                             }
                             return `Дефицит: ${(100 - rating).toFixed(2)}`;
                         },
-                                                labelColor: function(context) {
-                            // Цвет квадратика = цвет серии
+                        labelColor: function(context) {
                             if (context.datasetIndex === 0) {
-                                return {
-                                    borderColor: '#0066ff',
-                                    backgroundColor: '#0066ff',
-                                    borderWidth: 1,
-                                    borderRadius: 2
-                                };
+                                return { borderColor: '#1a73e8', backgroundColor: '#1a73e8', borderWidth: 1, borderRadius: 2 };
                             }
-                            return {
-                                borderColor: '#ff6600',
-                                backgroundColor: '#ff6600',
-                                borderWidth: 1,
-                                borderRadius: 2
-                            };
+                            return { borderColor: '#ff6a00', backgroundColor: '#ff6a00', borderWidth: 1, borderRadius: 2 };
                         },
                         labelTextColor: function(context) {
                             // Текст всегда чёрный
@@ -2039,7 +2035,7 @@ function createRatingChart(data, type) {
                     border: { color: '#000000', width: 2 }
                 }
             },
-            animation: { duration: 800, easing: 'easeOutQuart' },
+            animation: { duration: 0 },
             hover: { mode: 'index', intersect: false, animationDuration: 200 },
             elements: {
                 bar: { borderRadius: 0 }
