@@ -5762,7 +5762,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(async () => {
             const selectedCount = document.getElementById('region').selectedOptions.length;
             if (selectedCount > 0) {
-                await handleRatingChartButton();
+                await handleAnalyticsDashboardButton();
             }
         }, 500);
     }
