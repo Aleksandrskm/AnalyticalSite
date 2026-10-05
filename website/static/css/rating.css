@@ -2542,7 +2542,7 @@ body.analytics-mode #chart-pagination {
 .kpi-card__label {
     font-size: 13px;
     font-weight: 600;
-    color: #6b7280;
+    color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2596,7 +2596,7 @@ body.analytics-mode #chart-pagination {
 .chart-stat-card__label {
     font-size: 11px;
     font-weight: 600;
-    color: #6b7280;
+    color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
