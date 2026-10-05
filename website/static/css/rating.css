@@ -2325,3 +2325,327 @@ header h2 {
     flex: 1 1 auto;
     min-height: 0;
 }
+/* ============================================================ */
+/* ===== КАРТОЧКИ KPI (как на макете) ===== */
+
+.kpi-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+}
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 26px 16px 16px 16px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+    overflow: hidden;
+    min-width: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+}
+
+/* Цветная полоса сверху */
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: var(--kpi-color, #0066ff);
+    border-radius: 14px 14px 0 0;
+}
+
+.kpi-card__value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--kpi-color, #0066ff);
+    line-height: 1.1;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Адаптив */
+@media (max-width: 992px) {
+    .kpi-cards-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .kpi-card__value { font-size: 22px; }
+}
+
+@media (max-width: 576px) {
+    .kpi-cards-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .kpi-card {
+        padding: 22px 14px 14px 14px;
+    }
+    .kpi-card__value { font-size: 20px; }
+    .kpi-card__label { font-size: 12px; }
+}
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ СТАТИСТИКИ ДИАГРАММЫ РЕЙТИНГА НП ===== */
+/* (тот же стиль, что и KPI, но компактнее) */
+
+.chart-stats-row,
+.chart-stats-row-buckets {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    margin-bottom: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+.chart-stat-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 22px 14px 12px 14px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.chart-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 7px;
+    background: var(--kpi-color, #0066ff);
+    border-radius: 12px 12px 0 0;
+}
+
+.chart-stat-card__value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--kpi-color, #0066ff);
+    line-height: 1.1;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-stat-card__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================ */
+/* ===== УБИРАЕМ ЧЁРНЫЕ ГРАНИЦЫ У ДИАГРАММ ===== */
+
+/* Осей и сетки */
+#chart-container canvas,
+#analytics-dashboard canvas {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Общие правки для всех chart-блоков — убираем тёмные рамки */
+#analytics-dashboard > div,
+#chart-container > div {
+    border-color: transparent !important;
+}
+/* ===== Скрываем пагинацию во вкладке "Аналитический дашборд" ===== */
+body.analytics-mode #settlements-pagination,
+body.analytics-mode #settlements-pagination .pagination-controls,
+body.analytics-mode #settlements-pagination .pagination-info,
+body.analytics-mode #chart-pagination {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+/* ============================================================ */
+/* ===== KPI КАРТОЧКИ (аналитический дашборд) ===== */
+
+.kpi-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+}
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 26px 16px 16px 16px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+    overflow: hidden;
+    min-width: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+}
+
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: var(--kpi-color, #0066ff);
+    border-radius: 14px 14px 0 0;
+}
+
+.kpi-card__value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--kpi-color, #0066ff);
+    line-height: 1.1;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Карточки статистики диаграммы рейтинга НП ===== */
+
+.chart-stats-row,
+.chart-stats-row-buckets {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    margin-bottom: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+.chart-stat-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 22px 14px 12px 14px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.chart-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 7px;
+    background: var(--kpi-color, #0066ff);
+    border-radius: 12px 12px 0 0;
+}
+
+.chart-stat-card__value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--kpi-color, #0066ff);
+    line-height: 1.1;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-stat-card__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Скрытие пагинации в аналитическом режиме ===== */
+
+body.analytics-mode #settlements-pagination,
+body.analytics-mode #settlements-pagination .pagination-controls,
+body.analytics-mode #settlements-pagination .pagination-info,
+body.analytics-mode #chart-pagination {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+/* ===== Убираем чёрные рамки у канвасов ===== */
+
+#chart-container canvas,
+#analytics-dashboard canvas {
+    border: none !important;
+    outline: none !important;
+}
+
+/* ===== Адаптив KPI ===== */
+
+@media (max-width: 992px) {
+    .kpi-cards-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .kpi-card__value { font-size: 22px; }
+}
+
+@media (max-width: 576px) {
+    .kpi-cards-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .kpi-card {
+        padding: 22px 14px 14px 14px;
+    }
+    .kpi-card__value { font-size: 20px; }
+    .kpi-card__label { font-size: 12px; }
+
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 22px !important;
+    }
+}
