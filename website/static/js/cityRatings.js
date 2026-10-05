@@ -1687,54 +1687,27 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
 
     const row = document.createElement('div');
     row.className = rowClass;
-    row.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 8px;
-        padding: 0 4px;
-        margin-bottom: 6px;
-        flex-shrink: 0;
-    `;
 
     const makeCard = (label, value, color) => {
         const card = document.createElement('div');
-        card.style.cssText = `
-            background: #f8f9fa;
-            border: 2px solid ${color};
-            border-radius: 8px;
-            padding: 8px 10px;
-            text-align: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            min-width: 0;
-        `;
-        const valEl = document.createElement('div');
-        if( label ==='Медианная обеспеченность' || label ==='Медианный дефицит' || label ==='Средняя обеспеченность'|| label ==='Средний дефицит')
-        {
-            valEl.textContent = `${value}%`;
-        }
-        else {
-            valEl.textContent = value;
-        }
+        card.className = 'chart-stat-card';
+        card.style.setProperty('--kpi-color', color);
 
-        valEl.style.cssText = `
-            font-size: 16px;
-            font-weight: 700;
-            color: ${color};
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        `;
+        const valEl = document.createElement('div');
+        valEl.className = 'chart-stat-card__value';
+
+        const percentLabels = [
+            'Медианная обеспеченность',
+            'Медианный дефицит',
+            'Средняя обеспеченность',
+            'Средний дефицит'
+        ];
+        valEl.textContent = percentLabels.includes(label) ? `${value}%` : value;
+
         const lblEl = document.createElement('div');
+        lblEl.className = 'chart-stat-card__label';
         lblEl.textContent = label;
-        lblEl.style.cssText = `
-            font-size: 11px;
-            font-weight: 600;
-            color: black;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        `;
+
         card.appendChild(valEl);
         card.appendChild(lblEl);
         return card;
@@ -1742,7 +1715,6 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
 
     stats.forEach(s => row.appendChild(makeCard(s.label, s.value, s.color)));
 
-    // Куда вставлять
     let anchor = null;
     if (insertAfterSelector) {
         anchor = container.querySelector(insertAfterSelector);
@@ -2201,10 +2173,11 @@ function createRatingChart(data, type) {
                 if (!yScale) return;
 
                 ctx.save();
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1.5;
 
-                // Горизонтальные линии по Y: 20, 40, 60, 80
+                // ===== ГОРИЗОНТАЛЬНЫЕ ЛИНИИ (20 / 40 / 60 / 80) =====
+                ctx.strokeStyle = 'rgb(70, 70, 70)'; // тёмно-серый, почти непрозрачный
+                ctx.lineWidth = 0.8;                 // тоньше чёрных
+
                 [20, 40, 60, 80].forEach(v => {
                     const y = yScale.getPixelForValue(v);
                     if (y < chartArea.top || y > chartArea.bottom) return;
@@ -2214,7 +2187,10 @@ function createRatingChart(data, type) {
                     ctx.stroke();
                 });
 
-                // Вертикальные линии — границы блоков.
+                // ===== ВЕРТИКАЛЬНЫЕ ЛИНИИ (границы блоков) =====
+                ctx.strokeStyle = 'rgb(70, 70, 70)';
+                ctx.lineWidth = 0.8;
+
                 const meta = chart.getDatasetMeta(0);
                 if (meta && meta.data && meta.data.length > 0) {
                     verticalLines.forEach(({ afterIndex }) => {
@@ -3644,6 +3620,8 @@ async function handleAnalyticsDashboardButton() {
 }
 
 function destroyAnalyticsDashboard() {
+    document.body.classList.remove('analytics-mode');
+
     const dashboard = document.getElementById('analytics-dashboard');
     if (dashboard) dashboard.remove();
 
@@ -3661,7 +3639,6 @@ function destroyAnalyticsDashboard() {
     }
     isAnalyticsMode = false;
 }
-
 function switchToAnalyticsMode() {
     hideChartContainer();
     if (ratingChart) {
@@ -3669,6 +3646,8 @@ function switchToAnalyticsMode() {
         ratingChart = null;
     }
     isChartMode = false;
+
+    document.body.classList.add('analytics-mode');
 
     const table = document.getElementById('settlements-table');
     if (table) table.style.display = 'none';
@@ -3699,6 +3678,7 @@ function renderAnalyticsDashboard() {
 
     destroyAnalyticsDashboard();
     isAnalyticsMode = true;
+    document.body.classList.add('analytics-mode');
 
     const dashboard = document.createElement('div');
     dashboard.id = 'analytics-dashboard';
@@ -3718,18 +3698,19 @@ function renderAnalyticsDashboard() {
     headerBlock.style.cssText = `
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
         flex-shrink: 0;
     `;
 
     const title = document.createElement('div');
     title.textContent = 'Аналитический дашборд';
     title.style.cssText = `
-        text-align: left;
-        font-size: 22px;
-        font-weight: 700;
+        text-align: center;
+        font-size: clamp(22px, 2.2vw, 34px);
+        font-weight: 800;
         color: #1a1a1a;
         margin: 0;
+        letter-spacing: 0.3px;
     `;
 
     const regionsSubtitle = document.createElement('div');
@@ -3742,7 +3723,7 @@ function renderAnalyticsDashboard() {
         : 'Регион(ы): не выбраны';
     regionsSubtitle.style.cssText = `
         text-align: left;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
         color: black;
         margin: 0;
@@ -3786,53 +3767,25 @@ function renderAnalyticsDashboard() {
 
     // ==================== КАРТОЧКИ ====================
     const cardsRow = document.createElement('div');
-    cardsRow.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-        flex-shrink: 0;
-    `;
+    cardsRow.className = 'kpi-cards-row';
 
     const makeCard = (label, value, color) => {
         const card = document.createElement('div');
-        card.style.cssText = `
-            background: #f8f9fa;
-            border: 2px solid ${color};
-            border-radius: 10px;
-            padding: 12px 14px;
-            text-align: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            min-width: 0;
-        `;
+        card.className = 'kpi-card';
+        card.style.setProperty('--kpi-color', color);
+
         const valEl = document.createElement('div');
-        if (label==='Средняя обеспеченность' || label ==='Средний дефицит')
-        {
+        valEl.className = 'kpi-card__value';
+        if (label === 'Средняя обеспеченность' || label === 'Средний дефицит') {
             valEl.textContent = `${value} %`;
-        }
-        else
-        {
+        } else {
             valEl.textContent = value;
         }
 
-        valEl.style.cssText = `
-            font-size: 22px;
-            font-weight: 700;
-            color: ${color};
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        `;
         const lblEl = document.createElement('div');
+        lblEl.className = 'kpi-card__label';
         lblEl.textContent = label;
-        lblEl.style.cssText = `
-            font-size: 12px;
-            font-weight: 600;
-            color: black;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        `;
+
         card.appendChild(valEl);
         card.appendChild(lblEl);
         return card;
@@ -3853,7 +3806,7 @@ function renderAnalyticsDashboard() {
     cardsRow.appendChild(makeCard(
         'Средняя обеспеченность',
         avgRating.toFixed(2),
-        'rgba(78 215 41 / 90%)'
+        '#43A047'
     ));
     cardsRow.appendChild(makeCard(
         'Средний дефицит',
@@ -3868,7 +3821,7 @@ function renderAnalyticsDashboard() {
     chartsRow.style.cssText = `
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        gap: 14px;
         width: 100%;
         flex: 1 1 auto;
         min-height: 0;
@@ -3879,9 +3832,9 @@ function renderAnalyticsDashboard() {
         const block = document.createElement('div');
         block.style.cssText = `
             background: #ffffff;
-            border: 2px solid #000;
-            border-radius: 10px;
-            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -3889,12 +3842,13 @@ function renderAnalyticsDashboard() {
             min-height: 0;
             box-sizing: border-box;
             overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         `;
 
         const t = document.createElement('div');
         t.textContent = titleText;
         t.style.cssText = `
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #1a1a1a;
             text-align: center;
@@ -3925,11 +3879,11 @@ function renderAnalyticsDashboard() {
         'analytics-pie-chart'
     );
     const bar1Block = makeChartBlock(
-        'Обеспеченность НП услугами связи',
+        'Средняя обеспеченность НП по видам связи',
         'analytics-bar-services'
     );
     const bar2Block = makeChartBlock(
-        'Обеспеченность НП услугами моб. связи',
+        'Средняя обеспеченность НП услугами мобильной связи',
         'analytics-bar-mobile'
     );
 
@@ -3986,10 +3940,10 @@ function renderAnalyticsDashboard() {
             datasets: [{
                 data: categories.map(c => c.count),
                 backgroundColor: categories.map(c => c.color),
-                borderColor: '#000000',
+                borderColor: '#ffffff',
                 borderWidth: 2,
                 hoverOffset: 10,
-                hoverBorderWidth: 3
+                hoverBorderWidth: 2
             }]
         },
         options: {
@@ -4003,7 +3957,7 @@ function renderAnalyticsDashboard() {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { size: 14, weight: 'bold' },
+                        font: { size: 13, weight: 'bold' },
                         color: '#000000',
                         padding: 10,
                         usePointStyle: true,
@@ -4016,8 +3970,8 @@ function renderAnalyticsDashboard() {
                     backgroundColor: '#bdbdbd',
                     titleColor: '#000000',
                     bodyColor: '#000000',
-                    borderColor: '#000000',
-                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    borderWidth: 0,
                     bodyFont: { size: 12, weight: 'bold' },
                     callbacks: {
                         label: function(context) {
@@ -4032,28 +3986,50 @@ function renderAnalyticsDashboard() {
         }
     });
 
-    // ==================== ДИАГРАММА 2: услуги связи (рейтинги) ====================
+    // ==================== ДИАГРАММА 2: услуги связи ====================
     const serviceGroups = [
-        { key: 'rating_mobile',    label: 'Моб. связь' },
-        { key: 'rating_tv',        label: 'ТВ' },
-        { key: 'rating_rv',        label: 'РВ' },
-        { key: 'rating_comm_hubs', label: 'УС' },
-        { key: 'rating_posts',     label: 'Почтовая связь' },
-        { key: 'rating_focl',      label: 'ВОЛС' },
-        { key: 'rating_payphones', label: 'Таксофоны' },
-
+        { key: 'rating_mobile', label: 'Моб. связь' },
+        { key: 'rating_wifi',   label: 'ШПД(Wi-Fi)' },
+        { key: 'rating_tv',     label: 'ТВ' },
+        { key: 'rating_rv',     label: 'РВ' },
+        { key: 'rating_sput',   label: 'Спутниковая связь' },
+        { keys: ['rating_focl', 'rating_payphones'], label: 'Проводная связь' },
+        { key: 'rating_posts',  label: 'Почтовая связь' }
     ];
 
     const serviceStats = serviceGroups.map(g => {
         let sum = 0, cnt = 0;
+
         items.forEach(item => {
             const r = allRatings[String(item.id)];
             if (!r) return;
-            const v = Number(r[g.key]);
-            if (!isNaN(v) && r[g.key] !== undefined && r[g.key] !== null) {
-                sum += v; cnt++;
+
+            if (g.keys && g.keys.length > 0) {
+                let localSum = 0, localCnt = 0;
+                g.keys.forEach(k => {
+                    const raw = r[k];
+                    if (raw === undefined || raw === null) return;
+                    const v = Number(raw);
+                    if (!isNaN(v)) {
+                        localSum += v;
+                        localCnt++;
+                    }
+                });
+                if (localCnt > 0) {
+                    sum += localSum / localCnt;
+                    cnt++;
+                }
+            } else {
+                const raw = r[g.key];
+                if (raw === undefined || raw === null) return;
+                const v = Number(raw);
+                if (!isNaN(v)) {
+                    sum += v;
+                    cnt++;
+                }
             }
         });
+
         const avg = cnt > 0 ? sum / cnt : 0;
         return {
             label: g.label,
@@ -4073,7 +4049,7 @@ function renderAnalyticsDashboard() {
                     data: serviceStats.map(s => s.provided),
                     backgroundColor: '#1a73e8',
                     borderColor: '#1a73e8',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     stack: 'total'
                 },
                 {
@@ -4081,7 +4057,7 @@ function renderAnalyticsDashboard() {
                     data: serviceStats.map(s => s.deficit),
                     backgroundColor: '#ff6a00',
                     borderColor: '#ff6a00',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     stack: 'total'
                 }
             ]
@@ -4092,6 +4068,7 @@ function renderAnalyticsDashboard() {
             scales: {
                 x: {
                     stacked: true,
+                    border: { display: false },
                     ticks: {
                         color: '#000',
                         font: { size: 10, weight: 'bold' },
@@ -4106,13 +4083,14 @@ function renderAnalyticsDashboard() {
                     beginAtZero: true,
                     min: 0,
                     max: 100,
+                    border: { display: false },
                     ticks: {
                         stepSize: 20,
                         color: '#000',
                         font: { size: 10, weight: 'bold' },
                         callback: v => v
                     },
-                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    grid: { color: 'rgba(0,0,0,0.08)' },
                     title: {
                         display: true,
                         text: 'Обеспеченность',
@@ -4125,7 +4103,7 @@ function renderAnalyticsDashboard() {
                 legend: {
                     position: 'top',
                     labels: {
-                        font: { size: 14, weight: 'bold' },
+                        font: { size: 13, weight: 'bold' },
                         color: '#000',
                         boxWidth: 14,
                         boxHeight: 14
@@ -4135,8 +4113,8 @@ function renderAnalyticsDashboard() {
                     backgroundColor: '#bdbdbd',
                     titleColor: '#000',
                     bodyColor: '#000',
-                    borderColor: '#000',
-                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    borderWidth: 0,
                     callbacks: {
                         label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
                     }
@@ -4145,13 +4123,12 @@ function renderAnalyticsDashboard() {
         }
     });
 
-    // ==================== ДИАГРАММА 3: моб. связь (процент трафика) ====================
+    // ==================== ДИАГРАММА 3: моб. связь ====================
     const mobileGroups = [
+        { key: 'rating_5g',    label: '5G' },
         { key: 'rating_lte',   label: 'LTE' },
         { key: 'rating_gsm',   label: 'GSM' },
-        { key: 'rating_5g',    label: '5G' },
-        { key: 'rating_tetra', label: 'Tetra' },
-        { key: 'rating_wifi',  label: 'Wi-Fi' }
+        { key: 'rating_tetra', label: 'Tetra' }
     ];
 
     const mobileStats = mobileGroups.map(g => {
@@ -4186,7 +4163,7 @@ function renderAnalyticsDashboard() {
                     data: mobileStats.map(s => s.provided),
                     backgroundColor: '#1a73e8',
                     borderColor: '#1a73e8',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     stack: 'total'
                 },
                 {
@@ -4194,7 +4171,7 @@ function renderAnalyticsDashboard() {
                     data: mobileStats.map(s => s.deficit),
                     backgroundColor: '#ff6a00',
                     borderColor: '#ff6a00',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     stack: 'total'
                 }
             ]
@@ -4205,6 +4182,7 @@ function renderAnalyticsDashboard() {
             scales: {
                 x: {
                     stacked: true,
+                    border: { display: false },
                     ticks: {
                         color: '#000',
                         font: { size: 10, weight: 'bold' },
@@ -4219,13 +4197,14 @@ function renderAnalyticsDashboard() {
                     beginAtZero: true,
                     min: 0,
                     max: 100,
+                    border: { display: false },
                     ticks: {
                         stepSize: 20,
                         color: '#000',
                         font: { size: 10, weight: 'bold' },
                         callback: v => v
                     },
-                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    grid: { color: 'rgba(0,0,0,0.08)' },
                     title: {
                         display: true,
                         text: 'Обеспеченность',
@@ -4238,7 +4217,7 @@ function renderAnalyticsDashboard() {
                 legend: {
                     position: 'top',
                     labels: {
-                        font: { size: 14, weight: 'bold' },
+                        font: { size: 13, weight: 'bold' },
                         color: '#000',
                         boxWidth: 14,
                         boxHeight: 14
@@ -4248,8 +4227,8 @@ function renderAnalyticsDashboard() {
                     backgroundColor: '#bdbdbd',
                     titleColor: '#000',
                     bodyColor: '#000',
-                    borderColor: '#000',
-                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    borderWidth: 0,
                     callbacks: {
                         label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
                     }
@@ -6111,6 +6090,7 @@ async function handleResButton() {
 // ==================== ОЧИСТКА ====================
 
 function handleClear() {
+    document.body.classList.remove('analytics-mode');
     const form = document.querySelector('.form__rating');
     if (form) {
         form.reset();
