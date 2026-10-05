@@ -4038,6 +4038,86 @@ function renderAnalyticsDashboard() {
         };
     });
 
+    // ==================== ОБЩИЕ ОПЦИИ ДЛЯ ОБЕИХ СТОЛБЧАТЫХ ДИАГРАММ ====================
+    // Единая высота оси X у обеих диаграмм — выравнивает значения по Y
+    // (0, 20, 40, 60, 80, 100) на одной линии.
+    // Увеличено с 80 до 110 — подписям по X дано больше места,
+    // сами диаграммы стали чуть меньше.
+    const FIXED_X_AXIS_HEIGHT = 110;
+
+    const commonBarOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 8,     // чуть больше воздуха сверху — диаграммы визуально меньше
+                bottom: 0   // всё место под подписи резервируется через afterFit
+            }
+        },
+        scales: {
+            x: {
+                stacked: true,
+                border: { display: false },
+                ticks: {
+                    color: '#000',
+                    font: { size: 10, weight: 'bold' },
+                    maxRotation: 45,
+                    minRotation: 45,
+                    autoSkip: false,
+                    padding: 8   // подписи отодвинуты от оси — им дано больше места
+                },
+                grid: { display: false },
+                // Принудительно фиксируем высоту оси X (после стандартного расчёта).
+                afterFit(scale) {
+                    scale.height = FIXED_X_AXIS_HEIGHT;
+                }
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true,
+                min: 0,
+                max: 100,
+                border: { display: false },
+                ticks: {
+                    stepSize: 20,
+                    color: '#000',
+                    font: { size: 10, weight: 'bold' },
+                    callback: v => v
+                },
+                grid: { color: 'rgba(0,0,0,0.08)' },
+                title: {
+                    display: true,
+                    text: 'Обеспеченность',
+                    color: '#000',
+                    font: { size: 11, weight: 'bold' }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    font: { size: 13, weight: 'bold' },
+                    color: '#000',
+                    boxWidth: 14,
+                    boxHeight: 14,
+                    padding: 10
+                }
+            },
+            tooltip: {
+                backgroundColor: '#bdbdbd',
+                titleColor: '#000',
+                bodyColor: '#000',
+                borderColor: '#ffffff',
+                borderWidth: 0,
+                callbacks: {
+                    label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
+                }
+            }
+        }
+    };
+
+    // ---- Диаграмма 2: услуги связи ----
     const ctx1 = canvas1.getContext('2d');
     analyticsBarServices = new Chart(ctx1, {
         type: 'bar',
@@ -4062,65 +4142,7 @@ function renderAnalyticsDashboard() {
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    stacked: true,
-                    border: { display: false },
-                    ticks: {
-                        color: '#000',
-                        font: { size: 10, weight: 'bold' },
-                        maxRotation: 45,
-                        minRotation: 45,
-                        autoSkip: false
-                    },
-                    grid: { display: false }
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    min: 0,
-                    max: 100,
-                    border: { display: false },
-                    ticks: {
-                        stepSize: 20,
-                        color: '#000',
-                        font: { size: 10, weight: 'bold' },
-                        callback: v => v
-                    },
-                    grid: { color: 'rgba(0,0,0,0.08)' },
-                    title: {
-                        display: true,
-                        text: 'Обеспеченность',
-                        color: '#000',
-                        font: { size: 11, weight: 'bold' }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: { size: 13, weight: 'bold' },
-                        color: '#000',
-                        boxWidth: 14,
-                        boxHeight: 14
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#bdbdbd',
-                    titleColor: '#000',
-                    bodyColor: '#000',
-                    borderColor: '#ffffff',
-                    borderWidth: 0,
-                    callbacks: {
-                        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
-                    }
-                }
-            }
-        }
+        options: commonBarOptions
     });
 
     // ==================== ДИАГРАММА 3: моб. связь ====================
@@ -4176,65 +4198,7 @@ function renderAnalyticsDashboard() {
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    stacked: true,
-                    border: { display: false },
-                    ticks: {
-                        color: '#000',
-                        font: { size: 10, weight: 'bold' },
-                        maxRotation: 45,
-                        minRotation: 45,
-                        autoSkip: false
-                    },
-                    grid: { display: false }
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    min: 0,
-                    max: 100,
-                    border: { display: false },
-                    ticks: {
-                        stepSize: 20,
-                        color: '#000',
-                        font: { size: 10, weight: 'bold' },
-                        callback: v => v
-                    },
-                    grid: { color: 'rgba(0,0,0,0.08)' },
-                    title: {
-                        display: true,
-                        text: 'Обеспеченность',
-                        color: '#000',
-                        font: { size: 11, weight: 'bold' }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: { size: 13, weight: 'bold' },
-                        color: '#000',
-                        boxWidth: 14,
-                        boxHeight: 14
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#bdbdbd',
-                    titleColor: '#000',
-                    bodyColor: '#000',
-                    borderColor: '#ffffff',
-                    borderWidth: 0,
-                    callbacks: {
-                        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
-                    }
-                }
-            }
-        }
+        options: commonBarOptions
     });
 }
 

@@ -2649,3 +2649,332 @@ body.analytics-mode #chart-pagination {
         font-size: 22px !important;
     }
 }
+#analytics-bar-services,
+#analytics-bar-mobile {
+    height: 100% !important;
+    width: 100% !important;
+}
+/* === Выравнивание столбчатых диаграмм аналитики === */
+/* Все три блока диаграмм — одинаковая высота */
+#analytics-dashboard > div:nth-child(3) > div {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Фиксируем одинаковую высоту обёрток канвасов */
+#analytics-pie-chart,
+#analytics-bar-services,
+#analytics-bar-mobile {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+}
+
+/* Обёртки канвасов — одинаковая высота */
+#analytics-dashboard canvas {
+    max-height: 100% !important;
+}
+
+/* Убираем лишний нижний отступ у блоков диаграмм */
+#analytics-dashboard > div:nth-child(3) {
+    align-items: stretch !important;
+}
+/* ============================================================ */
+/* ===== АДАПТИВ: БОЛЬШЕ МЕСТА ДИАГРАММАМ НА МАЛЫХ/СРЕДНИХ ЭКРАНАХ ===== */
+
+/* ---------- Планшеты и маленькие ноутбуки (<= 1200px) ---------- */
+@media (max-width: 1200px) {
+    /* Карточки KPI — компактнее, чтобы не съедать высоту у диаграмм */
+    .kpi-cards-row {
+        gap: 10px;
+        margin-bottom: 2px;
+    }
+
+    .kpi-card {
+        padding: 18px 12px 10px 12px;
+        border-radius: 12px;
+    }
+
+    .kpi-card::before {
+        height: 6px;
+    }
+
+    .kpi-card__value {
+        font-size: 20px;
+        margin-bottom: 3px;
+    }
+
+    .kpi-card__label {
+        font-size: 12px;
+    }
+
+    /* Заголовок дашборда — компактнее */
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 24px !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:last-child {
+        font-size: 14px !important;
+    }
+
+    /* Отступы внутри дашборда — меньше */
+    #analytics-dashboard {
+        gap: 10px !important;
+        padding: 4px 0 !important;
+    }
+
+    /* Блоки диаграмм — минимальный padding, максимум места канвасу */
+    #analytics-dashboard > div:nth-child(3) > div {
+        padding: 8px 10px !important;
+        gap: 4px !important;
+        border-radius: 10px !important;
+    }
+
+    /* Заголовки диаграмм — компактнее */
+    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
+        font-size: 13px !important;
+        line-height: 1.15 !important;
+    }
+
+    /* Обёртки канвасов — растягиваются по максимуму */
+    #analytics-dashboard > div:nth-child(3) > div > div:last-child {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+}
+
+/* ---------- Планшеты в портретной ориентации (<= 992px) ---------- */
+@media (max-width: 992px) {
+    /* Карточки KPI — в 2 колонки, компактнее */
+    .kpi-cards-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .kpi-card {
+        padding: 14px 10px 8px 10px;
+        border-radius: 10px;
+    }
+
+    .kpi-card::before {
+        height: 5px;
+    }
+
+    .kpi-card__value {
+        font-size: 18px;
+        margin-bottom: 2px;
+    }
+
+    .kpi-card__label {
+        font-size: 11px;
+    }
+
+    /* Дашборд — 3 диаграммы в одну колонку, каждая повыше */
+    #analytics-dashboard > div:nth-child(3) {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    /* Каждая диаграмма получает больше вертикали */
+    #analytics-dashboard > div:nth-child(3) > div {
+        min-height: 260px !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Заголовок — компактнее */
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 20px !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:last-child {
+        font-size: 13px !important;
+    }
+
+    #analytics-dashboard {
+        gap: 8px !important;
+        padding: 2px 0 !important;
+    }
+}
+
+/* ---------- Мобильные (<= 768px) ---------- */
+@media (max-width: 768px) {
+    /* Карточки KPI — 2 в ряд, ещё компактнее */
+    .kpi-cards-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 0;
+    }
+
+    .kpi-card {
+        padding: 12px 8px 6px 8px;
+        border-radius: 8px;
+    }
+
+    .kpi-card::before {
+        height: 4px;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .kpi-card__value {
+        font-size: 16px;
+        margin-bottom: 2px;
+    }
+
+    .kpi-card__label {
+        font-size: 10px;
+    }
+
+    /* Заголовок и подзаголовок — минимальные */
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 18px !important;
+        margin-bottom: 2px !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:last-child {
+        font-size: 12px !important;
+    }
+
+    #analytics-dashboard {
+        gap: 6px !important;
+        padding: 0 !important;
+    }
+
+    /* Диаграммы — в одну колонку, каждая повыше */
+    #analytics-dashboard > div:nth-child(3) {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div {
+        min-height: 240px !important;
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
+        font-size: 12px !important;
+        line-height: 1.15 !important;
+    }
+
+    /* Обёртка канваса — максимум высоты */
+    #analytics-dashboard > div:nth-child(3) > div > div:last-child {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+}
+
+/* ---------- Маленькие телефоны (<= 576px) ---------- */
+@media (max-width: 576px) {
+    /* KPI — в одну колонку, но очень плоские, чтобы не отнимать высоту */
+    .kpi-cards-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .kpi-card {
+        padding: 10px 8px 6px 8px;
+    }
+
+    .kpi-card__value {
+        font-size: 15px;
+    }
+
+    .kpi-card__label {
+        font-size: 10px;
+    }
+
+    /* Диаграммы — выше */
+    #analytics-dashboard > div:nth-child(3) > div {
+        min-height: 220px !important;
+    }
+}
+
+/* ---------- Очень маленькие телефоны (<= 400px) ---------- */
+@media (max-width: 400px) {
+    .kpi-card {
+        padding: 8px 6px 5px 6px;
+    }
+
+    .kpi-card::before {
+        height: 3px;
+    }
+
+    .kpi-card__value {
+        font-size: 14px;
+    }
+
+    .kpi-card__label {
+        font-size: 9px;
+    }
+
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 16px !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:last-child {
+        font-size: 11px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div {
+        min-height: 200px !important;
+        padding: 6px 8px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
+        font-size: 11px !important;
+    }
+}
+
+/* ---------- Ландшафт на низких экранах (max-height: 600px) ---------- */
+@media (max-height: 600px) and (orientation: landscape) {
+    /* Карточки KPI — горизонтально, очень плоские */
+    .kpi-cards-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 6px;
+        margin-bottom: 0;
+    }
+
+    .kpi-card {
+        padding: 8px 6px 5px 6px;
+    }
+
+    .kpi-card::before {
+        height: 3px;
+    }
+
+    .kpi-card__value {
+        font-size: 13px;
+    }
+
+    .kpi-card__label {
+        font-size: 9px;
+    }
+
+    #analytics-dashboard {
+        gap: 4px !important;
+        padding: 0 !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:first-child {
+        font-size: 16px !important;
+    }
+
+    #analytics-dashboard > div:first-child > div:last-child {
+        font-size: 11px !important;
+    }
+
+    /* Диаграммы — в 3 колонки, но повыше */
+    #analytics-dashboard > div:nth-child(3) {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div {
+        min-height: 180px !important;
+        padding: 6px 8px !important;
+    }
+
+    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
+        font-size: 10px !important;
+    }
+}
