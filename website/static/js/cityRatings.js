@@ -406,7 +406,7 @@ let selectedSettlementName = null;
 
 let currentRegions = [];
 let currentKinds = [];
-let currentPopRange = { from: 1, to: 17000000 };
+let currentPopRange = null;
 
 let isCancelled = false;
 let isCalculateMode = false;
@@ -565,12 +565,9 @@ async function loadRatingsBulk(regions, popRange) {
 
         const body = {
             regions: Array.isArray(regions) ? regions : [],
-            population_filters: [
-                {
-                    from: popRange && popRange.from !== undefined ? popRange.from : 0,
-                    to: popRange && popRange.to !== undefined ? popRange.to : 17000000
-                }
-            ]
+            population_filters: popRange
+                ? [{ from: popRange.from, to: popRange.to }]
+                : []
         };
 
         const response = await getRatingsPage(0, 1, body);
@@ -1900,11 +1897,11 @@ function createRatingChart(data, type) {
 
     // ==================== КАТЕГОРИИ ПО ДИАПАЗОНАМ ====================
     const rangeBuckets = [
-        { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#E53935' },
-        { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#FB8C00' },
-        { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#FDD835' },
-        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#43A047' },
-        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#1E88E5' }
+        { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
+        { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#29B6F6' }, // голубой
+        { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#0D47A1' }, // темно-синий
+        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#1B5E20' }, // темно-зеленый
+        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#43A047' }  // зеленый
     ];
 
     ratingsAll.forEach(v => {
@@ -2958,8 +2955,9 @@ function getPopulationRange() {
     const fromInput = document.getElementById('numbers-settlement');
     const toInput = document.getElementById('numbers-settlements');
 
+    // «Все НП» — без фильтра по численности
     if (radioAll && radioAll.checked) {
-        return { from: 1, to: 17000000 };
+        return null;
     }
 
     if (radioRange && radioRange.checked) {
@@ -2968,9 +2966,9 @@ function getPopulationRange() {
         return { from, to };
     }
 
-    return { from: 1, to: 17000000 };
+    // По умолчанию — без фильтра
+    return null;
 }
-
 // ==================== ФУНКЦИИ СТРАНИЦ ====================
 
 function getPageSize(tableType) {
@@ -3073,12 +3071,9 @@ async function loadSettlements(page = 0, regions, popRange, pageSize) {
 
         const body = {
             regions: regions,
-            population_filters: [
-                {
-                    from: popRange.from,
-                    to: popRange.to
-                }
-            ]
+            population_filters: popRange
+                ? [{ from: popRange.from, to: popRange.to }]
+                : []
         };
 
         const result = await getSettlementsPage(0, 1, body);
@@ -3908,13 +3903,14 @@ function renderAnalyticsDashboard() {
     const canvas1 = bar1Block.canvas;
     const canvas2 = bar2Block.canvas;
 
+
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
-        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#E53935' },
-        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#FB8C00' },
-        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#f1c305' },
-        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#43A047' },
-        { label: '81-100', min: 81,  max: 100, count: 0, color: '#1E88E5' }
+        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
+        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#29B6F6' }, // голубой
+        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#0D47A1' }, // темно-синий
+        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#1B5E20' }, // темно-зеленый
+        { label: '81-100', min: 81,  max: 100, count: 0, color: '#43A047' }  // зеленый
     ];
 
     items.forEach(item => {
