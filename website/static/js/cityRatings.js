@@ -103,6 +103,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
 
     // ТВ
     'TV_KOL_RES': 'count_res_tv',
+    'TV_PROC_RES': 'percent_res_tv',
     'TV_KOL_CHANNELS': 'count_channels_tv',
     'TV_POKRITIE': 'communication_coverage_tv',
     'TV_PROC_POKRITIE': 'communication_coverage_percent_tv',
@@ -112,6 +113,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
 
     // РВ
     'RV_KOL_RES': 'count_res_rv',
+    'RV_PROC_RES': 'percent_res_rv',
     'RV_WIDTH': 'frequency_width_rv',
     'RV_KOL_CHANNELS': 'count_channels_rv',
     'RV_POKRITIE': 'communication_coverage_rv',
@@ -129,6 +131,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'LTE_TRAFIK': 'traffic_lte',
     'LTE_PROC_TRAFIK': 'traffic_percent_lte',
     'LTE_KOL_OPERATOR': 'count_operators_lte',
+    'LTE_SCORE': 'rating_lte',
 
     // GSM
     'GSM_KOL_RES': 'count_res_gsm',
@@ -139,6 +142,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'GSM_TRAFIK': 'traffic_gsm',
     'GSM_PROC_TRAFIK': 'traffic_percent_gsm',
     'GSM_KOL_OPERATOR': 'count_operators_gsm',
+    'GSM_SCORE': 'rating_gsm',
 
     // 5G
     'G5_KOL_RES': 'count_res_5g',
@@ -149,6 +153,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'G5_TRAFIK': 'traffic_5g',
     'G5_PROC_TRAFIK': 'traffic_percent_5g',
     'G5_KOL_OPERATOR': 'count_operators_5g',
+    'G5_SCORE': 'rating_5g',
 
     // Wi-Fi
     'WIFI_KOL_RES': 'count_res_wifi',
@@ -171,6 +176,7 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'TETRA_TRAFIK': 'traffic_tetra',
     'TETRA_PROC_TRAFIK': 'traffic_percent_tetra',
     'TETRA_KOL_OPERATOR': 'count_operators_tetra',
+    'TETRA_SCORE': 'rating_tetra',
 
     // УС
     'US_KOL_US': 'count_comm_hubs',
@@ -247,7 +253,9 @@ const RANKING_DB_TO_OBJECT_KEY = {
 const RANKING_COLUMN_LABELS = {
     'ID': 'ID',
 
+    // ТВ
     'TV_KOL_RES': 'Количество РЭС ТВ',
+    'TV_PROC_RES': 'Процент РЭС ТВ',
     'TV_KOL_CHANNELS': 'Количество каналов ТВ',
     'TV_POKRITIE': 'Покрытие связи ТВ',
     'TV_PROC_POKRITIE': 'Процент покрытия связи ТВ',
@@ -255,7 +263,9 @@ const RANKING_COLUMN_LABELS = {
     'TV_PROC_OPERATOR': 'Процент операторов ТВ',
     'TV_SCORE': 'Оценка ТВ',
 
+    // РВ
     'RV_KOL_RES': 'Количество РЭС РВ',
+    'RV_PROC_RES': 'Процент РЭС РВ',
     'RV_WIDTH': 'Общая ширина полосы РВ, МГц',
     'RV_KOL_CHANNELS': 'Количество каналов РВ',
     'RV_POKRITIE': 'Покрытие связи РВ',
@@ -264,6 +274,7 @@ const RANKING_COLUMN_LABELS = {
     'RV_PROC_OPERATOR': 'Процент операторов РВ',
     'RV_SCORE': 'Оценка РВ',
 
+    // LTE
     'LTE_KOL_RES': 'Количество РЭС LTE',
     'LTE_KOL_AB': 'Количество абонентов LTE',
     'LTE_PROC_NAS': 'Процент охвата населения LTE',
@@ -272,7 +283,9 @@ const RANKING_COLUMN_LABELS = {
     'LTE_TRAFIK': 'Объем трафика LTE',
     'LTE_PROC_TRAFIK': 'Процент трафика LTE',
     'LTE_KOL_OPERATOR': 'Количество операторов LTE',
+    'LTE_SCORE': 'Оценка LTE',
 
+    // GSM
     'GSM_KOL_RES': 'Количество РЭС GSM',
     'GSM_KOL_AB': 'Количество абонентов GSM',
     'GSM_PROC_NAS': 'Процент охвата населения GSM',
@@ -281,7 +294,9 @@ const RANKING_COLUMN_LABELS = {
     'GSM_TRAFIK': 'Объем трафика GSM',
     'GSM_PROC_TRAFIK': 'Процент трафика GSM',
     'GSM_KOL_OPERATOR': 'Количество операторов GSM',
+    'GSM_SCORE': 'Оценка GSM',
 
+    // 5G
     'G5_KOL_RES': 'Количество РЭС 5G',
     'G5_KOL_AB': 'Количество абонентов 5G',
     'G5_PROC_NAS': 'Процент охвата населения 5G',
@@ -290,7 +305,9 @@ const RANKING_COLUMN_LABELS = {
     'G5_TRAFIK': 'Объем трафика 5G',
     'G5_PROC_TRAFIK': 'Процент трафика 5G',
     'G5_KOL_OPERATOR': 'Количество операторов 5G',
+    'G5_SCORE': 'Оценка 5G',
 
+    // Wi-Fi
     'WIFI_KOL_RES': 'Количество РЭС Wi-Fi',
     'WIFI_KOL_AB': 'Количество абонентов Wi-Fi',
     'WIFI_PROC_NAS': 'Процент охвата населения Wi-Fi',
@@ -302,6 +319,7 @@ const RANKING_COLUMN_LABELS = {
     'WIFI_PROC_OPERATOR': 'Процент операторов Wi-Fi',
     'WIFI_SCORE': 'Оценка Wi-Fi',
 
+    // Tetra
     'TETRA_KOL_RES': 'Количество РЭС Tetra',
     'TETRA_KOL_AB': 'Количество абонентов Tetra',
     'TETRA_PROC_NAS': 'Процент охвата населения Tetra',
@@ -310,7 +328,9 @@ const RANKING_COLUMN_LABELS = {
     'TETRA_TRAFIK': 'Объем трафика Tetra',
     'TETRA_PROC_TRAFIK': 'Процент трафика Tetra',
     'TETRA_KOL_OPERATOR': 'Количество операторов Tetra',
+    'TETRA_SCORE': 'Оценка Tetra',
 
+    // УС
     'US_KOL_US': 'Количество узлов связи',
     'US_KOL_AB': 'Количество абонентов узлов связи',
     'US_PROC_NAS': 'Процент охвата населения узлов связи',
@@ -322,6 +342,7 @@ const RANKING_COLUMN_LABELS = {
     'US_PROC_OPERATOR': 'Процент операторов узлов связи',
     'US_SCORE': 'Оценка узлов связи',
 
+    // Почта
     'POST_KOL_POST': 'Количество почтовых отделений',
     'POST_KOL_AB': 'Количество абонентов почтовых отделений',
     'POST_PROC_NAS': 'Процент охвата населения почтовых отделений',
@@ -333,6 +354,7 @@ const RANKING_COLUMN_LABELS = {
     'POST_PROC_OPERATOR': 'Процент операторов почтовых отделений',
     'POST_SCORE': 'Оценка почтовых отделений',
 
+    // ВОЛС
     'VOLS_KOL_VOLS': 'Количество ВОЛС',
     'VOLS_KOL_AB': 'Количество абонентов ВОЛС',
     'VOLS_PROC_NAS': 'Процент охвата населения ВОЛС',
@@ -344,6 +366,7 @@ const RANKING_COLUMN_LABELS = {
     'VOLS_PROC_OPERATOR': 'Процент операторов ВОЛС',
     'VOLS_SCORE': 'Оценка ВОЛС',
 
+    // Таксофоны
     'TAKS_KOL_TAKS': 'Количество таксофонов',
     'TAKS_KOL_AB': 'Количество абонентов таксофонов',
     'TAKS_PROC_NAS': 'Процент охвата населения таксофонами',
@@ -355,6 +378,7 @@ const RANKING_COLUMN_LABELS = {
     'TAKS_PROC_OPERATOR': 'Процент операторов таксофонов',
     'TAKS_SCORE': 'Оценка таксофонов',
 
+    // Мобильная связь
     'MOB_KOL_RES': 'Количество РЭС моб. связи',
     'MOB_KOL_AB': 'Количество абонентов моб. связи',
     'MOB_PROC_NAS': 'Процент охвата населения моб. связи',
@@ -366,6 +390,7 @@ const RANKING_COLUMN_LABELS = {
     'MOB_PROC_OPERATOR': 'Процент операторов моб. связи',
     'MOB_SCORE': 'Оценка моб. связи',
 
+    // Суммарные
     'RAT_NP_KOL_AB': 'Общее количество абонентов',
     'RAT_NP_PROC_NAS': 'Общий процент охвата населения',
     'RAT_NP_POKRITIE': 'Общее покрытие',
@@ -2482,7 +2507,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_percent_lte', label: 'Процент покрытия связи LTE' },
                 { key: 'traffic_lte', label: 'Объем трафика LTE' },
                 { key: 'traffic_percent_lte', label: 'Процент трафика LTE' },
-                { key: 'count_operators_lte', label: 'Количество операторов LTE' }
+                { key: 'count_operators_lte', label: 'Количество операторов LTE' },
+                { key: 'rating_lte', label: 'Оценка LTE' }
             ]
         },
         {
@@ -2495,7 +2521,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_percent_gsm', label: 'Процент покрытия связи GSM' },
                 { key: 'traffic_gsm', label: 'Объем трафика GSM' },
                 { key: 'traffic_percent_gsm', label: 'Процент трафика GSM' },
-                { key: 'count_operators_gsm', label: 'Количество операторов GSM' }
+                { key: 'count_operators_gsm', label: 'Количество операторов GSM' },
+                { key: 'rating_gsm', label: 'Оценка GSM' }
             ]
         },
         {
@@ -2508,7 +2535,8 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_percent_5g', label: 'Процент покрытия связи 5G' },
                 { key: 'traffic_5g', label: 'Объем трафика 5G' },
                 { key: 'traffic_percent_5g', label: 'Процент трафика 5G' },
-                { key: 'count_operators_5g', label: 'Количество операторов 5G' }
+                { key: 'count_operators_5g', label: 'Количество операторов 5G' },
+                { key: 'rating_5g', label: 'Оценка 5G' }
             ]
         },
         {
@@ -2536,13 +2564,15 @@ function buildRatingGroups() {
                 { key: 'communication_coverage_percent_tetra', label: 'Процент покрытия связи Tetra' },
                 { key: 'traffic_tetra', label: 'Объем трафика Tetra' },
                 { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' },
-                { key: 'count_operators_tetra', label: 'Количество операторов Tetra' }
+                { key: 'count_operators_tetra', label: 'Количество операторов Tetra' },
+                { key: 'rating_tetra', label: 'Оценка Tetra' }
             ]
         },
         {
             title: 'Телевидение (ТВ)',
             fields: [
                 { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
+                { key: 'percent_res_tv', label: 'Процент РЭС ТВ' },
                 { key: 'count_channels_tv', label: 'Количество каналов ТВ' },
                 { key: 'communication_coverage_tv', label: 'Покрытие связи ТВ' },
                 { key: 'communication_coverage_percent_tv', label: 'Процент покрытия связи ТВ' },
@@ -2555,6 +2585,7 @@ function buildRatingGroups() {
             title: 'Радиовещание (РВ)',
             fields: [
                 { key: 'count_res_rv', label: 'Количество РЭС РВ' },
+                { key: 'percent_res_rv', label: 'Процент РЭС РВ' },
                 { key: 'frequency_width_rv', label: 'Общая ширина полосы РВ, МГц' },
                 { key: 'count_channels_rv', label: 'Количество каналов РВ' },
                 { key: 'communication_coverage_rv', label: 'Покрытие связи РВ' },
@@ -4286,6 +4317,24 @@ async function openEditModal(settlementId, type) {
                 value: getValueByDbColumn(ranking, 'RAT_SUM_NP', rankingDbToKey)
             });
         }
+    });
+
+    // === Fallback: добавляем поля из buildRatingGroups, которых нет в шапке таблицы ===
+    const allGroups = buildRatingGroups();
+    allGroups.forEach(group => {
+        group.fields.forEach(f => {
+            if (seen.has(f.key)) return;
+            const dbColumn = rankingKeyToDb[f.key];
+            if (!dbColumn) return;
+            seen.add(f.key);
+            orderedFields.push({
+                table: 'ranking',
+                dbColumn: dbColumn,
+                objectKey: f.key,
+                label: f.label,
+                value: getValueByDbColumn(ranking, dbColumn, rankingDbToKey)
+            });
+        });
     });
 
     const existing = document.getElementById('row-data-modal');
