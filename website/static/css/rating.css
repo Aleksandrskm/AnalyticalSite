@@ -2978,3 +2978,156 @@ body.analytics-mode #chart-pagination {
         font-size: 10px !important;
     }
 }
+/* Увеличиваем высоту контейнера диаграммы */
+#chart-container {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 6px 8px 8px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    border-radius: 3px;
+    height: calc(100vh - 120px);
+    min-height: 500px;
+}
+
+@media (min-width: 1400px) {
+    #chart-container {
+        height: calc(100vh - 140px);
+        min-height: 600px;
+    }
+}
+
+/* Более выразительные тени для карточек */
+.chart-stat-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 22px 14px 12px 14px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    min-width: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chart-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
+}
+
+.kpi-card {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
+}
+
+/* Скрываем ряд с диапазонными карточками, если где-то остался в разметке */
+.chart-stats-row-buckets {
+    display: none !important;
+}
+
+/* Ряд с диапазонами больше не используется */
+.chart-stats-row-buckets {
+    display: none !important;
+}
+/* ============================================================ */
+/* ===== КОНТЕЙНЕР ДИАГРАММЫ РЕЙТИНГА НП ===== */
+
+#chart-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 6px 8px 8px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    border-radius: 3px;
+}
+
+#chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* .table__rating должен тянуться по flex, а не по calc */
+.table__rating {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Карточки статистики — компактные */
+.chart-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    margin-bottom: 6px !important;
+    flex-shrink: 0 !important;
+}
+
+.chart-stat-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 12px 10px 6px 10px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    min-width: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chart-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
+}
+
+.chart-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--kpi-color, #0066ff);
+    border-radius: 8px 8px 0 0;
+}
+
+.chart-stat-card__value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--kpi-color, #0066ff);
+    line-height: 1.1;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-stat-card__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-stats-row-buckets {
+    display: none !important;
+}
