@@ -693,7 +693,8 @@ function showChartContainer() {
     if (chartContainer) {
         chartContainer.style.display = 'flex';
         chartContainer.style.flexDirection = 'column';
-        chartContainer.style.height = '600px';
+        chartContainer.style.height = 'calc(100vh - 120px)';
+        chartContainer.style.minHeight = '500px';
     }
 
     if (table) table.style.display = 'none';
@@ -1730,6 +1731,13 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
         lblEl.className = 'chart-stat-card__label';
         lblEl.textContent = label;
 
+        // ===== Подсказки при наведении =====
+        const valueText = valEl.textContent;
+        const fullText = `${label}: ${valueText}`;
+        card.title = fullText;         // на всей карточке
+        valEl.title = valueText;       // на значении
+        lblEl.title = label;           // на подписи
+
         card.appendChild(valEl);
         card.appendChild(lblEl);
         return card;
@@ -1764,10 +1772,8 @@ function rebuildChartPreservingZoom() {
     const savedMax = ratingChart.options.scales.x.max;
     const savedSelected = selectedSearchItem;
 
-    // Пересобираем данные диаграммы, но НЕ трогаем панель управления
     const query = chartSearchQuery.trim().toLowerCase();
 
-    // Сортируем исходные данные так же, как в createRatingChart
     const existingSortSelect = document.getElementById('chart-sort-select');
     let sortField = 'rating';
     if (existingSortSelect) sortField = existingSortSelect.value;
@@ -1795,7 +1801,6 @@ function rebuildChartPreservingZoom() {
     const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
     const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    // Обновляем данные прямо в существующей диаграмме
     ratingChart.data.labels = labels;
     ratingChart.data.datasets[0].data = providedValues;
     ratingChart.data.datasets[0].backgroundColor = '#1a73e8';
@@ -1804,7 +1809,6 @@ function rebuildChartPreservingZoom() {
     ratingChart.data.datasets[1].backgroundColor = '#ff6a00';
     ratingChart.data.datasets[1].borderColor = '#ff6a00';
 
-    // Восстанавливаем зум
     if (savedMin !== undefined && savedMax !== undefined) {
         ratingChart.options.scales.x.min = savedMin;
         ratingChart.options.scales.x.max = savedMax;
@@ -1815,7 +1819,6 @@ function rebuildChartPreservingZoom() {
 
     ratingChart.update();
 
-    // Обновляем счётчик "Всего НП"
     const countEl = document.querySelector('.chart-count');
     if (countEl) countEl.textContent = `Всего НП: ${sortedData.length}`;
 
@@ -1855,7 +1858,6 @@ function createRatingChart(data, type) {
         sortedData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
 
-    // ---- Карта мест в рейтинге ----
     const globalRatingOrder = [...chartAllData]
         .sort((a, b) => (b.rating || 0) - (a.rating || 0));
     ratingPlacesMap = new Map();
@@ -1894,7 +1896,6 @@ function createRatingChart(data, type) {
     const avgRating = n > 0 ? sumRating / n : 0;
     const avgDeficit = n > 0 ? 100 - avgRating : 0;
 
-    // Медиана
     const sortedRatings = [...ratingsAll].sort((a, b) => a - b);
     let medianRating = 0;
     if (n > 0) {
@@ -1907,7 +1908,7 @@ function createRatingChart(data, type) {
     }
     const medianDeficit = n > 0 ? 100 - medianRating : 0;
 
-    // ==================== ЧИСЛЕННОСТЬ НАСЕЛЕНИЯ (подпись, как в дашборде) ====================
+    // ==================== ЧИСЛЕННОСТЬ НАСЕЛЕНИЯ ====================
     const radioAll = document.getElementById('number-settlements');
     const fromInput = document.getElementById('numbers-settlement');
     const toInput = document.getElementById('numbers-settlements');
@@ -1922,11 +1923,11 @@ function createRatingChart(data, type) {
 
     // ==================== КАТЕГОРИИ ПО ДИАПАЗОНАМ ====================
     const rangeBuckets = [
-        { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
-        { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#29B6F6' }, // голубой
-        { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#0D47A1' }, // темно-синий
-        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#1B5E20' }, // темно-зеленый
-        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#43A047' }  // зеленый
+        { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#FB8C00' },
+        { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#29B6F6' },
+        { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#0D47A1' },
+        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#1B5E20' },
+        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#43A047' }
     ];
 
     ratingsAll.forEach(v => {
@@ -1935,33 +1936,73 @@ function createRatingChart(data, type) {
     });
 
     // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
-    // Данные отсортированы по рейтингу УБЫВАНИЕМ, значит блоки идут так:
-    //   [81-100] [61-80] [41-60] [21-40] [0-20]
-    // Считаем 4 границы между блоками по количеству НП в каждом.
+    // Данные отсортированы по рейтингу УБЫВАНИЕМ: [81-100] [61-80] [41-60] [21-40] [0-20]
+    //
+    // Для КАЖДОГО диапазона задаём верхнюю границу (высота линии):
+    //   81-100 → topValue = 100
+    //   61-80  → topValue = 80
+    //   41-60  → topValue = 60
+    //   21-40  → topValue = 40
+    //   0-20   → topValue = 20
+    //
+    // Позиция pos = кол-во элементов, у которых рейтинг ПОПАДАЕТ в этот диапазон
+    // И ВЫШЕ (т.е. >= min границы диапазона). Это и есть левая граница блока
+    // в массиве, отсортированном по убыванию.
+    //
+    // Плюс правая граница таблицы (pos = len, topValue = 0).
+    // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
+    // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
     const verticalLines = [];
     {
-        const [c0_20, c21_40, c41_60, c61_80, c81_100] = rangeBuckets.map(b => b.count);
         const len = displayData.length;
+        if (len > 0) {
+            const ratings = displayData.map(it => Number(it.rating) || 0);
 
-        // Кумулятивные суммы, начиная с "худшего" блока (0-20):
-        // граница между 0-20 и 21-40 — на позиции len - c0_20
-        // между 21-40 и 41-60 — на len - c0_20 - c21_40
-        // и т.д.
-        const cumulative = [
-            c0_20,
-            c0_20 + c21_40,
-            c0_20 + c21_40 + c41_60,
-            c0_20 + c21_40 + c41_60 + c61_80
-        ];
+            // min — нижняя граница диапазона; topValue — его верхняя граница
+            const bounds = [
+                { min: 81, topValue: 100 },  // 81-100
+                { min: 61, topValue: 80  },  // 61-80
+                { min: 41, topValue: 60  },  // 41-60
+                { min: 21, topValue: 40  },  // 21-40
+                { min: 0,  topValue: 20  }   // 0-20
+            ];
 
-        cumulative.forEach(cum => {
-            // Индекс элемента, ПОСЛЕ которого рисуем линию (т.е. последний элемент
-            // правого блока, если считать от конца массива).
-            const afterIndex = len - cum - 1;
-            if (afterIndex >= 0 && afterIndex < len - 1) {
-                verticalLines.push({ afterIndex });
+            bounds.forEach(({ min, topValue }) => {
+                let pos = 0;
+                for (let i = 0; i < len; i++) {
+                    if (ratings[i] >= min) pos = i + 1;
+                    else break;
+                }
+                verticalLines.push({
+                    pos,
+                    topValue,
+                    cumulative: pos
+                });
+            });
+
+            // ===== ЛИНИЯ ПЕРЕД ПЕРВЫМ НП С РЕЙТИНГОМ 0 =====
+            // pos = кол-во НП с рейтингом > 0 (т.е. всё до первого нуля).
+            // topValue = 20 — линия идёт от горизонтали 20 вниз.
+            {
+                let posBeforeZero = 0;
+                for (let i = 0; i < len; i++) {
+                    if (ratings[i] > 0) posBeforeZero = i + 1;
+                    else break;
+                }
+                verticalLines.push({
+                    pos: posBeforeZero,
+                    topValue: 20,
+                    cumulative: posBeforeZero
+                });
             }
-        });
+
+            // Правая граница таблицы — от низа
+            verticalLines.push({
+                pos: len,
+                topValue: 0,
+                cumulative: len
+            });
+        }
     }
 
     // ==================== ДИАГРАММА ====================
@@ -2005,9 +2046,15 @@ function createRatingChart(data, type) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 8,
+                    bottom: 30
+                }
+            },
             interaction: {
                 mode: 'index',
-                intersect: false,
+                intersect: true,
                 axis: 'x'
             },
             onClick: function(evt, elements) {
@@ -2016,6 +2063,49 @@ function createRatingChart(data, type) {
                 const item = displayData[idx];
                 if (!item) return;
                 openSettlementInfoModal(item);
+            },
+            onHover: function(event, elements) {
+                const nativeEvent = event && event.native ? event.native : event;
+                const canvas = nativeEvent && nativeEvent.target ? nativeEvent.target : ratingChart.canvas;
+                if (!canvas) return;
+
+                const ds0 = ratingChart.data.datasets[0];
+                const ds1 = ratingChart.data.datasets[1];
+
+                const selectedId = selectedSearchItem && selectedSearchItem.id;
+                const isSelectedAt = (i) => {
+                    if (selectedId === undefined || selectedId === null) return false;
+                    const d = displayData[i];
+                    if (!d || d.id === undefined) return false;
+                    return String(d.id) === String(selectedId);
+                };
+
+                if (elements && elements.length > 0) {
+                    const hoverIdx = elements[0].index;
+                    canvas.style.cursor = 'pointer';
+
+                    ds0.backgroundColor = displayData.map((d, i) => {
+                        if (i === hoverIdx) return '#ff1a1a';
+                        if (isSelectedAt(i)) return '#ff1a1a';
+                        return '#1a73e8';
+                    });
+                    ds1.backgroundColor = displayData.map((d, i) => {
+                        if (i === hoverIdx) return '#cc0000';
+                        if (isSelectedAt(i)) return '#ffb066';
+                        return '#ff6a00';
+                    });
+                } else {
+                    canvas.style.cursor = 'default';
+
+                    ds0.backgroundColor = displayData.map((d, i) =>
+                        isSelectedAt(i) ? '#ff1a1a' : '#1a73e8'
+                    );
+                    ds1.backgroundColor = displayData.map((d, i) =>
+                        isSelectedAt(i) ? '#ffb066' : '#ff6a00'
+                    );
+                }
+
+                ratingChart.update('none');
             },
             plugins: {
                 legend: {
@@ -2027,7 +2117,7 @@ function createRatingChart(data, type) {
                         generateLabels: function(chart) {
                             return [
                                 {
-                                    text: 'Обеспеченность',
+                                    text: 'Обеспеченность,%',
                                     fillStyle: '#1a73e8',
                                     strokeStyle: '#1a73e8',
                                     lineWidth: 1,
@@ -2110,49 +2200,7 @@ function createRatingChart(data, type) {
                         font: { size: 15, weight: 'bold' }
                     },
                     ticks: {
-                        display: true,
-                        color: '#000000',
-                        font: { size: 12, weight: 'bold' },
-                        autoSkip: false,
-                        maxRotation: 0,
-                        minRotation: 0,
-                        callback: function(value, index, ticks) {
-                            const total = ticks.length;
-                            const maxIndex = total - 1;
-
-                            if (maxIndex <= 0) return '';
-
-                            const niceSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000];
-                            const targetCount = 5;
-                            const rawStep = maxIndex / targetCount;
-
-                            let step = niceSteps[niceSteps.length - 1];
-                            for (let i = 0; i < niceSteps.length; i++) {
-                                if (niceSteps[i] >= rawStep) {
-                                    step = niceSteps[i];
-                                    break;
-                                }
-                            }
-
-                            const positions = new Set();
-                            positions.add(0);
-                            positions.add(maxIndex);
-                            for (let v = step; v < maxIndex; v += step) {
-                                positions.add(v);
-                            }
-
-                            if (!positions.has(index)) return '';
-
-                            if (index === 0) {
-                                return String(1 - baseIndex > 0 ? 1 : 1);
-                            }
-
-                            if (index === maxIndex) {
-                                return String(Number(value) + 1);
-                            }
-
-                            return String(Number(value));
-                        }
+                        display: false
                     },
                     border: { color: '#000000', width: 2 }
                 },
@@ -2186,56 +2234,143 @@ function createRatingChart(data, type) {
                 bar: { borderRadius: 0 }
             }
         },
-        plugins: [{
-            id: 'referenceLines',
-            afterDatasetsDraw(chart) {
-                const { ctx, chartArea } = chart;
-                if (!chartArea) return;
-                const yScale = chart.scales.y;
-                if (!yScale) return;
+        plugins: [
+            {
+                id: 'referenceLines',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+                    const yScale = chart.scales.y;
+                    if (!yScale) return;
 
-                ctx.save();
+                    ctx.save();
 
-                // ===== ГОРИЗОНТАЛЬНЫЕ ЛИНИИ (20 / 40 / 60 / 80) =====
-                ctx.strokeStyle = 'rgb(70, 70, 70)'; // тёмно-серый, почти непрозрачный
-                ctx.lineWidth = 0.8;                 // тоньше чёрных
+                    // ===== ГОРИЗОНТАЛЬНЫЕ ЛИНИИ (20 / 40 / 60 / 80) =====
+                    ctx.strokeStyle = 'rgb(70, 70, 70)';
+                    ctx.lineWidth = 0.8;
 
-                [20, 40, 60, 80].forEach(v => {
-                    const y = yScale.getPixelForValue(v);
-                    if (y < chartArea.top || y > chartArea.bottom) return;
-                    ctx.beginPath();
-                    ctx.moveTo(chartArea.left, y);
-                    ctx.lineTo(chartArea.right, y);
-                    ctx.stroke();
-                });
-
-                // ===== ВЕРТИКАЛЬНЫЕ ЛИНИИ (границы блоков) =====
-                ctx.strokeStyle = 'rgb(70, 70, 70)';
-                ctx.lineWidth = 0.8;
-
-                const meta = chart.getDatasetMeta(0);
-                if (meta && meta.data && meta.data.length > 0) {
-                    verticalLines.forEach(({ afterIndex }) => {
-                        const barCur = meta.data[afterIndex];
-                        const barNext = meta.data[afterIndex + 1];
-                        if (!barCur || !barNext) return;
-                        const x = (barCur.x + barNext.x) / 2;
-                        if (x < chartArea.left || x > chartArea.right) return;
+                    [20, 40, 60, 80].forEach(v => {
+                        const y = yScale.getPixelForValue(v);
+                        if (y < chartArea.top || y > chartArea.bottom) return;
                         ctx.beginPath();
-                        ctx.moveTo(x, chartArea.top);
-                        ctx.lineTo(x, chartArea.bottom);
+                        ctx.moveTo(chartArea.left, y);
+                        ctx.lineTo(chartArea.right, y);
                         ctx.stroke();
                     });
-                }
 
-                ctx.restore();
+                    // ===== ВЕРТИКАЛЬНЫЕ ЛИНИИ =====
+                    const meta = chart.getDatasetMeta(0);
+                    if (meta && meta.data && meta.data.length > 0) {
+                        const len = displayData.length;
+
+                        const posToPixel = (pos) => {
+                            const firstBar = meta.data[0];
+                            const lastBar  = meta.data[len - 1];
+                            if (!firstBar || !lastBar) return chartArea.left;
+
+                            let barWidth = chartArea.right - chartArea.left;
+                            if (len > 1) {
+                                barWidth = Math.abs(meta.data[1].x - meta.data[0].x);
+                            }
+
+                            if (pos <= 0)  return firstBar.x - barWidth / 2;
+                            if (pos >= len) return lastBar.x + barWidth / 2;
+
+                            const barLeft  = meta.data[pos - 1];
+                            const barRight = meta.data[pos];
+                            if (!barLeft || !barRight) {
+                                return chartArea.left + (chartArea.right - chartArea.left) * (pos / len);
+                            }
+                            return (barLeft.x + barRight.x) / 2;
+                        };
+
+                        verticalLines.forEach(({ pos, topValue }) => {
+                            let x = posToPixel(pos);
+                            if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
+
+                            // Не сливаем с осью Y
+                            if (pos <= 0) x += 2;
+
+                            const yTop = topValue > 0
+                                ? yScale.getPixelForValue(topValue)
+                                : chartArea.bottom;
+                            const yClamped = Math.max(yTop, chartArea.top);
+
+                            ctx.strokeStyle = 'rgb(70, 70, 70)';
+                            ctx.lineWidth = 0.8;
+
+                            ctx.beginPath();
+                            ctx.moveTo(x, yClamped);
+                            ctx.lineTo(x, chartArea.bottom);
+                            ctx.stroke();
+                        });
+                    }
+
+                    ctx.restore();
+                }
+            },
+            {
+                id: 'lineLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta || !meta.data || meta.data.length === 0) return;
+
+                    const len = displayData.length;
+
+                    const posToPixel = (pos) => {
+                        const firstBar = meta.data[0];
+                        const lastBar  = meta.data[len - 1];
+                        if (!firstBar || !lastBar) return chartArea.left;
+
+                        let barWidth = chartArea.right - chartArea.left;
+                        if (len > 1) {
+                            barWidth = Math.abs(meta.data[1].x - meta.data[0].x);
+                        }
+
+                        if (pos <= 0)  return firstBar.x - barWidth / 2;
+                        if (pos >= len) return lastBar.x + barWidth / 2;
+
+                        const barLeft  = meta.data[pos - 1];
+                        const barRight = meta.data[pos];
+                        if (!barLeft || !barRight) {
+                            return chartArea.left + (chartArea.right - chartArea.left) * (pos / len);
+                        }
+                        return (barLeft.x + barRight.x) / 2;
+                    };
+
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+
+                    const yBase = chartArea.bottom + 8;
+
+                    // Подписи под каждой вертикальной линией.
+                    // pos = 0 даст подпись «0» слева.
+                    verticalLines.forEach(({ pos, cumulative }) => {
+                        let x = posToPixel(pos);
+                        if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
+
+                        // Сдвиги, чтобы текст не сливался с осью/краем
+                        if (pos <= 0) x += 12;
+                        if (pos >= len) x -= 20;
+
+                        ctx.fillStyle = '#000000';
+                        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+                        ctx.fillText(String(cumulative), x, yBase);
+                    });
+
+                    ctx.restore();
+                }
             }
-        }]
+        ]
     });
 
     isChartMode = true;
 
-    // ==================== ЗАГОЛОВОК, КАРТОЧКИ, ПАНЕЛЬ ====================
+    // ==================== ЗАГОЛОВОК, КАРТОЧКИ ====================
     const chartContainer = document.getElementById('chart-container');
     if (chartContainer) {
         const existingTitle = chartContainer.querySelector('.chart-title');
@@ -2247,10 +2382,10 @@ function createRatingChart(data, type) {
 
         const title = document.createElement('div');
         title.className = 'chart-title';
-        title.textContent = 'Диаграмма рейтинга НП';
+        title.textContent = 'Диаграмма обеспеченности НП';
         title.style.cssText = `
             text-align: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             color: #1a1a1a;
             margin: 0 0 4px 0;
@@ -2258,7 +2393,6 @@ function createRatingChart(data, type) {
         `;
         chartContainer.prepend(title);
 
-        // === КАРТОЧКИ ОБЩИЕ + МЕДИАННЫЕ (6 шт.) ===
         const stats = [
             { label: 'Количество НП',            value: n.toLocaleString('ru-RU'),               color: '#0066ff' },
             { label: 'Численность населения',    value: populationLabel,                        color: '#4c00a8' },
@@ -2269,19 +2403,6 @@ function createRatingChart(data, type) {
         ];
 
         renderChartStatsCards(chartContainer, stats, 'chart-stats-row');
-
-        // === КАРТОЧКИ ПО ДИАПАЗОНАМ (5 шт.) — ПОСЛЕ первого ряда ===
-        const bucketCards = rangeBuckets.map(b => ({
-            label: `${b.label}`,
-            value: `${b.count} НП`,
-            color: b.color
-        }));
-        renderChartStatsCards(
-            chartContainer,
-            bucketCards,
-            'chart-stats-row-buckets',
-            '.chart-stats-row'
-        );
     }
 
     renderChartControls(sortField);
@@ -2462,16 +2583,44 @@ async function openSettlementInfoModal(item) {
         });
     });
 
+    // ===== Нижняя панель с кнопками =====
+    const buttonsBar = document.createElement('div');
+    buttonsBar.style.cssText = `
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    `;
+
+    // Кнопка "Детализация обеспеченности НП"
+    const detailBtn = document.createElement('button');
+    detailBtn.textContent = 'Детализация обеспеченности НП';
+    detailBtn.className = 'res-modal-close-btn';
+    detailBtn.style.background = '#0066ff';
+    detailBtn.style.color = '#fff';
+    detailBtn.style.border = '1.5px solid #0044cc';
+    detailBtn.addEventListener('click', () => {
+        const id = item.id !== undefined && item.id !== null ? item.id : null;
+        if (!id) return;
+        const url = `http://185.192.247.60:9105/ns/${encodeURIComponent(id)}`;
+        window.open(url, '_blank');
+    });
+
+    // Кнопка "Закрыть"
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
     closeBtn.addEventListener('click', () => modal.remove());
 
+    buttonsBar.appendChild(detailBtn);
+    buttonsBar.appendChild(closeBtn);
+
     content.appendChild(title);
     content.appendChild(ratingBadge);
     content.appendChild(tableWrapper);
     tableWrapper.appendChild(table);
-    content.appendChild(closeBtn);
+    content.appendChild(buttonsBar);
     modal.appendChild(content);
     document.body.appendChild(modal);
 
@@ -2828,12 +2977,13 @@ function showSettlementButtons() {
 function hideSettlementButtons() {
     const resBtn = document.getElementById('res-action-btn');
     if (resBtn) resBtn.remove();
+
     const wiredBtn = document.getElementById('wired-action-btn');
     if (wiredBtn) wiredBtn.remove();
+
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 }
-
 // ==================== ЗАГРУЗКА РЕГИОНОВ ====================
 
 async function loadRegions() {
@@ -3633,7 +3783,7 @@ async function handleRatingTableButton() {
     if (tableRadio) tableRadio.checked = true;
 }
 
-// ==================== АНАЛИТИЧЕСКИЙ ДАШБОРД ====================
+// ==================== Дашборд обеспеченности НП ====================
 
 async function handleAnalyticsDashboardButton() {
     const ok = await loadRatingsData();
@@ -3729,7 +3879,7 @@ function renderAnalyticsDashboard() {
     `;
 
     const title = document.createElement('div');
-    title.textContent = 'Аналитический дашборд';
+    title.textContent = 'Дашборд обеспеченности НП';
     title.style.cssText = `
         text-align: center;
         font-size: clamp(22px, 2.2vw, 34px);
@@ -3897,7 +4047,7 @@ function renderAnalyticsDashboard() {
         wrap.appendChild(canvas);
         block.appendChild(wrap);
 
-        return { block, canvas };
+        return { block, canvas, wrap };
     };
 
     const pieBlock = makeChartBlock(
@@ -3934,7 +4084,6 @@ function renderAnalyticsDashboard() {
     const canvas1 = bar1Block.canvas;
     const canvas2 = bar2Block.canvas;
 
-
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
         { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
@@ -3953,17 +4102,16 @@ function renderAnalyticsDashboard() {
     });
 
     const totalRated = categories.reduce((sum, c) => sum + c.count, 0);
+    const denom = totalCount > 0 ? totalCount : 1;
 
-    const makeLabel = (c) => {
-        const percent = totalRated > 0 ? ((c.count / totalRated) * 100).toFixed(1) : '0.0';
-        return `${c.label}%  ${c.count} НП (${percent}%)`;
-    };
+    // Обратный порядок для отображения в таблице (от лучшего к худшему)
+    const categoriesDisplay = [...categories].reverse();
 
     const ctxPie = canvasPie.getContext('2d');
     analyticsChart = new Chart(ctxPie, {
         type: 'doughnut',
         data: {
-            labels: categories.map(makeLabel),
+            labels: categories.map(c => c.label),
             datasets: [{
                 data: categories.map(c => c.count),
                 backgroundColor: categories.map(c => c.color),
@@ -3982,16 +4130,7 @@ function renderAnalyticsDashboard() {
             },
             plugins: {
                 legend: {
-                    position: 'bottom',
-                    labels: {
-                        font: { size: 13, weight: 'bold' },
-                        color: '#000000',
-                        padding: 10,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        boxWidth: 10,
-                        boxHeight: 10
-                    }
+                    display: false      // ← легенду убрали, вместо неё HTML-таблица
                 },
                 tooltip: {
                     backgroundColor: '#bdbdbd',
@@ -4002,16 +4141,139 @@ function renderAnalyticsDashboard() {
                     bodyFont: { size: 12, weight: 'bold' },
                     callbacks: {
                         label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const val = context.parsed;
-                            const percent = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
-                            return ` ${context.label}: ${val} НП (${percent}%)`;
+                            const percent = denom > 0 ? ((val / denom) * 100).toFixed(2) : '0.00';
+                            return ` ${context.label}: ${val} НП (${percent.replace('.', ',')}%)`;
                         }
                     }
                 }
             }
         }
     });
+
+    // ==================== HTML-ТАБЛИЦА ВМЕСТО ЛЕГЕНДЫ ====================
+    (function renderPieTable() {
+        const oldTable = pieBlock.block.querySelector('.pie-stats-table');
+        if (oldTable) oldTable.remove();
+
+        const table = document.createElement('table');
+        table.className = 'pie-stats-table';
+        table.style.cssText = `
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1a1a1a;
+            table-layout: fixed;
+            flex-shrink: 0;
+        `;
+
+        // Заголовок
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        const headers = [
+            { text: 'Цвет',          width: '12%' },
+            { text: 'Об., %',    width: '26%' },
+            { text: 'Кол-во НП', width: '26%' },
+            { text: '% НП',      width: '36%' }
+        ];
+        headers.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h.text;
+            th.style.cssText = `
+                padding: 5px 4px;
+                text-align: center;
+                font-weight: 700;
+                font-size: 11px;
+                background: #f5f5f5;
+                border-top: 1px solid #1a1a1a;
+                border-bottom: 1px solid #1a1a1a;
+                color: #1a1a1a;
+                width: ${h.width};
+            `;
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        // Тело
+        const tbody = document.createElement('tbody');
+        categoriesDisplay.forEach(cat => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #eee';
+
+            // 1) цветной кружок
+            const tdColor = document.createElement('td');
+            tdColor.style.cssText = `padding: 4px 4px; text-align: center; vertical-align: middle;`;
+            const dot = document.createElement('span');
+            dot.style.cssText = `
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: ${cat.color};
+                border: 1px solid #000;
+                vertical-align: middle;
+            `;
+            tdColor.appendChild(dot);
+            tr.appendChild(tdColor);
+
+            // 2) диапазон
+            const tdRange = document.createElement('td');
+            tdRange.textContent = cat.label;
+            tdRange.style.cssText = `
+                padding: 4px 4px;
+                text-align: center;
+                font-weight: 600;
+                font-size: 12px;
+                color: #1a1a1a;
+            `;
+            tr.appendChild(tdRange);
+
+            // 3) количество НП
+            const tdCount = document.createElement('td');
+            tdCount.textContent = cat.count;
+            tdCount.style.cssText = `
+                padding: 4px 4px;
+                text-align: center;
+                font-weight: 600;
+                font-size: 12px;
+                color: #1a1a1a;
+            `;
+            tr.appendChild(tdCount);
+
+            // 4) % НП
+            const percent = (cat.count / denom) * 100;
+            const tdPercent = document.createElement('td');
+            tdPercent.textContent = percent.toFixed(2).replace('.', ',') + ' %';
+            tdPercent.style.cssText = `
+                padding: 4px 4px;
+                text-align: center;
+                font-weight: 600;
+                font-size: 12px;
+                color: #1a1a1a;
+            `;
+            tr.appendChild(tdPercent);
+
+            tbody.appendChild(tr);
+        });
+
+
+        table.appendChild(tbody);
+
+        pieBlock.block.appendChild(table);
+
+        // Диаграмма и таблица делят высоту: canvas ~60%, таблица ~40%
+        pieBlock.block.style.display = 'flex';
+        pieBlock.block.style.flexDirection = 'column';
+
+        if (pieBlock.wrap) {
+            pieBlock.wrap.style.flex = '1 1 auto';
+            pieBlock.wrap.style.minHeight = '150px';
+            pieBlock.wrap.style.maxHeight = '55%';
+        }
+    })();
 
     // ==================== ДИАГРАММА 2: услуги связи ====================
     const serviceGroups = [
@@ -4065,21 +4327,13 @@ function renderAnalyticsDashboard() {
         };
     });
 
-    // ==================== ОБЩИЕ ОПЦИИ ДЛЯ ОБЕИХ СТОЛБЧАТЫХ ДИАГРАММ ====================
-    // Единая высота оси X у обеих диаграмм — выравнивает значения по Y
-    // (0, 20, 40, 60, 80, 100) на одной линии.
-    // Увеличено с 80 до 110 — подписям по X дано больше места,
-    // сами диаграммы стали чуть меньше.
     const FIXED_X_AXIS_HEIGHT = 110;
 
     const commonBarOptions = {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
-            padding: {
-                top: 8,     // чуть больше воздуха сверху — диаграммы визуально меньше
-                bottom: 0   // всё место под подписи резервируется через afterFit
-            }
+            padding: { top: 8, bottom: 0 }
         },
         scales: {
             x: {
@@ -4091,10 +4345,9 @@ function renderAnalyticsDashboard() {
                     maxRotation: 45,
                     minRotation: 45,
                     autoSkip: false,
-                    padding: 8   // подписи отодвинуты от оси — им дано больше места
+                    padding: 8
                 },
                 grid: { display: false },
-                // Принудительно фиксируем высоту оси X (после стандартного расчёта).
                 afterFit(scale) {
                     scale.height = FIXED_X_AXIS_HEIGHT;
                 }
@@ -4114,7 +4367,7 @@ function renderAnalyticsDashboard() {
                 grid: { color: 'rgba(0,0,0,0.08)' },
                 title: {
                     display: true,
-                    text: 'Обеспеченность',
+                    text: 'Обеспеченность,%',
                     color: '#000',
                     font: { size: 11, weight: 'bold' }
                 }
@@ -4426,9 +4679,25 @@ async function openEditModal(settlementId, type) {
         tbody.appendChild(tr);
     });
 
+    // ===== Нижняя панель с кнопками =====
     const buttonsBar = document.createElement('div');
-    buttonsBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;';
+    buttonsBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; flex-wrap: wrap;';
 
+    // 1) Кнопка "Детализация обеспеченности НП" — ПЕРВОЙ
+    const detailBtn = document.createElement('button');
+    detailBtn.textContent = 'Детализация обеспеченности НП';
+    detailBtn.className = 'res-modal-close-btn';
+    detailBtn.style.background = '#0066ff';
+    detailBtn.style.color = '#fff';
+    detailBtn.style.border = '1.5px solid #0044cc';
+    detailBtn.addEventListener('click', () => {
+        const id = settlementId !== undefined && settlementId !== null ? settlementId : null;
+        if (!id) return;
+        const url = `http://185.192.247.60:9105/ns/${encodeURIComponent(id)}`;
+        window.open(url, '_blank');
+    });
+
+    // 2) Кнопка "Сохранить изменения"
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Сохранить изменения';
     editBtn.className = 'res-modal-close-btn';
@@ -4438,11 +4707,13 @@ async function openEditModal(settlementId, type) {
         await handleEditRow(fieldRefs, settlementId, modal);
     });
 
+    // 3) Кнопка "Закрыть"
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
     closeBtn.addEventListener('click', () => modal.remove());
 
+    buttonsBar.appendChild(detailBtn);
     buttonsBar.appendChild(editBtn);
     buttonsBar.appendChild(closeBtn);
 
@@ -4904,7 +5175,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     const settlementsTitle = document.createElement('h3');
     settlementsTitle.className = 'settlements-title';
-    settlementsTitle.textContent = 'Цифровой  рейтинг НП';
+    settlementsTitle.textContent = 'Таблица обеспеченности НП';
     table.parentNode.insertBefore(settlementsTitle, table);
 
     const thead = table.querySelector('thead');
