@@ -1926,8 +1926,8 @@ function createRatingChart(data, type) {
         { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#FB8C00' },
         { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#29B6F6' },
         { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#0D47A1' },
-        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#1B5E20' },
-        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#43A047' }
+        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#43A047' },
+        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#1B5E20' }
     ];
 
     ratingsAll.forEach(v => {
@@ -4089,8 +4089,8 @@ function renderAnalyticsDashboard() {
         { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
         { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#29B6F6' }, // голубой
         { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#0D47A1' }, // темно-синий
-        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#1B5E20' }, // темно-зеленый
-        { label: '81-100', min: 81,  max: 100, count: 0, color: '#43A047' }  // зеленый
+        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#43A047' }, // темно-зеленый
+        { label: '81-100', min: 81,  max: 100, count: 0, color: '#1B5E20' }  // зеленый
     ];
 
     items.forEach(item => {
