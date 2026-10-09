@@ -693,8 +693,8 @@ function showChartContainer() {
     if (chartContainer) {
         chartContainer.style.display = 'flex';
         chartContainer.style.flexDirection = 'column';
-        chartContainer.style.height = 'calc(100vh - 120px)';
-        chartContainer.style.minHeight = '500px';
+        chartContainer.style.height = '';
+        chartContainer.style.minHeight = '';
     }
 
     if (table) table.style.display = 'none';
