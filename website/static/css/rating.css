@@ -3055,7 +3055,7 @@ body.analytics-mode #chart-pagination {
 
 #chart-container canvas {
     display: block;
-    width: 100% !important;
+    width: 90% !important;
     height: 100% !important;
     flex: 1 1 auto;
     min-height: 0;
@@ -3130,4 +3130,105 @@ body.analytics-mode #chart-pagination {
 
 .chart-stats-row-buckets {
     display: none !important;
+}
+/* ============================================================ */
+/* ===== КОНТЕЙНЕР ДИАГРАММЫ РЕЙТИНГА НП ===== */
+
+#chart-container {
+    /* Квадратный, не растягивается, центрируется */
+    flex: 0 0 auto;
+    align-self: center;
+    width: min(100%, 65vh);
+    aspect-ratio: 1 / 1;
+    min-height: unset;
+    max-height: 65vh;
+    position: relative;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 6px 8px 8px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    border-radius: 3px;
+    margin: 0 auto;
+}
+/* Когда видна диаграмма — центрируем её внутри .table__rating */
+.table__rating:has(#chart-container[style*="display: flex"]) {
+
+    overflow: auto;
+}
+/* ===== Контейнер диаграммы: адаптивное соотношение ===== */
+
+#chart-container {
+    flex: 0 0 auto;
+    align-self: center;
+    position: relative;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 6px 8px 8px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    border-radius: 3px;
+    margin: 0 auto;
+
+    /* По умолчанию — почти квадрат */
+    aspect-ratio: 1 / 1;
+    width: min(100%, 60vh);
+    max-height: 60vh;
+    min-height: unset;
+}
+
+#chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0;
+}
+
+/* ===== Адаптив по ширине экрана ===== */
+
+/* Широкие мониторы (>= 1600px) — вытянутый по горизонтали */
+@media (min-width: 1600px) {
+    #chart-container {
+        aspect-ratio: 16 / 9;
+        width: min(100%, 110vh);
+        max-height: 80vh;
+    }
+}
+
+/* Обычные десктопы (1200–1599px) — БОЛЕЕ КВАДРАТНЫЙ */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    #chart-container {
+        aspect-ratio: 1 / 1;      /* было 4 / 3 — теперь квадрат */
+        width: min(100%, 70vh);   /* было 90vh */
+        max-height: 80vh;       /* было 70vh */
+    }
+}
+
+/* Ноутбуки (992–1199px) — чуть шире квадрата */
+@media (min-width: 992px) and (max-width: 1199px) {
+    #chart-container {
+        aspect-ratio: 1 / 1;      /* было 3 / 2 — тоже квадрат */
+        width: min(100%, 65vh);
+        max-height: 65vh;
+    }
+}
+
+/* Планшеты (768–991px) — почти квадрат */
+@media (min-width: 768px) and (max-width: 991px) {
+    #chart-container {
+        aspect-ratio: 1 / 1;
+        width: min(100%, 70vh);
+        max-height: 60vh;
+    }
+}
+
+/* Мобильные (<= 767px) — вертикально вытянутый */
+@media (max-width: 767px) {
+    #chart-container {
+        aspect-ratio: 3 / 4;
+        width: 100%;
+        max-height: 70vh;
+    }
 }
