@@ -254,8 +254,8 @@ const RANKING_COLUMN_LABELS = {
     'ID': 'ID',
 
     // ТВ
-    'TV_KOL_RES': 'Количество РЭС ТВ',
-    'TV_PROC_RES': 'Процент РЭС ТВ',
+    'TV_KOL_RES': 'Количество БС ТВ',
+    'TV_PROC_RES': 'Процент БС ТВ',
     'TV_KOL_CHANNELS': 'Количество каналов ТВ',
     'TV_POKRITIE': 'Покрытие связи ТВ',
     'TV_PROC_POKRITIE': 'Процент покрытия связи ТВ',
@@ -264,8 +264,8 @@ const RANKING_COLUMN_LABELS = {
     'TV_SCORE': 'Оценка ТВ',
 
     // РВ
-    'RV_KOL_RES': 'Количество РЭС РВ',
-    'RV_PROC_RES': 'Процент РЭС РВ',
+    'RV_KOL_RES': 'Количество БС РВ',
+    'RV_PROC_RES': 'Процент БС РВ',
     'RV_WIDTH': 'Общая ширина полосы РВ, МГц',
     'RV_KOL_CHANNELS': 'Количество каналов РВ',
     'RV_POKRITIE': 'Покрытие связи РВ',
@@ -275,7 +275,7 @@ const RANKING_COLUMN_LABELS = {
     'RV_SCORE': 'Оценка РВ',
 
     // LTE
-    'LTE_KOL_RES': 'Количество РЭС LTE',
+    'LTE_KOL_RES': 'Количество БС LTE',
     'LTE_KOL_AB': 'Количество абонентов LTE',
     'LTE_PROC_NAS': 'Процент охвата населения LTE',
     'LTE_POKRITIE': 'Покрытие связи LTE',
@@ -286,7 +286,7 @@ const RANKING_COLUMN_LABELS = {
     'LTE_SCORE': 'Оценка LTE',
 
     // GSM
-    'GSM_KOL_RES': 'Количество РЭС GSM',
+    'GSM_KOL_RES': 'Количество БС GSM',
     'GSM_KOL_AB': 'Количество абонентов GSM',
     'GSM_PROC_NAS': 'Процент охвата населения GSM',
     'GSM_POKRITIE': 'Покрытие связи GSM',
@@ -297,7 +297,7 @@ const RANKING_COLUMN_LABELS = {
     'GSM_SCORE': 'Оценка GSM',
 
     // 5G
-    'G5_KOL_RES': 'Количество РЭС 5G',
+    'G5_KOL_RES': 'Количество БС 5G',
     'G5_KOL_AB': 'Количество абонентов 5G',
     'G5_PROC_NAS': 'Процент охвата населения 5G',
     'G5_POKRITIE': 'Покрытие связи 5G',
@@ -308,7 +308,7 @@ const RANKING_COLUMN_LABELS = {
     'G5_SCORE': 'Оценка 5G',
 
     // Wi-Fi
-    'WIFI_KOL_RES': 'Количество РЭС Wi-Fi',
+    'WIFI_KOL_RES': 'Количество БС Wi-Fi',
     'WIFI_KOL_AB': 'Количество абонентов Wi-Fi',
     'WIFI_PROC_NAS': 'Процент охвата населения Wi-Fi',
     'WIFI_POKRITIE': 'Покрытие связи Wi-Fi',
@@ -320,7 +320,7 @@ const RANKING_COLUMN_LABELS = {
     'WIFI_SCORE': 'Оценка Wi-Fi',
 
     // Tetra
-    'TETRA_KOL_RES': 'Количество РЭС Tetra',
+    'TETRA_KOL_RES': 'Количество БС Tetra',
     'TETRA_KOL_AB': 'Количество абонентов Tetra',
     'TETRA_PROC_NAS': 'Процент охвата населения Tetra',
     'TETRA_POKRITIE': 'Покрытие связи Tetra',
@@ -379,7 +379,7 @@ const RANKING_COLUMN_LABELS = {
     'TAKS_SCORE': 'Оценка таксофонов',
 
     // Мобильная связь
-    'MOB_KOL_RES': 'Количество РЭС моб. связи',
+    'MOB_KOL_RES': 'Количество БС моб. связи',
     'MOB_KOL_AB': 'Количество абонентов моб. связи',
     'MOB_PROC_NAS': 'Процент охвата населения моб. связи',
     'MOB_POKRITIE': 'Покрытие моб. связи',
@@ -399,7 +399,7 @@ const RANKING_COLUMN_LABELS = {
     'RAT_NP_PROC_TRAFIK': 'Общий процент трафика',
     'RAT_NP_PROC_OPERATOR': 'Общий процент операторов',
 
-    'RAT_SUM_NP': 'Рейтинг'
+    'RAT_SUM_NP': 'Обеспеченность'
 };
 
 // ==================== ДАННЫЕ ====================
@@ -578,11 +578,11 @@ function getValueByDbColumn(obj, dbColumn, map) {
     return '';
 }
 
-// ==================== МАССОВАЯ ЗАГРУЗКА РЕЙТИНГОВ ====================
+// ==================== МАССОВАЯ ЗАГРУЗКА обеспеченностьОВ ====================
 
 async function loadRatingsBulk(regions, popRange) {
     const loader = initLoader();
-    loader.show('Загрузка рейтингов...');
+    loader.show('Загрузка обеспеченностьов...');
 
     const result = {};
     try {
@@ -611,12 +611,12 @@ async function loadRatingsBulk(regions, popRange) {
             }
         });
 
-        console.log(`Массово загружено рейтингов: ${Object.keys(result).length}`);
+        console.log(`Массово загружено обеспеченностьов: ${Object.keys(result).length}`);
         loader.close();
         return result;
     } catch (error) {
         loader.close();
-        console.error('Ошибка массовой загрузки рейтингов:', error);
+        console.error('Ошибка массовой загрузки обеспеченностьов:', error);
         return result;
     }
 }
@@ -944,7 +944,7 @@ function showItemTooltip(item, chartIndex) {
     const district = item.district_name || 'Н/Д';
     const name = item.name || `ID: ${item.id}`;
 
-    // ---- Место в рейтинге ----
+    // ---- Место в обеспеченностье ----
     let placeText = '—';
     let totalPlaces = ratingPlacesTotal;
     if (ratingPlacesMap && ratingPlacesMap.size > 0) {
@@ -973,7 +973,7 @@ function showItemTooltip(item, chartIndex) {
                 <span style="display:inline-block; width:10px; height:10px; background:#ff6a00; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
                 Дефицит: ${deficitText}
             </div>
-            <div>Место в рейтинге: ${placeText} из ${totalPlaces}</div>
+            <div>Место в обеспеченностье: ${placeText} из ${totalPlaces}</div>
             <div>Население: ${population.toLocaleString()}</div>
             <div>Регион: ${region}</div>
             <div>Район: ${district}</div>
@@ -1409,7 +1409,7 @@ function renderChartControls(currentSortField) {
     `;
 
     const options = [
-        { value: 'rating', label: 'По рейтингу (убывание)' },
+        { value: 'rating', label: 'По обеспеченностьу (убывание)' },
         { value: 'name', label: 'По названию (А-Я)' }
     ];
     options.forEach(opt => {
@@ -1936,7 +1936,7 @@ function createRatingChart(data, type) {
     });
 
     // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
-    // Данные отсортированы по рейтингу УБЫВАНИЕМ: [81-100] [61-80] [41-60] [21-40] [0-20]
+    // Данные отсортированы по обеспеченностьу УБЫВАНИЕМ: [81-100] [61-80] [41-60] [21-40] [0-20]
     //
     // Для КАЖДОГО диапазона задаём верхнюю границу (высота линии):
     //   81-100 → topValue = 100
@@ -1945,7 +1945,7 @@ function createRatingChart(data, type) {
     //   21-40  → topValue = 40
     //   0-20   → topValue = 20
     //
-    // Позиция pos = кол-во элементов, у которых рейтинг ПОПАДАЕТ в этот диапазон
+    // Позиция pos = кол-во элементов, у которых обеспеченность ПОПАДАЕТ в этот диапазон
     // И ВЫШЕ (т.е. >= min границы диапазона). Это и есть левая граница блока
     // в массиве, отсортированном по убыванию.
     //
@@ -1980,8 +1980,8 @@ function createRatingChart(data, type) {
                 });
             });
 
-            // ===== ЛИНИЯ ПЕРЕД ПЕРВЫМ НП С РЕЙТИНГОМ 0 =====
-            // pos = кол-во НП с рейтингом > 0 (т.е. всё до первого нуля).
+            // ===== ЛИНИЯ ПЕРЕД ПЕРВЫМ НП С обеспеченностьОМ 0 =====
+            // pos = кол-во НП с обеспеченностьом > 0 (т.е. всё до первого нуля).
             // topValue = 20 — линия идёт от горизонтали 20 вниз.
             {
                 let posBeforeZero = 0;
@@ -2179,7 +2179,7 @@ function createRatingChart(data, type) {
                             const place = ratingPlacesMap.get(String(item.id)) || '—';
                             const total = ratingPlacesTotal || 0;
                             return [
-                                `Место в рейтинге: ${place} из ${total}`,
+                                `Место в обеспеченностье: ${place} из ${total}`,
                                 `Население: ${item.population || 0}`,
                                 `Регион: ${item.region_name || 'Н/Д'}`,
                                 `Район: ${item.district_name || 'Н/Д'}`,
@@ -2221,7 +2221,7 @@ function createRatingChart(data, type) {
                     },
                     title: {
                         display: true,
-                        text: 'Рейтинг',
+                        text: 'Обеспеченность',
                         color: '#000000',
                         font: { size: 15, weight: 'bold' }
                     },
@@ -2564,7 +2564,7 @@ async function openSettlementInfoModal(item) {
 
     addSection('Обеспеченность');
     addRow('Обеспеченность', rating.rating);
-    addRow('Место в рейтинге', `${placeInRating} из ${totalInRating}`);
+    addRow('Место в обеспеченности', `${placeInRating} из ${totalInRating}`);
 
     addSection('Суммарные показатели');
     addRow('Общее количество абонентов', rating.count_abonents_summary);
@@ -2634,7 +2634,7 @@ function buildRatingGroups() {
         {
             title: 'Мобильная связь',
             fields: [
-                { key: 'count_res_mobile', label: 'Количество РЭС моб. связи' },
+                { key: 'count_res_mobile', label: 'Количество БС моб. связи' },
                 { key: 'count_abonents_mobile', label: 'Количество абонентов моб. связи' },
                 { key: 'population_percent_mobile', label: 'Процент охвата населения моб. связи' },
                 { key: 'communication_coverage_mobile', label: 'Покрытие моб. связи' },
@@ -2649,7 +2649,7 @@ function buildRatingGroups() {
         {
             title: 'LTE',
             fields: [
-                { key: 'count_res_lte', label: 'Количество РЭС LTE' },
+                { key: 'count_res_lte', label: 'Количество БС LTE' },
                 { key: 'count_abonents_lte', label: 'Количество абонентов LTE' },
                 { key: 'population_percent_lte', label: 'Процент охвата населения LTE' },
                 { key: 'communication_coverage_lte', label: 'Покрытие связи LTE' },
@@ -2663,7 +2663,7 @@ function buildRatingGroups() {
         {
             title: 'GSM',
             fields: [
-                { key: 'count_res_gsm', label: 'Количество РЭС GSM' },
+                { key: 'count_res_gsm', label: 'Количество БС GSM' },
                 { key: 'count_abonents_gsm', label: 'Количество абонентов GSM' },
                 { key: 'population_percent_gsm', label: 'Процент охвата населения GSM' },
                 { key: 'communication_coverage_gsm', label: 'Покрытие связи GSM' },
@@ -2677,7 +2677,7 @@ function buildRatingGroups() {
         {
             title: '5G',
             fields: [
-                { key: 'count_res_5g', label: 'Количество РЭС 5G' },
+                { key: 'count_res_5g', label: 'Количество БС 5G' },
                 { key: 'count_abonents_5g', label: 'Количество абонентов 5G' },
                 { key: 'population_percent_5g', label: 'Процент охвата населения 5G' },
                 { key: 'communication_coverage_5g', label: 'Покрытие связи 5G' },
@@ -2691,7 +2691,7 @@ function buildRatingGroups() {
         {
             title: 'Wi-Fi',
             fields: [
-                { key: 'count_res_wifi', label: 'Количество РЭС Wi-Fi' },
+                { key: 'count_res_wifi', label: 'Количество БС Wi-Fi' },
                 { key: 'count_abonents_wifi', label: 'Количество абонентов Wi-Fi' },
                 { key: 'population_percent_wifi', label: 'Процент охвата населения Wi-Fi' },
                 { key: 'communication_coverage_wifi', label: 'Покрытие связи Wi-Fi' },
@@ -2706,7 +2706,7 @@ function buildRatingGroups() {
         {
             title: 'Tetra',
             fields: [
-                { key: 'count_res_tetra', label: 'Количество РЭС Tetra' },
+                { key: 'count_res_tetra', label: 'Количество БС Tetra' },
                 { key: 'count_abonents_tetra', label: 'Количество абонентов Tetra' },
                 { key: 'population_percent_tetra', label: 'Процент охвата населения Tetra' },
                 { key: 'communication_coverage_tetra', label: 'Покрытие связи Tetra' },
@@ -2720,8 +2720,8 @@ function buildRatingGroups() {
         {
             title: 'Телевидение (ТВ)',
             fields: [
-                { key: 'count_res_tv', label: 'Количество РЭС ТВ' },
-                { key: 'percent_res_tv', label: 'Процент РЭС ТВ' },
+                { key: 'count_res_tv', label: 'Количество БС ТВ' },
+                { key: 'percent_res_tv', label: 'Процент БС ТВ' },
                 { key: 'count_channels_tv', label: 'Количество каналов ТВ' },
                 { key: 'communication_coverage_tv', label: 'Покрытие связи ТВ' },
                 { key: 'communication_coverage_percent_tv', label: 'Процент покрытия связи ТВ' },
@@ -2733,8 +2733,8 @@ function buildRatingGroups() {
         {
             title: 'Радиовещание (РВ)',
             fields: [
-                { key: 'count_res_rv', label: 'Количество РЭС РВ' },
-                { key: 'percent_res_rv', label: 'Процент РЭС РВ' },
+                { key: 'count_res_rv', label: 'Количество БС РВ' },
+                { key: 'percent_res_rv', label: 'Процент БС РВ' },
                 { key: 'frequency_width_rv', label: 'Общая ширина полосы РВ, МГц' },
                 { key: 'count_channels_rv', label: 'Количество каналов РВ' },
                 { key: 'communication_coverage_rv', label: 'Покрытие связи РВ' },
@@ -2816,7 +2816,7 @@ function createCalculateAllBtn() {
     const btn = document.createElement('button');
     btn.id = 'calculate-all-btn';
     btn.className = 'grid-btn calculate-all-btn';
-    btn.textContent = 'Рассчитать рейтинг всех НП в таблице';
+    btn.textContent = 'Рассчитать обеспеченность всех НП в таблице';
     btn.style.marginRight = '10px';
     btn.style.width = 'auto';
     btn.addEventListener('click', handleCalculateAll);
@@ -2856,7 +2856,7 @@ function createCalculateSelectedBtn() {
     const btn = document.createElement('button');
     btn.id = 'calculate-selected-btn';
     btn.className = 'grid-btn calculate-selected-btn';
-    btn.textContent = 'Рассчитать рейтинг выбранного НП';
+    btn.textContent = 'Рассчитать обеспеченность выбранного НП';
     btn.style.marginRight = '10px';
     btn.style.width = 'auto';
     btn.addEventListener('click', handleCalculateSelected);
@@ -2901,7 +2901,7 @@ function createResButton() {
     const btn = document.createElement('button');
     btn.id = 'res-action-btn';
     btn.className = 'grid-btn res-action-btn';
-    btn.textContent = 'РЭС';
+    btn.textContent = 'БС';
     btn.style.marginRight = '10px';
     btn.style.width = 'auto';
     btn.addEventListener('click', handleResButton);
@@ -3277,7 +3277,7 @@ async function loadSettlements(page = 0, regions, popRange, pageSize) {
     }
 }
 
-// ==================== ЗАГРУЗКА РЕЙТИНГОВ ====================
+// ==================== ЗАГРУЗКА обеспеченностьОВ ====================
 
 async function loadRatingsForSettlements(items, allowPost = false) {
     const total = items.length;
@@ -3295,7 +3295,7 @@ async function loadRatingsForSettlements(items, allowPost = false) {
 
         const modal = createProgressModal(missing.length);
         const titleEl = modal.querySelector('.progress-modal-title');
-        if (titleEl) titleEl.textContent = 'Расчет рейтингов';
+        if (titleEl) titleEl.textContent = 'Расчет обеспеченностьов';
 
         isCancelled = false;
         let processed = 0;
@@ -3418,13 +3418,13 @@ function getPageData(allData, page, pageSize) {
     return allData.slice(start, end);
 }
 
-// ==================== РАСЧЕТ РЕЙТИНГА ====================
+// ==================== РАСЧЕТ обеспеченностьА ====================
 
 async function handleCalculateSelected() {
     if (!selectedSettlementId) return;
 
     const loader = initLoader();
-    loader.show(`Расчет рейтинга для НП: ${selectedSettlementName || selectedSettlementId}...`);
+    loader.show(`Расчет обеспеченностьа для НП: ${selectedSettlementName || selectedSettlementId}...`);
 
     try {
         await postRatingSett(selectedSettlementId);
@@ -3445,7 +3445,7 @@ async function handleCalculateSelected() {
         }
     } catch (error) {
         loader.close();
-        console.error('Ошибка расчета рейтинга:', error);
+        console.error('Ошибка расчета обеспеченностьа:', error);
     }
 }
 
@@ -3534,7 +3534,7 @@ function setupDoubleClickHandler() {
             const headerCells = this.querySelectorAll('thead th');
             let hasRatingColumns = false;
             headerCells.forEach(th => {
-                if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Рейтинг')) {
+                if (th.textContent.includes('БС') || th.textContent.includes('Количество БС') || th.textContent.includes('обеспеченность')) {
                     hasRatingColumns = true;
                 }
             });
@@ -3571,7 +3571,7 @@ function setupDoubleClickHandler() {
         const headerCells = table.querySelectorAll('thead th');
         let hasRatingColumns = false;
         headerCells.forEach(th => {
-            if (th.textContent.includes('РЭС') || th.textContent.includes('Количество РЭС') || th.textContent.includes('Рейтинг')) {
+            if (th.textContent.includes('БС') || th.textContent.includes('Количество БС') || th.textContent.includes('обеспеченность')) {
                 hasRatingColumns = true;
             }
         });
@@ -4566,7 +4566,7 @@ async function openEditModal(settlementId, type) {
                 table: 'ranking',
                 dbColumn: 'RAT_SUM_NP',
                 objectKey: 'rating',
-                label: 'Рейтинг',
+                label: 'обеспеченность',
                 value: getValueByDbColumn(ranking, 'RAT_SUM_NP', rankingDbToKey)
             });
         }
@@ -4603,7 +4603,7 @@ async function openEditModal(settlementId, type) {
 
     const nameForTitle = settlement['name'] || settlement['NAME'] || settlementId;
     const titleText = (type === 'rating')
-        ? `Рейтинг НП: ${nameForTitle}`
+        ? `обеспеченность НП: ${nameForTitle}`
         : `НП: ${nameForTitle}`;
 
     const title = document.createElement('h3');
@@ -5239,7 +5239,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
         { key: 'district_name', label: 'Муниципальное образование' }
     ];
 
-    const ratingColumn = { key: 'rating', label: 'Рейтинг' };
+    const ratingColumn = { key: 'rating', label: 'обеспеченность' };
 
     const settlementRestHeaders = [
         { key: 'area', label: 'Площадь (км²)' },
@@ -5620,7 +5620,7 @@ function renderSettlementsPagination(total, currentPage, totalPages, pageSize) {
     container.appendChild(controlsDiv);
 }
 
-// ==================== ЗАГРУЗКА РЭС ====================
+// ==================== ЗАГРУЗКА БС ====================
 
 async function loadResForModal(settlementId, lat, lon, area) {
     if (!settlementId || lat === undefined || lon === undefined) {
@@ -5628,7 +5628,7 @@ async function loadResForModal(settlementId, lat, lon, area) {
     }
 
     const loader = initLoader();
-    loader.show('Загрузка РЭС...');
+    loader.show('Загрузка БС...');
 
     try {
         const radius = calculateRadius(area);
@@ -5659,11 +5659,11 @@ async function loadResForModal(settlementId, lat, lon, area) {
         loader.close();
     } catch (error) {
         loader.close();
-        console.error('Ошибка загрузки РЭС:', error);
+        console.error('Ошибка загрузки БС:', error);
     }
 }
 
-// ==================== МОДАЛКА РЭС ====================
+// ==================== МОДАЛКА БС ====================
 
 function openResModal(data, settlementId) {
     const existing = document.getElementById('res-modal');
@@ -5677,7 +5677,7 @@ function openResModal(data, settlementId) {
     content.className = 'res-modal-content';
 
     const title = document.createElement('h3');
-    title.textContent = `РЭС для НП: ${selectedSettlementName || settlementId}`;
+    title.textContent = `БС для НП: ${selectedSettlementName || settlementId}`;
     title.className = 'res-modal-title';
 
     const closeBtn = document.createElement('button');
@@ -5710,7 +5710,7 @@ function openResModal(data, settlementId) {
         border: 1px solid #000;
         flex-shrink: 0;
     `;
-    countInfo.textContent = `Всего РЭС: ${data.length}`;
+    countInfo.textContent = `Всего БС: ${data.length}`;
 
     content.appendChild(title);
     content.appendChild(tableWrapper);
@@ -5733,7 +5733,7 @@ function openResModal(data, settlementId) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 18;
-            cell.textContent = 'Нет РЭС для отображения';
+            cell.textContent = 'Нет БС для отображения';
             cell.className = 'empty-message';
             cell.style.cssText = 'text-align: center; padding: 30px; font-size: 16px; color: #666; border: 1px solid #000;';
             row.appendChild(cell);
@@ -5953,7 +5953,7 @@ function openResModal(data, settlementId) {
         content.style.maxWidth = '600px';
 
         const title = document.createElement('h3');
-        title.textContent = `РЭС #${item.id || 'Н/Д'}`;
+        title.textContent = `БС #${item.id || 'Н/Д'}`;
         title.className = 'res-modal-title';
 
         const details = document.createElement('div');
@@ -6076,7 +6076,7 @@ function createProgressModal(total) {
     content.className = 'progress-modal-content';
 
     const title = document.createElement('h3');
-    title.textContent = 'Расчет рейтингов НП';
+    title.textContent = 'Расчет обеспеченностьов НП';
     title.className = 'progress-modal-title';
 
     const progressInfo = document.createElement('div');
@@ -6096,7 +6096,7 @@ function createProgressModal(total) {
     const statusInfo = document.createElement('div');
     statusInfo.className = 'status-info';
     statusInfo.id = 'rating-status-info';
-    statusInfo.textContent = 'Получено рейтингов: 0';
+    statusInfo.textContent = 'Получено обеспеченностьов: 0';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.id = 'rating-cancel-btn';
@@ -6133,7 +6133,7 @@ function updateProgress(current, total, successCount) {
         info.textContent = `Обработано: ${current} / ${total}`;
     }
     if (status) {
-        status.textContent = `Получено рейтингов: ${successCount}`;
+        status.textContent = `Получено обеспеченностьов: ${successCount}`;
     }
 }
 
@@ -6142,7 +6142,7 @@ function closeProgressModal() {
     if (modal) modal.remove();
 }
 
-// ==================== РАБОТА С РЕЙТИНГАМИ ДЛЯ ПЕРЕДАННЫХ ДАННЫХ ====================
+// ==================== РАБОТА С обеспеченностьАМИ ДЛЯ ПЕРЕДАННЫХ ДАННЫХ ====================
 
 async function getRatingsOnlyForData(items) {
     const total = items.length;
