@@ -677,6 +677,13 @@ function hideChartContainer() {
     if (chartContainer) {
         chartContainer.style.display = 'none';
     }
+
+    const chartInner = chartContainer ? chartContainer.querySelector('.chart-inner') : null;
+    if (chartInner) {
+        chartInner.scrollTop = 0;
+        chartInner.scrollLeft = 0;
+    }
+
     destroyChart();
     chartAllData = [];
     chartCurrentData = [];
@@ -691,10 +698,34 @@ function showChartContainer() {
     const placeholder = document.getElementById('placeholder-message');
 
     if (chartContainer) {
+        // Шапка (заголовок + карточки + контролы) — не скроллится
+        let header = chartContainer.querySelector('.chart-header');
+        if (!header) {
+            header = document.createElement('div');
+            header.className = 'chart-header';
+            chartContainer.appendChild(header);
+        }
+
+        // Скролл-область для canvas
+        let chartInner = chartContainer.querySelector('.chart-inner');
+        if (!chartInner) {
+            chartInner = document.createElement('div');
+            chartInner.className = 'chart-inner';
+            chartContainer.appendChild(chartInner);
+
+            const content = document.createElement('div');
+            content.className = 'chart-content';
+            chartInner.appendChild(content);
+
+            const canvas = document.getElementById('rating-chart');
+            if (canvas && canvas.parentNode !== content) {
+                content.appendChild(canvas);
+            }
+        }
+
         chartContainer.style.display = 'flex';
         chartContainer.style.flexDirection = 'column';
-        chartContainer.style.height = '';
-        chartContainer.style.minHeight = '';
+        chartInner.style.display = 'flex';
     }
 
     if (table) table.style.display = 'none';
@@ -1399,26 +1430,24 @@ function renderChartControls(currentSortField) {
     const sortSelect = document.createElement('select');
     sortSelect.id = 'chart-sort-select';
     sortSelect.style.cssText = `
-        padding: 5px 10px !important;
+        padding: 6px 12px !important;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
-        font-size: 14px !important;
-        height: 34px !important;
+        font-size: 15px !important;
+        height: 36px !important;
         background: #fff !important;
         cursor: pointer !important;
     `;
 
     const options = [
-        { value: 'rating', label: 'По обеспеченностьу (убывание)' },
+        { value: 'rating', label: 'По обеспеченности (убывание)' },
         { value: 'name', label: 'По названию (А-Я)' }
     ];
     options.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt.value;
         option.textContent = opt.label;
-        if (opt.value === currentSortField) {
-            option.selected = true;
-        }
+        if (opt.value === currentSortField) option.selected = true;
         sortSelect.appendChild(option);
     });
 
@@ -1485,11 +1514,11 @@ function renderChartControls(currentSortField) {
     searchInput.style.cssText = `
         flex: 1;
         min-width: 150px;
-        padding: 5px 12px;
+        padding: 6px 12px;
         border: 1px solid #ccc;
         border-radius: 4px;
-        font-size: 14px;
-        height: 34px;
+        font-size: 15px;
+        height: 36px;
         box-sizing: border-box;
     `;
 
@@ -1571,13 +1600,13 @@ function renderChartControls(currentSortField) {
     clearBtn.textContent = '✕';
     clearBtn.title = 'Очистить поиск и снять выделение';
     clearBtn.style.cssText = `
-        padding: 0 10px;
+        padding: 0 12px;
         border: 1px solid #ccc;
         border-radius: 4px;
         background: #fff;
         cursor: pointer;
-        font-size: 16px;
-        height: 34px;
+        font-size: 17px;
+        height: 36px;
         color: #666;
         flex-shrink: 0;
     `;
@@ -1625,13 +1654,13 @@ function renderChartControls(currentSortField) {
     zoomInBtn.textContent = '+';
     zoomInBtn.title = 'Увеличить масштаб';
     zoomInBtn.style.cssText = `
-        padding: 0 14px !important;
+        padding: 0 16px !important;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
         background: #fff !important;
         cursor: pointer !important;
-        font-size: 18px !important;
-        height: 34px !important;
+        font-size: 19px !important;
+        height: 36px !important;
         font-weight: 700 !important;
         color: #1a1a1a !important;
     `;
@@ -1642,13 +1671,13 @@ function renderChartControls(currentSortField) {
     zoomOutBtn.textContent = '−';
     zoomOutBtn.title = 'Уменьшить масштаб';
     zoomOutBtn.style.cssText = `
-        padding: 0 14px !important;
+        padding: 0 16px !important;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
         background: #fff !important;
         cursor: pointer !important;
-        font-size: 18px !important;
-        height: 34px !important;
+        font-size: 19px !important;
+        height: 36px !important;
         font-weight: 700 !important;
         color: #1a1a1a !important;
     `;
@@ -1659,13 +1688,13 @@ function renderChartControls(currentSortField) {
     resetZoomBtn.textContent = 'Сброс';
     resetZoomBtn.title = 'Сбросить масштаб';
     resetZoomBtn.style.cssText = `
-        padding: 0 14px !important;
+        padding: 0 16px !important;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
         background: #fff !important;
         cursor: pointer !important;
-        font-size: 14px !important;
-        height: 34px !important;
+        font-size: 15px !important;
+        height: 36px !important;
         font-weight: 500 !important;
         color: #1a1a1a !important;
     `;
@@ -1676,20 +1705,16 @@ function renderChartControls(currentSortField) {
     zoomInfo.id = 'zoom-info';
     zoomInfo.textContent = 'Видно: все';
     zoomInfo.style.cssText = `
-        font-size: 14px !important;
+        font-size: 15px !important;
         color: #555 !important;
         margin-left: auto !important;
         font-weight: 500 !important;
-        display:none;
+        display: none;
     `;
     controls.appendChild(zoomInfo);
 
-    const title = chartContainer.querySelector('.chart-title');
-    if (title) {
-        chartContainer.insertBefore(controls, title.nextSibling);
-    } else {
-        chartContainer.prepend(controls);
-    }
+    const header = chartContainer.querySelector('.chart-header') || chartContainer;
+    header.appendChild(controls);
 
     const dataLength = currentDisplayDataLength || chartAllData.length || 0;
     zoomStartIndex = 0;
@@ -1731,12 +1756,11 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
         lblEl.className = 'chart-stat-card__label';
         lblEl.textContent = label;
 
-        // ===== Подсказки при наведении =====
         const valueText = valEl.textContent;
         const fullText = `${label}: ${valueText}`;
-        card.title = fullText;         // на всей карточке
-        valEl.title = valueText;       // на значении
-        lblEl.title = label;           // на подписи
+        card.title = fullText;
+        valEl.title = valueText;
+        lblEl.title = label;
 
         card.appendChild(valEl);
         card.appendChild(lblEl);
@@ -1745,23 +1769,14 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
 
     stats.forEach(s => row.appendChild(makeCard(s.label, s.value, s.color)));
 
-    let anchor = null;
     if (insertAfterSelector) {
-        anchor = container.querySelector(insertAfterSelector);
+        const anchor = container.querySelector(insertAfterSelector);
+        if (anchor && anchor.nextSibling) {
+            container.insertBefore(row, anchor.nextSibling);
+            return;
+        }
     }
-    if (!anchor) {
-        const title = container.querySelector('.chart-title');
-        const count = container.querySelector('.chart-count');
-        anchor = count || title;
-    }
-
-    if (anchor && anchor.nextSibling) {
-        container.insertBefore(row, anchor.nextSibling);
-    } else if (anchor) {
-        container.appendChild(row);
-    } else {
-        container.prepend(row);
-    }
+    container.appendChild(row);
 }
 // ==================== ПЕРЕСБОРКА С СОХРАНЕНИЕМ ЗУМА ====================
 
@@ -1886,8 +1901,6 @@ function createRatingChart(data, type) {
     const providedColors = displayData.map(() => '#1a73e8');
     const deficitColors  = displayData.map(() => '#ff6a00');
 
-    const baseIndex = zoomStartIndex;
-
     // ==================== РАСЧЁТ СТАТИСТИКИ ====================
     const ratingsAll = sortedData.map(it => Number(it.rating) || 0);
     const n = ratingsAll.length;
@@ -1936,35 +1949,18 @@ function createRatingChart(data, type) {
     });
 
     // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
-    // Данные отсортированы по обеспеченностьу УБЫВАНИЕМ: [81-100] [61-80] [41-60] [21-40] [0-20]
-    //
-    // Для КАЖДОГО диапазона задаём верхнюю границу (высота линии):
-    //   81-100 → topValue = 100
-    //   61-80  → topValue = 80
-    //   41-60  → topValue = 60
-    //   21-40  → topValue = 40
-    //   0-20   → topValue = 20
-    //
-    // Позиция pos = кол-во элементов, у которых обеспеченность ПОПАДАЕТ в этот диапазон
-    // И ВЫШЕ (т.е. >= min границы диапазона). Это и есть левая граница блока
-    // в массиве, отсортированном по убыванию.
-    //
-    // Плюс правая граница таблицы (pos = len, topValue = 0).
-    // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
-    // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
     const verticalLines = [];
     {
         const len = displayData.length;
         if (len > 0) {
             const ratings = displayData.map(it => Number(it.rating) || 0);
 
-            // min — нижняя граница диапазона; topValue — его верхняя граница
             const bounds = [
-                { min: 81, topValue: 100 },  // 81-100
-                { min: 61, topValue: 80  },  // 61-80
-                { min: 41, topValue: 60  },  // 41-60
-                { min: 21, topValue: 40  },  // 21-40
-                { min: 0,  topValue: 20  }   // 0-20
+                { min: 81, topValue: 100 },
+                { min: 61, topValue: 80  },
+                { min: 41, topValue: 60  },
+                { min: 21, topValue: 40  },
+                { min: 0,  topValue: 20  }
             ];
 
             bounds.forEach(({ min, topValue }) => {
@@ -1973,16 +1969,9 @@ function createRatingChart(data, type) {
                     if (ratings[i] >= min) pos = i + 1;
                     else break;
                 }
-                verticalLines.push({
-                    pos,
-                    topValue,
-                    cumulative: pos
-                });
+                verticalLines.push({ pos, topValue, cumulative: pos });
             });
 
-            // ===== ЛИНИЯ ПЕРЕД ПЕРВЫМ НП С обеспеченностьОМ 0 =====
-            // pos = кол-во НП с обеспеченностьом > 0 (т.е. всё до первого нуля).
-            // topValue = 20 — линия идёт от горизонтали 20 вниз.
             {
                 let posBeforeZero = 0;
                 for (let i = 0; i < len; i++) {
@@ -1996,7 +1985,6 @@ function createRatingChart(data, type) {
                 });
             }
 
-            // Правая граница таблицы — от низа
             verticalLines.push({
                 pos: len,
                 topValue: 0,
@@ -2047,10 +2035,7 @@ function createRatingChart(data, type) {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: {
-                    top: 8,
-                    bottom: 30
-                }
+                padding: { top: 8, bottom: 60 }
             },
             interaction: {
                 mode: 'index',
@@ -2112,8 +2097,11 @@ function createRatingChart(data, type) {
                     display: true,
                     position: 'top',
                     labels: {
-                        font: { size: 14, weight: 'bold' },
+                        font: { size: 16, weight: 'bold' },
                         color: '#1a1a1a',
+                        boxWidth: 22,
+                        boxHeight: 14,
+                        padding: 12,
                         generateLabels: function(chart) {
                             return [
                                 {
@@ -2147,8 +2135,8 @@ function createRatingChart(data, type) {
                     borderWidth: 2,
                     padding: 12,
                     cornerRadius: 8,
-                    titleFont: { size: 15, weight: 'bold' },
-                    bodyFont: { size: 13, weight: 'bold' },
+                    titleFont: { size: 16, weight: 'bold' },
+                    bodyFont: { size: 14, weight: 'bold' },
                     bodySpacing: 6,
                     callbacks: {
                         title: function(context) {
@@ -2179,7 +2167,7 @@ function createRatingChart(data, type) {
                             const place = ratingPlacesMap.get(String(item.id)) || '—';
                             const total = ratingPlacesTotal || 0;
                             return [
-                                `Место в обеспеченностье: ${place} из ${total}`,
+                                `Место в обеспеченности: ${place} из ${total}`,
                                 `Население: ${item.population || 0}`,
                                 `Регион: ${item.region_name || 'Н/Д'}`,
                                 `Район: ${item.district_name || 'Н/Д'}`,
@@ -2197,11 +2185,10 @@ function createRatingChart(data, type) {
                         display: true,
                         text: 'Населенные пункты',
                         color: '#000000',
-                        font: { size: 15, weight: 'bold' }
+                        font: { size: 16, weight: 'bold' },
+                        padding: { top: 25, bottom: 10 }
                     },
-                    ticks: {
-                        display: false
-                    },
+                    ticks: { display: false },
                     border: { color: '#000000', width: 2 }
                 },
                 y: {
@@ -2215,7 +2202,7 @@ function createRatingChart(data, type) {
                     },
                     ticks: {
                         stepSize: 5,
-                        font: { size: 13 },
+                        font: { size: 14 },
                         color: '#000000',
                         callback: function(value) { return value.toFixed(0); }
                     },
@@ -2223,16 +2210,14 @@ function createRatingChart(data, type) {
                         display: true,
                         text: 'Обеспеченность',
                         color: '#000000',
-                        font: { size: 15, weight: 'bold' }
+                        font: { size: 16, weight: 'bold' }
                     },
                     border: { color: '#000000', width: 2 }
                 }
             },
             animation: { duration: 0 },
             hover: { mode: 'index', intersect: false, animationDuration: 200 },
-            elements: {
-                bar: { borderRadius: 0 }
-            }
+            elements: { bar: { borderRadius: 0 } }
         },
         plugins: [
             {
@@ -2245,7 +2230,6 @@ function createRatingChart(data, type) {
 
                     ctx.save();
 
-                    // ===== ГОРИЗОНТАЛЬНЫЕ ЛИНИИ (20 / 40 / 60 / 80) =====
                     ctx.strokeStyle = 'rgb(70, 70, 70)';
                     ctx.lineWidth = 0.8;
 
@@ -2258,7 +2242,6 @@ function createRatingChart(data, type) {
                         ctx.stroke();
                     });
 
-                    // ===== ВЕРТИКАЛЬНЫЕ ЛИНИИ =====
                     const meta = chart.getDatasetMeta(0);
                     if (meta && meta.data && meta.data.length > 0) {
                         const len = displayData.length;
@@ -2287,8 +2270,6 @@ function createRatingChart(data, type) {
                         verticalLines.forEach(({ pos, topValue }) => {
                             let x = posToPixel(pos);
                             if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-
-                            // Не сливаем с осью Y
                             if (pos <= 0) x += 2;
 
                             const yTop = topValue > 0
@@ -2345,20 +2326,16 @@ function createRatingChart(data, type) {
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'top';
 
-                    const yBase = chartArea.bottom + 8;
+                    const yBase = chartArea.bottom + 10;
 
-                    // Подписи под каждой вертикальной линией.
-                    // pos = 0 даст подпись «0» слева.
                     verticalLines.forEach(({ pos, cumulative }) => {
                         let x = posToPixel(pos);
                         if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-
-                        // Сдвиги, чтобы текст не сливался с осью/краем
                         if (pos <= 0) x += 12;
-                        if (pos >= len) x -= 20;
+                        if (pos >= len) x -= 22;
 
                         ctx.fillStyle = '#000000';
-                        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+                        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
                         ctx.fillText(String(cumulative), x, yBase);
                     });
 
@@ -2370,42 +2347,36 @@ function createRatingChart(data, type) {
 
     isChartMode = true;
 
-    // ==================== ЗАГОЛОВОК, КАРТОЧКИ ====================
+    // ==================== ЗАГОЛОВОК, КОНТРОЛЫ, КАРТОЧКИ ====================
     const chartContainer = document.getElementById('chart-container');
-    if (chartContainer) {
-        const existingTitle = chartContainer.querySelector('.chart-title');
-        if (existingTitle) existingTitle.remove();
-        const existingCount = chartContainer.querySelector('.chart-count');
-        if (existingCount) existingCount.remove();
-        const existingStats = chartContainer.querySelectorAll('.chart-stats-row, .chart-stats-row-buckets');
-        existingStats.forEach(el => el.remove());
+    const chartHeader = chartContainer ? chartContainer.querySelector('.chart-header') : null;
 
+    if (chartHeader) {
+        chartHeader.innerHTML = '';
+
+        // 1. Заголовок
         const title = document.createElement('div');
         title.className = 'chart-title';
-        title.textContent = 'Диаграмма обеспеченности НП';
-        title.style.cssText = `
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin: 0 0 4px 0;
-            flex-shrink: 0;
-        `;
-        chartContainer.prepend(title);
-
-        const stats = [
-            { label: 'Количество НП',            value: n.toLocaleString('ru-RU'),               color: '#0066ff' },
-            { label: 'Численность населения',    value: populationLabel,                        color: '#4c00a8' },
-            { label: 'Средняя обеспеченность',   value: avgRating.toFixed(2),                  color: 'rgba(78 215 41 / 90%)' },
-            { label: 'Средний дефицит',          value: avgDeficit.toFixed(2),                 color: '#cc0000' },
-            { label: 'Медианная обеспеченность', value: medianRating.toFixed(2),               color: 'rgba(78 215 41 / 90%)' },
-            { label: 'Медианный дефицит',        value: medianDeficit.toFixed(2),              color: '#cc0000' }
-        ];
-
-        renderChartStatsCards(chartContainer, stats, 'chart-stats-row');
+        title.textContent = 'График обеспеченности НП';
+        chartHeader.appendChild(title);
     }
 
+    // 2. Контролы (сортировка / поиск / масштаб)
     renderChartControls(sortField);
+
+    // 3. Карточки статистики
+    if (chartHeader) {
+        const stats = [
+            { label: 'Количество НП',            value: n.toLocaleString('ru-RU'),  color: '#0066ff' },
+            { label: 'Численность населения',    value: populationLabel,           color: '#4c00a8' },
+            { label: 'Средняя обеспеченность',   value: avgRating.toFixed(2),      color: 'rgba(78 215 41 / 90%)' },
+            { label: 'Средний дефицит',          value: avgDeficit.toFixed(2),     color: '#cc0000' },
+            { label: 'Медианная обеспеченность', value: medianRating.toFixed(2),   color: 'rgba(78 215 41 / 90%)' },
+            { label: 'Медианный дефицит',        value: medianDeficit.toFixed(2),  color: '#cc0000' }
+        ];
+
+        renderChartStatsCards(chartHeader, stats, 'chart-stats-row');
+    }
 
     const paginationContainer = document.getElementById('settlements-pagination');
     if (paginationContainer) {
@@ -3783,7 +3754,7 @@ async function handleRatingTableButton() {
     if (tableRadio) tableRadio.checked = true;
 }
 
-// ==================== Дашборд обеспеченности НП ====================
+// ==================== Диаграмма обеспеченности НП ====================
 
 async function handleAnalyticsDashboardButton() {
     const ok = await loadRatingsData();
@@ -3858,38 +3829,17 @@ function renderAnalyticsDashboard() {
 
     const dashboard = document.createElement('div');
     dashboard.id = 'analytics-dashboard';
-    dashboard.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 8px 0;
-        width: 100%;
-        height: 100%;
-        box-sizing: border-box;
-        overflow: hidden;
-    `;
 
     // ==================== ЗАГОЛОВОК ====================
     const headerBlock = document.createElement('div');
-    headerBlock.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        flex-shrink: 0;
-    `;
+    headerBlock.className = 'analytics-header';
 
     const title = document.createElement('div');
-    title.textContent = 'Дашборд обеспеченности НП';
-    title.style.cssText = `
-        text-align: center;
-        font-size: clamp(22px, 2.2vw, 34px);
-        font-weight: 800;
-        color: #1a1a1a;
-        margin: 0;
-        letter-spacing: 0.3px;
-    `;
+    title.className = 'analytics-title';
+    title.textContent = 'Диаграмма обеспеченности НП';
 
     const regionsSubtitle = document.createElement('div');
+    regionsSubtitle.className = 'analytics-subtitle';
     const regionNames = currentRegions.map(r => {
         const opt = document.querySelector(`#region option[value="${r}"]`);
         return opt ? opt.textContent : r;
@@ -3897,13 +3847,6 @@ function renderAnalyticsDashboard() {
     regionsSubtitle.textContent = regionNames.length > 0
         ? `Регион(ы): ${regionNames.join(', ')}`
         : 'Регион(ы): не выбраны';
-    regionsSubtitle.style.cssText = `
-        text-align: left;
-        font-size: 16px;
-        font-weight: 500;
-        color: black;
-        margin: 0;
-    `;
 
     headerBlock.appendChild(title);
     headerBlock.appendChild(regionsSubtitle);
@@ -3941,7 +3884,7 @@ function renderAnalyticsDashboard() {
     const avgRating = ratingCount > 0 ? sumRating / ratingCount : 0;
     const avgDeficit = ratingCount > 0 ? 100 - avgRating : 0;
 
-    // ==================== КАРТОЧКИ ====================
+    // ==================== КАРТОЧКИ KPI ====================
     const cardsRow = document.createElement('div');
     cardsRow.className = 'kpi-cards-row';
 
@@ -3967,80 +3910,34 @@ function renderAnalyticsDashboard() {
         return card;
     };
 
-    cardsRow.appendChild(makeCard(
-        'Количество НП',
-        totalCount.toLocaleString('ru-RU'),
-        '#0066ff'
-    ));
-    cardsRow.appendChild(makeCard(
-        'Численность населения',
-        isAllPop
-            ? 'Все НП'
-            : `${popFrom.toLocaleString('ru-RU')}–${popTo.toLocaleString('ru-RU')}`,
-        '#4c00a8'
-    ));
-    cardsRow.appendChild(makeCard(
-        'Средняя обеспеченность',
-        avgRating.toFixed(2),
-        '#43A047'
-    ));
-    cardsRow.appendChild(makeCard(
-        'Средний дефицит',
-        avgDeficit.toFixed(2),
-        '#cc0000'
-    ));
+    cardsRow.appendChild(makeCard('Количество НП', totalCount.toLocaleString('ru-RU'), '#0066ff'));
+    cardsRow.appendChild(makeCard('Численность населения', isAllPop
+        ? 'Все НП'
+        : `${popFrom.toLocaleString('ru-RU')}–${popTo.toLocaleString('ru-RU')}`, '#4c00a8'));
+    cardsRow.appendChild(makeCard('Средняя обеспеченность', avgRating.toFixed(2), '#43A047'));
+    cardsRow.appendChild(makeCard('Средний дефицит', avgDeficit.toFixed(2), '#cc0000'));
 
     dashboard.appendChild(cardsRow);
 
-    // ==================== ОБЩИЙ РЯД ДЛЯ 3 ДИАГРАММ ====================
+    // ==================== ОТДЕЛЬНЫЙ БЛОК ДЛЯ ДИАГРАММ ====================
+    const chartsScroll = document.createElement('div');
+    chartsScroll.className = 'analytics-charts-scroll';
+
     const chartsRow = document.createElement('div');
-    chartsRow.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        width: 100%;
-        flex: 1 1 auto;
-        min-height: 0;
-        box-sizing: border-box;
-    `;
+    chartsRow.className = 'analytics-charts-row';
+    chartsScroll.appendChild(chartsRow);
 
     const makeChartBlock = (titleText, canvasId) => {
         const block = document.createElement('div');
-        block.style.cssText = `
-            background: #ffffff;
-            border: none;
-            border-radius: 14px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 0;
-            min-height: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-        `;
+        block.className = 'analytics-chart-block';
 
         const t = document.createElement('div');
+        t.className = 'analytics-chart-block__title';
         t.textContent = titleText;
-        t.style.cssText = `
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a1a;
-            text-align: center;
-            flex-shrink: 0;
-            line-height: 1.2;
-        `;
         block.appendChild(t);
 
         const wrap = document.createElement('div');
-        wrap.style.cssText = `
-            position: relative;
-            width: 100%;
-            flex: 1 1 auto;
-            min-height: 0;
-            min-width: 0;
-        `;
+        wrap.className = 'analytics-chart-block__canvas-wrap';
 
         const canvas = document.createElement('canvas');
         canvas.id = canvasId;
@@ -4067,7 +3964,7 @@ function renderAnalyticsDashboard() {
     chartsRow.appendChild(bar1Block.block);
     chartsRow.appendChild(bar2Block.block);
 
-    dashboard.appendChild(chartsRow);
+    dashboard.appendChild(chartsScroll);
 
     // ==================== ВСТАВКА В DOM ====================
     const tableContainer = document.querySelector('.table__rating');
@@ -4086,11 +3983,11 @@ function renderAnalyticsDashboard() {
 
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
-        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' }, // оранжевый
-        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#29B6F6' }, // голубой
-        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#0D47A1' }, // темно-синий
-        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#43A047' }, // темно-зеленый
-        { label: '81-100', min: 81,  max: 100, count: 0, color: '#1B5E20' }  // зеленый
+        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' },
+        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#29B6F6' },
+        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#0D47A1' },
+        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#43A047' },
+        { label: '81-100', min: 81,  max: 100, count: 0, color: '#1B5E20' }
     ];
 
     items.forEach(item => {
@@ -4101,10 +3998,7 @@ function renderAnalyticsDashboard() {
         if (cat) cat.count++;
     });
 
-    const totalRated = categories.reduce((sum, c) => sum + c.count, 0);
     const denom = totalCount > 0 ? totalCount : 1;
-
-    // Обратный порядок для отображения в таблице (от лучшего к худшему)
     const categoriesDisplay = [...categories].reverse();
 
     const ctxPie = canvasPie.getContext('2d');
@@ -4125,20 +4019,16 @@ function renderAnalyticsDashboard() {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '50%',
-            layout: {
-                padding: { top: 4, bottom: 4, left: 4, right: 4 }
-            },
+            layout: { padding: { top: 4, bottom: 4, left: 4, right: 4 } },
             plugins: {
-                legend: {
-                    display: false      // ← легенду убрали, вместо неё HTML-таблица
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#bdbdbd',
                     titleColor: '#000000',
                     bodyColor: '#000000',
                     borderColor: '#ffffff',
                     borderWidth: 0,
-                    bodyFont: { size: 12, weight: 'bold' },
+                    bodyFont: { size: 13, weight: 'bold' },
                     callbacks: {
                         label: function(context) {
                             const val = context.parsed;
@@ -4158,22 +4048,11 @@ function renderAnalyticsDashboard() {
 
         const table = document.createElement('table');
         table.className = 'pie-stats-table';
-        table.style.cssText = `
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 6px;
-            font-size: 13px;
-            font-family: inherit;
-            color: #1a1a1a;
-            table-layout: fixed;
-            flex-shrink: 0;
-        `;
 
-        // Заголовок
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
         const headers = [
-            { text: 'Цвет',          width: '12%' },
+            { text: 'Цвет',      width: '12%' },
             { text: 'Об., %',    width: '26%' },
             { text: 'Кол-во НП', width: '26%' },
             { text: '% НП',      width: '36%' }
@@ -4181,98 +4060,41 @@ function renderAnalyticsDashboard() {
         headers.forEach(h => {
             const th = document.createElement('th');
             th.textContent = h.text;
-            th.style.cssText = `
-                padding: 5px 4px;
-                text-align: center;
-                font-weight: 700;
-                font-size: 11px;
-                background: #f5f5f5;
-                border-top: 1px solid #1a1a1a;
-                border-bottom: 1px solid #1a1a1a;
-                color: #1a1a1a;
-                width: ${h.width};
-            `;
+            th.style.width = h.width;
             headRow.appendChild(th);
         });
         thead.appendChild(headRow);
         table.appendChild(thead);
 
-        // Тело
         const tbody = document.createElement('tbody');
         categoriesDisplay.forEach(cat => {
             const tr = document.createElement('tr');
-            tr.style.borderBottom = '1px solid #eee';
 
-            // 1) цветной кружок
             const tdColor = document.createElement('td');
-            tdColor.style.cssText = `padding: 4px 4px; text-align: center; vertical-align: middle;`;
             const dot = document.createElement('span');
-            dot.style.cssText = `
-                display: inline-block;
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                background: ${cat.color};
-                border: 1px solid #000;
-                vertical-align: middle;
-            `;
+            dot.className = 'pie-stats-table__dot';
+            dot.style.background = cat.color;
             tdColor.appendChild(dot);
             tr.appendChild(tdColor);
 
-            // 2) диапазон
             const tdRange = document.createElement('td');
             tdRange.textContent = cat.label;
-            tdRange.style.cssText = `
-                padding: 4px 4px;
-                text-align: center;
-                font-weight: 600;
-                font-size: 12px;
-                color: #1a1a1a;
-            `;
             tr.appendChild(tdRange);
 
-            // 3) количество НП
             const tdCount = document.createElement('td');
             tdCount.textContent = cat.count;
-            tdCount.style.cssText = `
-                padding: 4px 4px;
-                text-align: center;
-                font-weight: 600;
-                font-size: 12px;
-                color: #1a1a1a;
-            `;
             tr.appendChild(tdCount);
 
-            // 4) % НП
             const percent = (cat.count / denom) * 100;
             const tdPercent = document.createElement('td');
             tdPercent.textContent = percent.toFixed(2).replace('.', ',') + ' %';
-            tdPercent.style.cssText = `
-                padding: 4px 4px;
-                text-align: center;
-                font-weight: 600;
-                font-size: 12px;
-                color: #1a1a1a;
-            `;
             tr.appendChild(tdPercent);
 
             tbody.appendChild(tr);
         });
-
-
         table.appendChild(tbody);
 
         pieBlock.block.appendChild(table);
-
-        // Диаграмма и таблица делят высоту: canvas ~60%, таблица ~40%
-        pieBlock.block.style.display = 'flex';
-        pieBlock.block.style.flexDirection = 'column';
-
-        if (pieBlock.wrap) {
-            pieBlock.wrap.style.flex = '1 1 auto';
-            pieBlock.wrap.style.minHeight = '150px';
-            pieBlock.wrap.style.maxHeight = '55%';
-        }
     })();
 
     // ==================== ДИАГРАММА 2: услуги связи ====================
@@ -4332,16 +4154,14 @@ function renderAnalyticsDashboard() {
     const commonBarOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-            padding: { top: 8, bottom: 0 }
-        },
+        layout: { padding: { top: 8, bottom: 0 } },
         scales: {
             x: {
                 stacked: true,
                 border: { display: false },
                 ticks: {
                     color: '#000',
-                    font: { size: 10, weight: 'bold' },
+                    font: { size: 12, weight: 'bold' },
                     maxRotation: 45,
                     minRotation: 45,
                     autoSkip: false,
@@ -4361,7 +4181,7 @@ function renderAnalyticsDashboard() {
                 ticks: {
                     stepSize: 20,
                     color: '#000',
-                    font: { size: 10, weight: 'bold' },
+                    font: { size: 12, weight: 'bold' },
                     callback: v => v
                 },
                 grid: { color: 'rgba(0,0,0,0.08)' },
@@ -4369,7 +4189,7 @@ function renderAnalyticsDashboard() {
                     display: true,
                     text: 'Обеспеченность,%',
                     color: '#000',
-                    font: { size: 11, weight: 'bold' }
+                    font: { size: 13, weight: 'bold' }
                 }
             }
         },
@@ -4377,10 +4197,10 @@ function renderAnalyticsDashboard() {
             legend: {
                 position: 'top',
                 labels: {
-                    font: { size: 13, weight: 'bold' },
+                    font: { size: 14, weight: 'bold' },
                     color: '#000',
-                    boxWidth: 14,
-                    boxHeight: 14,
+                    boxWidth: 16,
+                    boxHeight: 16,
                     padding: 10
                 }
             },
@@ -4397,7 +4217,6 @@ function renderAnalyticsDashboard() {
         }
     };
 
-    // ---- Диаграмма 2: услуги связи ----
     const ctx1 = canvas1.getContext('2d');
     analyticsBarServices = new Chart(ctx1, {
         type: 'bar',

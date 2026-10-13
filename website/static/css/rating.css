@@ -1,6 +1,6 @@
-/* rating.css - серые тона, черные рамки, компактно для ПК */
+/* rating.css - серая тема, чёрные рамки, без адаптива, фиксированные шрифты */
 
-/* ===== СТРАНИЦА — flex-контейнер на весь экран ===== */
+/* ===== БАЗА ===== */
 * {
     box-sizing: border-box;
 }
@@ -16,15 +16,37 @@ body {
     display: flex;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.35;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
-/* ===== ЗАГОЛОВОК (header из base.html) ===== */
-
+header {
+    flex-shrink: 0;
+}
 
 header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
+}
+
+/* ===== ОБЩИЕ СКРОЛЛБАРЫ ===== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #666;
 }
 
 /* ===== ГЛАВНЫЙ КОНТЕЙНЕР ===== */
@@ -36,7 +58,7 @@ header h2 {
     padding: 12px 16px 16px 16px;
     background: #d4d4d4;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* ===== ЛЕВАЯ КОЛОНКА ===== */
@@ -44,23 +66,11 @@ header h2 {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: auto;
     padding-right: 4px;
-    max-height: calc(100vh - 160px);
-}
-
-.column__form::-webkit-scrollbar {
-    width: 4px;
-}
-
-.column__form::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-.column__form::-webkit-scrollbar-track {
-    background: transparent;
+    min-height: 0;
+    min-width: 0;
+    height: 100%;
 }
 
 .form__rating {
@@ -74,13 +84,13 @@ header h2 {
 .form__rating label {
     display: block;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
     color: #1a1a1a;
     margin-bottom: 3px;
 }
 
 .form__rating > label:first-of-type {
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: 4px;
 }
 
@@ -88,23 +98,21 @@ header h2 {
 .form__rating input[type="text"],
 .form__rating input[type="number"] {
     width: 100%;
-    padding: 5px 8px;
+    padding: 6px 10px;
     border: 1.5px solid #333;
     background: #fff;
-    font-size: 13px;
+    font-size: 15px;
     border-radius: 3px;
-    box-sizing: border-box;
 }
 
-/* Множественный выбор регионов */
 .form__rating select[multiple] {
-    height: 70px;
-    min-height: 50px;
+    height: 90px;
+    min-height: 60px;
 }
 
 .form__rating select[multiple] option {
     padding: 3px 8px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .form__rating select[multiple] option:checked {
@@ -120,7 +128,7 @@ header h2 {
 
 .form__rating > div:not(.form__div) {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
     color: #1a1a1a;
     margin: 8px 0 4px 0;
 }
@@ -141,9 +149,9 @@ header h2 {
 }
 
 .form__div__div input[type="radio"] {
-    width: 14px;
-    height: 14px;
-    margin-right: 4px;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
     accent-color: #8a8a8a;
     vertical-align: middle;
 }
@@ -151,7 +159,7 @@ header h2 {
 .form__div__div label {
     display: inline;
     font-weight: normal;
-    font-size: 13px;
+    font-size: 15px;
     color: #1a1a1a;
     vertical-align: middle;
 }
@@ -160,22 +168,21 @@ header h2 {
     margin-top: 4px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
 .form__div__div:nth-child(2) input[type="number"] {
-    width: 110px;
-    padding: 3px 5px;
-    font-size: 13px;
+    width: 120px;
+    padding: 4px 6px;
+    font-size: 15px;
 }
 
 .h5-label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     margin: 0 0 0 8px;
     display: block;
-
 }
 
 /* ===== КНОПКИ ===== */
@@ -184,8 +191,8 @@ header h2 {
     background: #d9d9d9;
     color: #1a1a1a;
     border: 1.5px solid #8a8a8a;
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 7px 12px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     margin-top: 4px;
@@ -206,7 +213,6 @@ header h2 {
     background: #b5b5b5;
 }
 
-/* Все кнопки формы - серые */
 .rating-btn {
     background: #d9d9d9;
     border-color: #8a8a8a;
@@ -217,7 +223,6 @@ header h2 {
     background: #c4c4c4;
 }
 
-/* Кнопки-заглушки */
 .rating-btn-disabled {
     background: #cfcfcf !important;
     border-color: #a0a0a0 !important;
@@ -231,10 +236,16 @@ header h2 {
     cursor: not-allowed !important;
 }
 
-/* Кнопка "Очистить" */
+/* Кнопка "Очистить" — компактная */
 #clear-btn {
     margin-top: 4px;
     flex-shrink: 0;
+    width: 98.2%;
+
+    align-self: flex-start;
+    padding: 4px 14px;
+    font-size: 15px;
+    height: auto;
 }
 
 .form__buttons {
@@ -246,8 +257,8 @@ header h2 {
 
 .form__buttons .grid-btn {
     margin-top: 0;
-    padding: 5px 8px;
-    font-size: 11px;
+    padding: 6px 10px;
+    font-size: 15px;
 }
 
 /* ===== ПРАВАЯ КОЛОНКА ===== */
@@ -258,19 +269,22 @@ header h2 {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
     border-radius: 4px;
     margin-top: 0;
+    gap: 8px;
 }
 
 /* ===== ЗАГОЛОВКИ ТАБЛИЦ ===== */
 .settlements-title,
 .res-title {
     text-align: center;
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 700;
     color: #1a1a1a;
-    margin: 2px 0 6px 0;
+    margin: 2px 0 8px 0;
     padding: 0;
     flex-shrink: 0;
 }
@@ -279,26 +293,27 @@ header h2 {
 .table-wrapper {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
     margin-bottom: 4px;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .table-wrapper:last-child {
     margin-bottom: 0;
 }
 
-/* ===== САМИ ТАБЛИЦЫ (скролл внутри) ===== */
+/* ===== ТАБЛИЦА ===== */
 .table__rating__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
     border: 1px solid #1a1a1a;
-    flex: 1;
     display: block;
-    overflow-y: auto;
+    overflow: auto;
     border-radius: 3px;
+    flex: 1 1 auto;
+    min-height: 200px;
 }
 
 .table__rating__table thead {
@@ -314,15 +329,14 @@ header h2 {
     table-layout: fixed;
 }
 
-/* ===== ФИКСИРОВАННАЯ ШИРИНА ДЛЯ ВСЕХ КОЛОНОК ===== */
 .table__rating__table th,
 .table__rating__table td {
     border: 1px solid #1a1a1a !important;
-    padding: 4px 6px;
+    padding: 6px 8px;
     vertical-align: middle;
-    width: 90px;
-    min-width: 90px;
-    max-width: 90px;
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
     word-break: break-word;
     white-space: normal;
     overflow: hidden;
@@ -335,8 +349,8 @@ header h2 {
     color: #1a1a1a;
     cursor: pointer;
     user-select: none;
-    padding: 5px 6px;
-    font-size: 11px;
+    padding: 8px 10px;
+    font-size: 14px;
     position: sticky;
     top: 0;
     background: #e8e8e8;
@@ -344,14 +358,14 @@ header h2 {
 }
 
 .sort-icon {
-    margin-left: 3px;
-    font-size: 9px;
+    margin-left: 4px;
+    font-size: 12px;
     font-weight: bold;
 }
 
 .table__rating__table td {
     color: #2a2a2a;
-    font-size: 11px;
+    font-size: 14px;
 }
 
 .table__rating__table tbody tr:hover {
@@ -374,33 +388,76 @@ header h2 {
     max-width: 100% !important;
 }
 
-/* ===== КОНТЕЙНЕР ДЛЯ ДИАГРАММЫ ===== */
+/* ============================================================ */
+/* ===== БЛОК ДИАГРАММЫ РЕЙТИНГА НП ===== */
+
 #chart-container {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
-    position: relative;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 6px 8px 8px 8px;
-    box-sizing: border-box;
+    width: 100%;
     display: none;
     flex-direction: column;
+    background: #fff;
+    border: none;
+    padding: 0;
     border-radius: 3px;
+    gap: 8px;
+    overflow: hidden;
 }
 
-#chart-container canvas {
+#chart-container > .chart-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+    max-height: 50%;
+}
+
+.chart-inner {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    border-radius: 4px;
+    padding: 8px;
+    position: relative;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.chart-content {
+    width: 1600px;
+    min-width: 1600px;
+    max-width: 1600px;
+    height: 950px;
+    min-height: 950px;
+    max-height: 950px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.chart-content canvas,
+#rating-chart {
+    display: block;
     width: 100% !important;
     height: 100% !important;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
 }
 
 .chart-title {
     text-align: center;
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 700;
     color: #1a1a1a;
-    margin: 0 0 6px 0;
+    margin: 0 0 8px 0;
     flex-shrink: 0;
 }
 
@@ -418,7 +475,7 @@ header h2 {
 }
 
 #chart-pagination .pagination-info {
-    font-size: 12px !important;
+    font-size: 14px !important;
     color: black !important;
     font-weight: 550 !important;
 }
@@ -429,28 +486,27 @@ header h2 {
     gap: 3px !important;
 }
 
-.page-input{
-    width: 50px !important;
+.page-input {
+    width: 60px !important;
 }
 
 #chart-pagination .pagination-btn,
 #chart-pagination .page-input,
 #chart-pagination .page-size-select {
-    height: 26px !important;
-    padding: 0 6px !important;
+    height: 30px !important;
+    padding: 0 10px !important;
     border: 1px solid #333 !important;
     border-radius: 3px !important;
-    font-size: 11px !important;
+    font-size: 14px !important;
     background: #fff !important;
     color: #333 !important;
-    box-sizing: border-box !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
 #chart-pagination .pagination-btn {
-    min-width: 26px !important;
+    min-width: 30px !important;
     background: #eee !important;
     cursor: pointer !important;
     font-weight: 600 !important;
@@ -466,12 +522,11 @@ header h2 {
 }
 
 #chart-pagination .page-input {
-    /*width: 34px !important;*/
     text-align: center !important;
 }
 
 #chart-pagination .page-size-select {
-    min-width: 44px !important;
+    min-width: 56px !important;
     cursor: pointer !important;
 }
 
@@ -480,7 +535,7 @@ header h2 {
 #res-table {
     display: block;
     width: 100%;
-    overflow-x: auto;
+    overflow: auto;
 }
 
 /* ===== КНОПКИ ВНИЗУ ===== */
@@ -493,18 +548,19 @@ header h2 {
     flex-shrink: 0;
     flex-wrap: wrap;
     min-height: 32px;
+    overflow: auto;
 }
 
 .table_buttons .grid-btn {
     width: auto !important;
-    min-width: 80px;
-    max-width: 180px;
+    min-width: 100px;
+    max-width: 240px;
     margin-top: 0;
-    padding: 4px 10px;
-    font-size: 11px;
+    padding: 7px 14px;
+    font-size: 14px;
     text-align: center;
     flex-shrink: 0;
-    white-space: nowrap;
+    white-space: break-spaces;
 }
 
 .table_buttons .res-action-btn,
@@ -512,8 +568,8 @@ header h2 {
 .table_buttons .calculate-selected-btn,
 .table_buttons .calculate-all-btn {
     width: auto !important;
-    min-width: 80px;
-    max-width: 180px;
+    min-width: 100px;
+    max-width: 240px;
     flex-shrink: 0;
     white-space: break-spaces;
 }
@@ -536,7 +592,7 @@ header h2 {
 }
 
 #settlements-pagination .pagination-info {
-    font-size: 12px !important;
+    font-size: 14px !important;
     color: black !important;
     font-weight: 550 !important;
 }
@@ -550,21 +606,20 @@ header h2 {
 #settlements-pagination .pagination-btn,
 #settlements-pagination .page-input,
 #settlements-pagination .page-size-select {
-    height: 26px !important;
-    padding: 0 8px !important;
+    height: 30px !important;
+    padding: 0 10px !important;
     border: 1px solid #333 !important;
     border-radius: 3px !important;
-    font-size: 12px !important;
+    font-size: 14px !important;
     background: #fff !important;
     color: #333 !important;
-    box-sizing: border-box !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
 #settlements-pagination .pagination-btn {
-    min-width: 26px !important;
+    min-width: 30px !important;
     background: #eee !important;
     cursor: pointer !important;
     font-weight: 600 !important;
@@ -580,12 +635,11 @@ header h2 {
 }
 
 #settlements-pagination .page-input {
-    /*width: 36px !important;*/
     text-align: center !important;
 }
 
 #settlements-pagination .page-size-select {
-    min-width: 46px !important;
+    min-width: 60px !important;
     cursor: pointer !important;
 }
 
@@ -594,12 +648,12 @@ header h2 {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 12px;
+    font-size: 14px;
     flex-shrink: 0;
     margin-bottom: 3px;
 }
 
-/* ===== ПОДСКАЗКА ПРИ ОТСУТСТВИИ ДАННЫХ ===== */
+/* ===== ПЛЕЙСХОЛДЕР ===== */
 .placeholder-message {
     display: flex;
     flex-direction: column;
@@ -610,23 +664,16 @@ header h2 {
     border: 2px dashed #1a1a1a;
     border-radius: 8px;
     margin: 8px 0;
-    flex: 1;
-    min-height: 200px;
+    min-height: 60vh;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-}
-
-.placeholder-message:hover {
-    border-color: #2a2a2a;
-    background: linear-gradient(145deg, #fafafa, #ececec);
+    overflow: auto;
 }
 
 .placeholder-message p {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     color: #1a1a1a;
     margin: 0 0 12px 0;
-    letter-spacing: 0.3px;
 }
 
 .placeholder-message ul {
@@ -634,18 +681,17 @@ header h2 {
     padding: 0;
     margin: 0;
     text-align: left;
-    max-width: 480px;
+    max-width: 520px;
     width: 100%;
 }
 
 .placeholder-message ul li {
-    font-size: 13px;
+    font-size: 15px;
     color: #333;
     padding: 8px 10px 8px 28px;
     line-height: 1.4;
     position: relative;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    transition: background 0.2s ease;
     border-radius: 3px;
 }
 
@@ -663,7 +709,7 @@ header h2 {
     left: 8px;
     color: #1a1a1a;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .placeholder-message ul li strong {
@@ -672,12 +718,11 @@ header h2 {
     background: #e0e0e0;
     padding: 1px 6px;
     border-radius: 3px;
-    font-size: 11px;
-    letter-spacing: 0.2px;
+    font-size: 15px;
     white-space: nowrap;
 }
 
-/* ===== МОДАЛЬНОЕ ОКНО РЭС ===== */
+/* ===== МОДАЛЬНЫЕ ОКНА ===== */
 .res-modal-overlay {
     position: fixed;
     top: 0;
@@ -689,72 +734,56 @@ header h2 {
     justify-content: center;
     align-items: center;
     z-index: 99999;
+    overflow: auto;
+    padding: 20px;
 }
 
 .res-modal-content {
     background: white;
-    padding: 16px 20px 20px 20px;
+    padding: 20px 24px 24px 24px;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     width: 95%;
     max-width: 1300px;
-    max-height: 88vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    position: relative;
+    overflow: auto;
 }
 
 .res-modal-title {
-    margin: 0 0 10px 0;
-    font-size: 17px;
+    margin: 0 0 12px 0;
+    font-size: 19px;
     font-weight: 700;
     flex-shrink: 0;
 }
 
 .res-modal-title .count-info {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
     color: #666;
 }
 
 .res-table-wrapper {
-    flex: 1;
+    flex: 1 1 auto;
     overflow: auto;
-    max-height: 55vh;
+    max-height: 60vh;
     border-radius: 4px;
-}
-
-.res-table-wrapper::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.res-table-wrapper::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-}
-
-.res-table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #666;
-}
-
-.res-table-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
+    min-height: 0;
 }
 
 .res-modal-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .res-modal-table th,
 .res-modal-table td {
-    padding: 5px 8px;
+    padding: 6px 10px;
     border: 1px solid #1a1a1a;
-    min-width: 70px;
-    max-width: 160px;
+    min-width: 80px;
+    max-width: 220px;
     word-break: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -770,7 +799,7 @@ header h2 {
     z-index: 10;
     cursor: pointer;
     user-select: none;
-    font-size: 11px;
+    font-size: 15px;
 }
 
 .res-modal-table th:hover {
@@ -779,7 +808,7 @@ header h2 {
 
 .res-modal-table td {
     color: #2a2a2a;
-    font-size: 11px;
+    font-size: 15px;
 }
 
 .res-modal-table tr:hover td {
@@ -787,17 +816,16 @@ header h2 {
 }
 
 .res-modal-close-btn {
-    margin-top: 12px;
-    padding: 6px 20px;
+    margin-top: 14px;
+    padding: 8px 22px;
     background: #d9d9d9;
     color: #1a1a1a;
     border: 1.5px solid #8a8a8a;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     align-self: flex-end;
     flex-shrink: 0;
-    transition: background 0.2s, border-color 0.2s;
 }
 
 .res-modal-close-btn:hover {
@@ -805,31 +833,33 @@ header h2 {
     border-color: #6a6a6a;
 }
 
-/* === ФИЛЬТР === */
+/* ===== ФИЛЬТР ===== */
 .filter-container {
     display: flex;
     gap: 10px;
     align-items: flex-end;
-    padding: 8px 10px;
+    padding: 10px 12px;
     background: #f5f5f5;
     border-radius: 4px;
     margin-bottom: 8px;
     flex-wrap: wrap;
     border: 1.2px solid black;
     flex-shrink: 0;
+    overflow: auto;
 }
 
 .filter-field-group,
 .filter-value-group {
     flex: 2;
-    min-width: 130px;
+    min-width: 150px;
 }
 
 .filter-exact-group {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 6px;
     padding-bottom: 1px;
+    font-size: 14px;
 }
 
 .filter-buttons-group {
@@ -839,39 +869,32 @@ header h2 {
 
 .filter-label {
     display: block;
-    margin-bottom: 3px;
-    font-size: 12px;
+    margin-bottom: 4px;
+    font-size: 14px;
     font-weight: bold;
     color: #333;
 }
 
-.filter-field-select {
+.filter-field-select,
+.filter-value-input {
     width: 100%;
-    padding: 4px 8px;
+    padding: 6px 10px;
     border: 1px solid black;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 14px;
     background: white;
     cursor: pointer;
 }
 
-.filter-value-input {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid black;
-    border-radius: 3px;
-    font-size: 12px;
-    box-sizing: border-box;
-}
-
-.filter-apply-btn {
-    padding: 4px 14px;
+.filter-apply-btn,
+.filter-reset-btn {
+    padding: 6px 16px;
     background: #cfcfcf;
     color: #1a1a1a;
     border: 1px solid #8a8a8a;
     border-radius: 3px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
     transition: background 0.2s;
 }
@@ -880,23 +903,11 @@ header h2 {
     background: #a6a6a6;
 }
 
-.filter-reset-btn {
-    padding: 4px 14px;
-    background: #cfcfcf;
-    color: #1a1a1a;
-    border: 1px solid #8a8a8a;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-
 .filter-reset-btn:hover {
     background: #bfbfbf;
 }
 
-/* === ВЫДЕЛЕНИЕ ВЫБРАННОГО НАСЕЛЁННОГО ПУНКТА === */
+/* ===== ВЫДЕЛЕНИЕ СТРОКИ ===== */
 #settlements-table tbody tr.selected {
     background-color: #80808094 !important;
 }
@@ -906,7 +917,7 @@ header h2 {
     color: #000 !important;
 }
 
-/* === ПРОГРЕСС МОДАЛЬНОЕ ОКНО === */
+/* ===== ПРОГРЕСС МОДАЛЬНОЕ ОКНО ===== */
 .progress-modal-overlay {
     position: fixed;
     top: 0;
@@ -918,6 +929,8 @@ header h2 {
     justify-content: center;
     align-items: center;
     z-index: 99999;
+    overflow: auto;
+    padding: 20px;
 }
 
 .progress-modal-content {
@@ -925,25 +938,25 @@ header h2 {
     padding: 24px 28px 28px 28px;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    min-width: 320px;
-    max-width: 450px;
+    min-width: 340px;
+    max-width: 480px;
     text-align: center;
 }
 
 .progress-modal-title {
     margin: 0 0 16px 0;
-    font-size: 17px;
+    font-size: 19px;
 }
 
 .progress-info {
     margin-bottom: 12px;
-    font-size: 13px;
+    font-size: 15px;
     color: #333;
 }
 
 .progress-bar-wrap {
     width: 100%;
-    height: 18px;
+    height: 20px;
     background: #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
@@ -959,19 +972,18 @@ header h2 {
 
 .status-info {
     margin-bottom: 12px;
-    font-size: 12px;
+    font-size: 14px;
     color: #666;
 }
 
 .progress-cancel-btn {
-    padding: 6px 20px;
+    padding: 7px 22px;
     background: #cfcfcf;
     color: #1a1a1a;
     border: 1.5px solid #8a8a8a;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
-    transition: background 0.2s;
+    font-size: 14px;
 }
 
 .progress-cancel-btn:hover:not(.disabled) {
@@ -986,1347 +998,7 @@ header h2 {
 }
 
 /* ============================================================ */
-/* ===== АДАПТИВНОСТЬ С УВЕЛИЧЕННЫМИ ШРИФТАМИ ===== */
-
-/* Большие экраны  */
-@media (min-width: 1400px) {
-    .container__forms {
-        grid-template-columns: 400px 1fr;
-        gap: 24px;
-        padding: 20px 24px 24px 24px;
-    }
-
-    .column__form {
-        max-height: calc(100vh - 180px);
-    }
-
-    .form__rating {
-        padding: 18px 20px 20px 20px;
-    }
-
-    .form__rating label {
-        font-size: 16px;
-        margin-bottom: 5px;
-    }
-
-    .form__rating > label:first-of-type {
-        font-size: 18px;
-    }
-
-    .form__rating select,
-    .form__rating input[type="text"],
-    .form__rating input[type="number"] {
-        font-size: 16px;
-        padding: 8px 12px;
-        height: 40px;
-    }
-
-    .form__rating select[multiple] {
-        height: 100px;
-        min-height: 80px;
-    }
-
-    .form__rating select[multiple] option {
-        font-size: 15px;
-        padding: 6px 12px;
-    }
-
-    .form__rating > div:not(.form__div) {
-        font-size: 16px;
-        margin: 12px 0 6px 0;
-    }
-
-    .form__div {
-        padding: 12px 16px;
-    }
-
-    .form__div__div label {
-        font-size: 15px;
-    }
-
-    .form__div__div input[type="radio"] {
-        width: 18px;
-        height: 18px;
-        margin-right: 8px;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 115px;
-        padding: 5px 8px;
-        font-size: 15px;
-        height: 32px;
-    }
-
-    .h5-label {
-        font-size: 15px;
-        margin-left: 10px;
-    }
-
-    .grid-btn {
-        font-size: 15px;
-        padding: 8px 14px;
-        height: 36px;
-        margin-top: 6px;
-    }
-
-    .form__buttons .grid-btn {
-        font-size: 14px;
-        padding: 6px 10px;
-        height: 32px;
-    }
-
-    #clear-btn {
-        height: 36px;
-        font-size: 15px;
-        padding: 8px 14px;
-        margin-top: 6px;
-    }
-
-    .settlements-title,
-    .res-title {
-        font-size: 20px;
-        margin: 4px 0 10px 0;
-    }
-
-    .table__rating__table {
-        font-size: 15px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        padding: 8px 12px;
-        width: 140px;
-        min-width: 120px;
-        max-width: 140px;
-        font-size: 14px;
-    }
-
-    .table__rating__table th {
-        font-size: 14px;
-        padding: 10px 12px;
-    }
-
-    .table__rating__table td {
-        font-size: 14px;
-    }
-
-    .sort-icon {
-        font-size: 12px;
-        margin-left: 5px;
-    }
-
-    #settlements-pagination {
-        gap: 10px !important;
-        padding: 10px 0 !important;
-    }
-
-    #settlements-pagination .pagination-info {
-        font-size: 15px !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #settlements-pagination .page-size-select {
-        height: 34px !important;
-        font-size: 15px !important;
-        /*padding: 0 14px !important;*/
-    }
-
-    #settlements-pagination .pagination-btn {
-        min-width: 34px !important;
-    }
-
-    #settlements-pagination .page-input {
-        /*width: 48px !important;*/
-    }
-
-    #settlements-pagination .page-size-select {
-        min-width: 58px !important;
-    }
-
-    #chart-container {
-        padding: 10px 14px 14px 14px;
-    }
-
-    .chart-title {
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-
-    #chart-pagination {
-        gap: 10px !important;
-        padding: 10px 0 !important;
-    }
-
-    #chart-pagination .pagination-info {
-        font-size: 15px !important;
-    }
-
-    #chart-pagination .pagination-btn,
-    #chart-pagination .page-input,
-    #chart-pagination .page-size-select {
-        height: 34px !important;
-        font-size: 15px !important;
-        padding: 0 12px !important;
-    }
-
-    #chart-pagination .pagination-btn {
-        min-width: 34px !important;
-    }
-
-    #chart-pagination .page-input {
-        /*width: 44px !important;*/
-    }
-
-    #chart-pagination .page-size-select {
-        min-width: 56px !important;
-    }
-
-    .table_buttons .grid-btn {
-        font-size: 14px;
-        padding: 6px 14px;
-        min-width: 100px;
-        max-width: 220px;
-        height: 42px;
-    }
-
-    .placeholder-message {
-        padding: 40px 30px;
-        min-height: 280px;
-    }
-
-    .placeholder-message p {
-        font-size: 20px;
-        margin-bottom: 16px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 16px;
-        padding: 12px 14px 12px 36px;
-    }
-
-    .placeholder-message ul li::before {
-        font-size: 18px;
-        left: 10px;
-    }
-
-    .placeholder-message ul li strong {
-        font-size: 14px;
-        padding: 2px 10px;
-    }
-
-    .res-modal-content {
-        padding: 24px 30px 30px 30px;
-    }
-
-    .res-modal-title {
-        font-size: 20px;
-        margin-bottom: 14px;
-    }
-
-    .res-modal-table {
-        font-size: 15px;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        padding: 8px 12px;
-        font-size: 14px;
-        min-width: 90px;
-        max-width: 200px;
-    }
-
-    .res-modal-table th {
-        font-size: 14px;
-    }
-
-    .res-modal-close-btn {
-        padding: 8px 28px;
-        font-size: 15px;
-        margin-top: 16px;
-    }
-
-    .filter-container {
-        padding: 12px 16px;
-        gap: 14px;
-    }
-
-    .filter-label {
-        font-size: 15px;
-        margin-bottom: 4px;
-    }
-
-    .filter-field-select,
-    .filter-value-input {
-        font-size: 15px;
-        padding: 6px 12px;
-        /*height: 36px;*/
-    }
-
-    .filter-apply-btn,
-    .filter-reset-btn {
-        font-size: 15px;
-        padding: 6px 20px;
-        /*height: 36px;*/
-    }
-}
-
-/* Средние экраны (ноутбуки) */
-@media (min-width: 1200px) and (max-width: 1399px) {
-    .container__forms {
-        grid-template-columns: 360px 1fr;
-        gap: 20px;
-        padding: 16px 20px 20px 20px;
-    }
-
-    .column__form {
-        max-height: calc(100vh - 170px);
-    }
-
-    .form__rating {
-        padding: 16px 18px 18px 18px;
-    }
-
-    .form__rating label {
-        font-size: 15px;
-    }
-
-    .form__rating > label:first-of-type {
-        font-size: 16px;
-    }
-
-    .form__rating select,
-    .form__rating input[type="text"],
-    .form__rating input[type="number"] {
-        font-size: 15px;
-        padding: 6px 10px;
-        height: 36px;
-    }
-
-    .form__rating select[multiple] {
-        height: 85px;
-        min-height: 65px;
-    }
-
-    .form__rating select[multiple] option {
-        font-size: 14px;
-        padding: 4px 10px;
-    }
-
-    .form__rating > div:not(.form__div) {
-        font-size: 15px;
-    }
-
-    .form__div__div label {
-        font-size: 14px;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 120px;
-        font-size: 14px;
-        height: 30px;
-    }
-
-    .h5-label {
-        font-size: 14px;
-    }
-
-    .grid-btn {
-        font-size: 14px;
-        padding: 7px 12px;
-        height: 34px;
-    }
-
-    .form__buttons .grid-btn {
-        font-size: 13px;
-        height: 30px;
-    }
-
-    #clear-btn {
-        height: 34px;
-        font-size: 14px;
-    }
-
-    .settlements-title,
-    .res-title {
-        font-size: 18px;
-    }
-
-    .table__rating__table {
-        font-size: 14px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        padding: 6px 10px;
-        width: 100px;
-        min-width: 100px;
-        max-width: 100px;
-        font-size: 13px;
-    }
-
-    .table__rating__table th {
-        font-size: 13px;
-        padding: 8px 10px;
-    }
-
-    .table__rating__table td {
-        font-size: 13px;
-    }
-
-    #settlements-pagination .pagination-info {
-        font-size: 14px !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #settlements-pagination .page-size-select {
-        height: 30px !important;
-        font-size: 14px !important;
-        padding: 0 12px !important;
-    }
-
-    #settlements-pagination .pagination-btn {
-        min-width: 30px !important;
-    }
-
-    #settlements-pagination .page-input {
-        width: 42px !important;
-    }
-
-    #settlements-pagination .page-size-select {
-        min-width: 52px !important;
-    }
-
-    .chart-title {
-        font-size: 17px;
-    }
-
-    #chart-pagination .pagination-info {
-        font-size: 14px !important;
-    }
-
-    #chart-pagination .pagination-btn,
-    #chart-pagination .page-input,
-    #chart-pagination .page-size-select {
-        height: 30px !important;
-        font-size: 14px !important;
-        padding: 0 10px !important;
-    }
-
-    #chart-pagination .pagination-btn {
-        min-width: 30px !important;
-    }
-
-    #chart-pagination .page-input {
-        /*width: 40px !important;*/
-    }
-
-    #chart-pagination .page-size-select {
-        min-width: 50px !important;
-    }
-
-    .table_buttons .grid-btn {
-        font-size: 13px;
-        padding: 5px 12px;
-        min-width: 90px;
-        max-width: 200px;
-        height: 42px;
-    }
-
-    .placeholder-message p {
-        font-size: 18px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 15px;
-        padding: 10px 12px 10px 34px;
-    }
-
-    .res-modal-content {
-        padding: 20px 24px 24px 24px;
-    }
-
-    .res-modal-title {
-        font-size: 18px;
-    }
-
-    .res-modal-table {
-        font-size: 14px;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        font-size: 13px;
-        min-width: 80px;
-        max-width: 180px;
-    }
-
-    .res-modal-table th {
-        font-size: 13px;
-    }
-
-    .filter-container {
-        padding: 10px 14px;
-    }
-
-    .filter-label {
-        font-size: 14px;
-    }
-
-    .filter-field-select,
-    .filter-value-input {
-        font-size: 14px;
-        padding: 5px 10px;
-        height: 32px;
-    }
-
-    .filter-apply-btn,
-    .filter-reset-btn {
-        font-size: 14px;
-        padding: 5px 16px;
-        height: 32px;
-    }
-}
-
-/* Планшеты и маленькие ноутбуки */
-@media (max-width: 1200px) {
-    .container__forms {
-        grid-template-columns: 280px 1fr;
-        gap: 12px;
-        padding: 8px 12px 12px 12px;
-    }
-
-    .column__form {
-        max-height: calc(100vh - 140px);
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 75px;
-        min-width: 75px;
-        max-width: 75px;
-        padding: 3px 5px;
-        font-size: 10px;
-    }
-
-    .table_buttons .grid-btn {
-        min-width: 70px;
-        max-width: 160px;
-        font-size: 10px;
-        padding: 4px 8px;
-    }
-
-    .res-modal-content {
-        max-width: 98%;
-        padding: 12px 16px 16px 16px;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        min-width: 55px;
-        max-width: 110px;
-        padding: 4px 5px;
-        font-size: 10px;
-    }
-}
-
-/* Планшеты в портретной ориентации */
-@media (max-width: 992px) {
-    .container__forms {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 10px;
-        height: auto;
-        overflow: auto;
-    }
-
-    .column__form {
-        position: static;
-        max-height: none;
-        overflow-y: visible;
-        padding-right: 0;
-    }
-
-    .form__div__div:nth-child(2) {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 120px;
-        font-size: 14px;
-        height: 30px;
-    }
-
-    .table__rating {
-        height: auto;
-        overflow: visible;
-        min-height: 300px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 60px;
-        min-width: 60px;
-        max-width: 60px;
-        padding: 3px 4px;
-        font-size: 9px;
-    }
-
-    #chart-container {
-        height: 300px;
-        min-height: 200px;
-    }
-
-    .table_buttons {
-        gap: 4px;
-        justify-content: center;
-    }
-
-    .table_buttons .grid-btn {
-        min-width: 70px;
-        max-width: 140px;
-        font-size: 10px;
-        padding: 4px 6px;
-    }
-
-    .res-modal-content {
-        width: 98%;
-        max-height: 95vh;
-        padding: 10px 12px 14px 12px;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        min-width: 45px;
-        max-width: 90px;
-        padding: 3px 4px;
-        font-size: 9px;
-    }
-
-    .res-modal-title {
-        font-size: 15px;
-    }
-}
-
-/* Мобильные устройства */
-@media (max-width: 768px) {
-    .container__forms {
-        padding: 6px 8px 10px 8px;
-        gap: 8px;
-    }
-
-    .form__rating {
-        padding: 8px 10px 10px 10px;
-    }
-
-    .form__rating label {
-        font-size: 12px;
-    }
-
-    .form__rating select,
-    .form__rating input[type="text"],
-    .form__rating input[type="number"] {
-        font-size: 12px;
-        padding: 4px 6px;
-    }
-
-    .form__rating select[multiple] {
-        height: 50px;
-    }
-
-    .grid-btn {
-        font-size: 11px;
-        padding: 5px 8px;
-    }
-
-    .form__buttons .grid-btn {
-        font-size: 10px;
-        padding: 4px 6px;
-    }
-
-    .table__rating {
-        padding: 6px 8px 8px 8px;
-        min-height: 250px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 50px;
-        min-width: 50px;
-        max-width: 50px;
-        padding: 2px 3px;
-        font-size: 8px;
-    }
-
-    .table__rating__table th {
-        font-size: 8px;
-        padding: 3px 3px;
-    }
-
-    .settlements-title {
-        font-size: 14px;
-        margin: 2px 0 4px 0;
-    }
-
-    #chart-container {
-        height: 220px;
-        min-height: 160px;
-        padding: 4px 6px 6px 6px;
-    }
-
-    .chart-title {
-        font-size: 12px;
-        margin-bottom: 4px;
-    }
-
-    .filter-container {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-        padding: 6px 8px;
-    }
-
-    .filter-buttons-group {
-        flex-direction: column;
-    }
-
-    .filter-buttons-group .filter-apply-btn,
-    .filter-buttons-group .filter-reset-btn {
-        width: 100%;
-    }
-
-    .filter-field-group,
-    .filter-value-group {
-        min-width: 100px;
-    }
-
-    .filter-label {
-        font-size: 11px;
-    }
-
-    .filter-field-select,
-    .filter-value-input {
-        font-size: 11px;
-        padding: 3px 6px;
-    }
-
-    .filter-apply-btn,
-    .filter-reset-btn {
-        font-size: 11px;
-        padding: 4px 10px;
-    }
-
-    .table_buttons {
-        gap: 4px;
-        padding-top: 4px;
-        min-height: 28px;
-    }
-
-    .table_buttons .grid-btn {
-        min-width: 60px;
-        max-width: 120px;
-        font-size: 9px;
-        padding: 3px 5px;
-        white-space: normal;
-        word-break: break-word;
-    }
-
-    .placeholder-message {
-        padding: 20px 12px;
-        min-height: 150px;
-    }
-
-    .placeholder-message p {
-        font-size: 14px;
-        margin-bottom: 10px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 11px;
-        padding: 6px 8px 6px 22px;
-        line-height: 1.3;
-    }
-
-    .placeholder-message ul li::before {
-        font-size: 12px;
-        left: 6px;
-    }
-
-    .placeholder-message ul li strong {
-        font-size: 10px;
-        padding: 1px 5px;
-        white-space: normal;
-    }
-
-    #settlements-pagination,
-    #chart-pagination {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 4px !important;
-        padding: 4px 0 !important;
-    }
-
-    #settlements-pagination .pagination-controls,
-    #chart-pagination .pagination-controls {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #chart-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #chart-pagination .page-input,
-    #settlements-pagination .page-size-select,
-    #chart-pagination .page-size-select {
-        height: 22px !important;
-        font-size: 10px !important;
-        padding: 0 5px !important;
-    }
-
-    #settlements-pagination .page-input,
-    #chart-pagination .page-input {
-        /*width: 32px !important;*/
-    }
-
-    #settlements-pagination .pagination-btn,
-    #chart-pagination .pagination-btn {
-        min-width: 22px !important;
-    }
-
-    #settlements-pagination .page-size-select,
-    #chart-pagination .page-size-select {
-        min-width: 38px !important;
-    }
-
-    #settlements-pagination .pagination-info,
-    #chart-pagination .pagination-info {
-        font-size: 11px !important;
-    }
-
-    .progress-modal-content {
-        min-width: auto;
-        max-width: 92%;
-        padding: 16px 18px 20px 18px;
-    }
-
-    .progress-modal-title {
-        font-size: 15px;
-        margin-bottom: 12px;
-    }
-
-    .progress-info {
-        font-size: 12px;
-    }
-
-    .progress-cancel-btn {
-        font-size: 12px;
-        padding: 5px 16px;
-    }
-
-    /* Модалка РЭС на телефонах */
-    .res-modal-content {
-        padding: 8px 10px 12px 10px;
-        width: 100%;
-        max-height: 100vh;
-        border-radius: 0;
-    }
-
-    .res-modal-title {
-        font-size: 13px;
-        margin-bottom: 6px;
-    }
-
-    .res-table-wrapper {
-        max-height: 45vh;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        min-width: 40px;
-        max-width: 70px;
-        padding: 2px 4px;
-        font-size: 9px;
-        white-space: normal;
-    }
-
-    .res-modal-table th {
-        font-size: 9px;
-        padding: 3px 4px;
-    }
-
-    .res-modal-close-btn {
-        padding: 5px 14px;
-        font-size: 12px;
-        margin-top: 8px;
-    }
-}
-
-/* Маленькие телефоны */
-@media (max-width: 400px) {
-    .container__forms {
-        padding: 4px 6px 8px 6px;
-        gap: 6px;
-    }
-
-    .form__rating {
-        padding: 6px 8px 8px 8px;
-    }
-
-    .form__rating select[multiple] {
-        height: 40px;
-        min-height: 35px;
-    }
-
-    .form__rating > div:not(.form__div) {
-        font-size: 11px;
-        margin: 6px 0 3px 0;
-    }
-
-    .form__div__div label {
-        font-size: 11px;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 80px;
-        padding: 2px 4px;
-        font-size: 11px;
-    }
-
-    .grid-btn {
-        font-size: 10px;
-        padding: 4px 6px;
-    }
-
-    .form__buttons .grid-btn {
-        font-size: 10px;
-        padding: 3px 5px;
-    }
-
-    .table__rating {
-        padding: 4px 6px 6px 6px;
-        min-height: 200px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        width: 38px;
-        min-width: 38px;
-        max-width: 38px;
-        padding: 2px;
-        font-size: 7px;
-    }
-
-    .table__rating__table th {
-        font-size: 7px;
-        padding: 2px 2px;
-    }
-
-    .settlements-title {
-        font-size: 12px;
-    }
-
-    #chart-container {
-        height: 160px;
-        min-height: 120px;
-        padding: 3px 4px 4px 4px;
-    }
-
-    .chart-title {
-        font-size: 11px;
-        margin-bottom: 3px;
-    }
-
-    .table_buttons .grid-btn {
-        width: 100% !important;
-        max-width: 100%;
-        font-size: 10px;
-        padding: 3px 6px;
-        white-space: normal;
-        word-break: break-word;
-        min-width: unset;
-    }
-
-    .filter-container {
-        padding: 4px 6px;
-        gap: 4px;
-    }
-
-    .filter-field-group,
-    .filter-value-group {
-        min-width: 80px;
-    }
-
-    .filter-label {
-        font-size: 10px;
-        margin-bottom: 2px;
-    }
-
-    .filter-field-select,
-    .filter-value-input {
-        font-size: 10px;
-        padding: 2px 4px;
-    }
-
-    .filter-apply-btn,
-    .filter-reset-btn {
-        font-size: 10px;
-        padding: 3px 8px;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #chart-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #chart-pagination .page-input,
-    #settlements-pagination .page-size-select,
-    #chart-pagination .page-size-select {
-        height: 20px !important;
-        font-size: 9px !important;
-        padding: 0 3px !important;
-    }
-
-    #settlements-pagination .page-input,
-    #chart-pagination .page-input {
-        /*width: 28px !important;*/
-    }
-
-    #settlements-pagination .pagination-btn,
-    #chart-pagination .pagination-btn {
-        min-width: 20px !important;
-    }
-
-    #settlements-pagination .page-size-select,
-    #chart-pagination .page-size-select {
-        min-width: 32px !important;
-    }
-
-    #settlements-pagination .pagination-info,
-    #chart-pagination .pagination-info {
-        font-size: 10px !important;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        min-width: 30px;
-        max-width: 50px;
-        padding: 2px 3px;
-        font-size: 8px;
-    }
-
-    .res-modal-title {
-        font-size: 12px;
-    }
-
-    .placeholder-message {
-        padding: 15px 10px;
-        min-height: 120px;
-    }
-
-    .placeholder-message p {
-        font-size: 12px;
-        margin-bottom: 8px;
-    }
-
-    .placeholder-message ul li {
-        font-size: 10px;
-        padding: 4px 6px 4px 18px;
-    }
-
-    .placeholder-message ul li::before {
-        font-size: 10px;
-        left: 4px;
-    }
-
-    .placeholder-message ul li strong {
-        font-size: 9px;
-        padding: 1px 4px;
-    }
-
-    .progress-modal-content {
-        padding: 12px 14px 16px 14px;
-    }
-
-    .progress-modal-title {
-        font-size: 13px;
-        margin-bottom: 10px;
-    }
-
-    .progress-info {
-        font-size: 11px;
-    }
-
-    .progress-bar-wrap {
-        height: 14px;
-    }
-}
-
-/* Ландшафтная ориентация на маленьких экранах */
-@media (max-height: 600px) and (orientation: landscape) {
-    .container__forms {
-        grid-template-columns: 1fr 2fr;
-        gap: 8px;
-        padding: 4px 8px 8px 8px;
-    }
-
-    .column__form {
-        max-height: calc(100vh - 80px);
-        padding-right: 3px;
-    }
-
-    .form__rating {
-        padding: 6px 8px 8px 8px;
-    }
-
-    .form__rating select[multiple] {
-        height: 35px;
-        min-height: 30px;
-    }
-
-    .form__rating > div:not(.form__div) {
-        margin: 4px 0 2px 0;
-        font-size: 11px;
-    }
-
-    .form__div {
-        padding: 4px 6px;
-    }
-
-    .form__div__div {
-        margin-bottom: 2px;
-    }
-
-    .form__div__div label {
-        font-size: 11px;
-    }
-
-    .form__div__div:nth-child(2) {
-        gap: 3px;
-    }
-
-    .form__div__div:nth-child(2) input[type="number"] {
-        width: 80px;
-        padding: 2px 4px;
-        font-size: 11px;
-    }
-
-    .grid-btn {
-        padding: 3px 6px;
-        font-size: 10px;
-        margin-top: 3px;
-    }
-
-    .form__buttons .grid-btn {
-        padding: 2px 5px;
-        font-size: 9px;
-    }
-
-    .table__rating {
-        padding: 4px 6px 6px 6px;
-        min-height: 150px;
-    }
-
-    .table__rating__table th,
-    .table__rating__table td {
-        padding: 2px 4px;
-        font-size: 8px;
-        width: 50px;
-        min-width: 50px;
-        max-width: 50px;
-    }
-
-    .table__rating__table th {
-        font-size: 8px;
-        padding: 2px 3px;
-    }
-
-    #chart-container {
-        height: 140px;
-        min-height: 100px;
-    }
-
-    .chart-title {
-        font-size: 11px;
-        margin-bottom: 3px;
-    }
-
-    .table_buttons .grid-btn {
-        padding: 2px 5px;
-        font-size: 9px;
-        min-width: 50px;
-        max-width: 100px;
-    }
-
-    #settlements-pagination,
-    #chart-pagination {
-        padding: 3px 0 !important;
-        gap: 3px !important;
-    }
-
-    #settlements-pagination .pagination-btn,
-    #chart-pagination .pagination-btn,
-    #settlements-pagination .page-input,
-    #chart-pagination .page-input,
-    #settlements-pagination .page-size-select,
-    #chart-pagination .page-size-select {
-        height: 20px !important;
-        font-size: 9px !important;
-        padding: 0 4px !important;
-    }
-
-    .res-modal-content {
-        padding: 8px 12px 12px 12px;
-        max-height: 95vh;
-    }
-
-    .res-modal-table th,
-    .res-modal-table td {
-        min-width: 40px;
-        max-width: 80px;
-        padding: 2px 4px;
-        font-size: 9px;
-    }
-}
-/* ===== КНОПКИ ВНИЗУ ===== */
-.table_buttons {
-    display: flex;
-    justify-content: right;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #1a1a1a;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    min-height: 50px;
-}
-
-.table_buttons .grid-btn {
-    width: 160px !important;
-    min-width: 140px;
-    max-width: 180px;
-    margin-top: 0;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
-}
-
-/* Все кнопки под таблицей - одинаковая ширина */
-.table_buttons .res-action-btn,
-.table_buttons .wired-action-btn,
-.table_buttons .calculate-selected-btn,
-.table_buttons .calculate-all-btn,
-.table_buttons #print__btn,
-.table_buttons #close-btn {
-    width: 160px !important;
-    min-width: 140px;
-    max-width: 180px;
-    flex-shrink: 0;
-}
-
-/* Специально для кнопок с переносом текста */
-.table_buttons .res-action-btn,
-.table_buttons .wired-action-btn,
-.table_buttons .calculate-selected-btn,
-.table_buttons .calculate-all-btn {
-    white-space: break-spaces;
-}
-
-#exit-home {
-    text-decoration: none;
-}
-
-/* Адаптив для планшетов */
-@media (max-width: 992px) {
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn,
-    .table_buttons #print__btn,
-    .table_buttons #close-btn {
-        width: 140px !important;
-        min-width: 120px;
-        max-width: 160px;
-        font-size: 11px;
-        padding: 5px 10px;
-    }
-}
-
-/* Адаптив для мобильных устройств */
-@media (max-width: 768px) {
-    .table_buttons {
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn,
-    .table_buttons #print__btn,
-    .table_buttons #close-btn {
-        width: calc(50% - 8px) !important;
-        min-width: 100px;
-        max-width: 160px;
-        flex: 1 1 auto;
-        font-size: 10px;
-        padding: 4px 8px;
-        white-space: normal;
-        word-break: break-word;
-    }
-}
-
-/* Для маленьких телефонов */
-@media (max-width: 480px) {
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn,
-    .table_buttons #print__btn,
-    .table_buttons #close-btn {
-        width: 100% !important;
-        max-width: 100%;
-        flex: 1 1 100%;
-        font-size: 11px;
-        padding: 6px 10px;
-    }
-}
-
-/* Для очень маленьких экранов в ландшафтной ориентации */
-@media (max-height: 600px) and (orientation: landscape) {
-    .table_buttons .grid-btn,
-    .table_buttons .res-action-btn,
-    .table_buttons .wired-action-btn,
-    .table_buttons .calculate-selected-btn,
-    .table_buttons .calculate-all-btn,
-    .table_buttons #print__btn,
-    .table_buttons #close-btn {
-        width: 120px !important;
-        min-width: 100px;
-        max-width: 140px;
-        font-size: 9px;
-        padding: 3px 6px;
-    }
-}
-.table__rating {
-    height: calc(100vh - 200px); /* подгони под свой layout */
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-#analytics-dashboard {
-    flex: 1 1 auto;
-    min-height: 0;
-}
-/* ============================================================ */
-/* ===== КАРТОЧКИ KPI (как на макете) ===== */
+/* ===== KPI КАРТОЧКИ ===== */
 
 .kpi-cards-row {
     display: grid;
@@ -2334,26 +1006,25 @@ header h2 {
     gap: 14px;
     flex-shrink: 0;
     margin-bottom: 4px;
+    overflow: auto;
 }
 
 .kpi-card {
     position: relative;
     background: #ffffff;
     border-radius: 14px;
-    padding: 26px 16px 16px 16px;
+    padding: 28px 16px 18px 16px;
     text-align: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     min-width: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
 }
 
-/* Цветная полоса сверху */
 .kpi-card::before {
     content: "";
     position: absolute;
@@ -2366,7 +1037,7 @@ header h2 {
 }
 
 .kpi-card__value {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 800;
     color: var(--kpi-color, #0066ff);
     line-height: 1.1;
@@ -2377,42 +1048,21 @@ header h2 {
 }
 
 .kpi-card__label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
-    color: #6b7280;
+    color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Адаптив */
-@media (max-width: 992px) {
-    .kpi-cards-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .kpi-card__value { font-size: 22px; }
-}
-
-@media (max-width: 576px) {
-    .kpi-cards-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .kpi-card {
-        padding: 22px 14px 14px 14px;
-    }
-    .kpi-card__value { font-size: 20px; }
-    .kpi-card__label { font-size: 12px; }
-}
-
 /* ============================================================ */
 /* ===== КАРТОЧКИ СТАТИСТИКИ ДИАГРАММЫ РЕЙТИНГА НП ===== */
-/* (тот же стиль, что и KPI, но компактнее) */
 
 .chart-stats-row,
 .chart-stats-row-buckets {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
     gap: 12px !important;
     padding: 0 !important;
     margin-bottom: 10px !important;
@@ -2423,11 +1073,16 @@ header h2 {
     position: relative;
     background: #ffffff;
     border-radius: 12px;
-    padding: 22px 14px 12px 14px;
+    padding: 24px 14px 14px 14px;
     text-align: center;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     min-width: 0;
+}
+
+.chart-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
 }
 
 .chart-stat-card::before {
@@ -2442,7 +1097,7 @@ header h2 {
 }
 
 .chart-stat-card__value {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 800;
     color: var(--kpi-color, #0066ff);
     line-height: 1.1;
@@ -2453,9 +1108,9 @@ header h2 {
 }
 
 .chart-stat-card__label {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
-    color: #6b7280;
+    color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2464,19 +1119,18 @@ header h2 {
 /* ============================================================ */
 /* ===== УБИРАЕМ ЧЁРНЫЕ ГРАНИЦЫ У ДИАГРАММ ===== */
 
-/* Осей и сетки */
 #chart-container canvas,
 #analytics-dashboard canvas {
     border: none !important;
     outline: none !important;
 }
 
-/* Общие правки для всех chart-блоков — убираем тёмные рамки */
 #analytics-dashboard > div,
 #chart-container > div {
     border-color: transparent !important;
 }
-/* ===== Скрываем пагинацию во вкладке "Аналитический дашборд" ===== */
+
+/* ===== СКРЫТИЕ ПАГИНАЦИИ В АНАЛИТИКЕ ===== */
 body.analytics-mode #settlements-pagination,
 body.analytics-mode #settlements-pagination .pagination-controls,
 body.analytics-mode #settlements-pagination .pagination-info,
@@ -2489,746 +1143,174 @@ body.analytics-mode #chart-pagination {
     border: none !important;
     overflow: hidden !important;
 }
-/* ============================================================ */
-/* ===== KPI КАРТОЧКИ (аналитический дашборд) ===== */
 
-.kpi-cards-row {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    flex-shrink: 0;
-    margin-bottom: 4px;
+.chart-stats-row-buckets {
+    display: none !important;
 }
 
-.kpi-card {
+/* ============================================================ */
+/* ===== АНАЛИТИЧЕСКИЙ ДАШБОРД (без адаптива, скроллы внутри) ===== */
+
+#analytics-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 8px 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+/* Шапка дашборда */
+.analytics-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: visible;
+}
+
+.analytics-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+.analytics-subtitle {
+    text-align: left;
+    font-size: 16px;
+    font-weight: 500;
+    color: black;
+    margin: 0;
+}
+
+/* ============================================================ */
+/* ===== ОТДЕЛЬНЫЙ БЛОК ДЛЯ ДИАГРАММ АНАЛИТИКИ (со скроллом) ===== */
+
+.analytics-charts-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: auto;
+    background: transparent;
+    border-radius: 4px;
+    box-sizing: border-box;
     position: relative;
+}
+
+.analytics-charts-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(400px, 1fr));
+    gap: 14px;
+    width: 100%;
+    min-width: 1300px;
+    height: 100%;
+    min-height: 500px;
+    box-sizing: border-box;
+    padding: 4px;
+}
+
+.analytics-chart-block {
     background: #ffffff;
     border-radius: 14px;
-    padding: 26px 16px 16px 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 400px;
+    min-height: 600px;
+    box-sizing: border-box;
+    overflow: auto;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.analytics-chart-block__title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
     text-align: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
-    overflow: hidden;
-    min-width: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+    line-height: 1.2;
 }
 
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
-}
-
-.kpi-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: var(--kpi-color, #0066ff);
-    border-radius: 14px 14px 0 0;
-}
-
-.kpi-card__value {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--kpi-color, #0066ff);
-    line-height: 1.1;
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.kpi-card__label {
-    font-size: 13px;
-    font-weight: 600;
-    color: black;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ===== Карточки статистики диаграммы рейтинга НП ===== */
-
-.chart-stats-row,
-.chart-stats-row-buckets {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
-    gap: 12px !important;
-    padding: 0 !important;
-    margin-bottom: 10px !important;
-    flex-shrink: 0 !important;
-}
-
-.chart-stat-card {
+.analytics-chart-block__canvas-wrap {
     position: relative;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 22px 14px 12px 14px;
-    text-align: center;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
-    overflow: hidden;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 350px;
     min-width: 0;
+    overflow: auto;
 }
 
-.chart-stat-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 7px;
-    background: var(--kpi-color, #0066ff);
-    border-radius: 12px 12px 0 0;
-}
-
-.chart-stat-card__value {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--kpi-color, #0066ff);
-    line-height: 1.1;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.chart-stat-card__label {
-    font-size: 11px;
-    font-weight: 600;
-    color: black;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ===== Скрытие пагинации в аналитическом режиме ===== */
-
-body.analytics-mode #settlements-pagination,
-body.analytics-mode #settlements-pagination .pagination-controls,
-body.analytics-mode #settlements-pagination .pagination-info,
-body.analytics-mode #chart-pagination {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    overflow: hidden !important;
-}
-
-/* ===== Убираем чёрные рамки у канвасов ===== */
-
-#chart-container canvas,
-#analytics-dashboard canvas {
-    border: none !important;
-    outline: none !important;
-}
-
-/* ===== Адаптив KPI ===== */
-
-@media (max-width: 992px) {
-    .kpi-cards-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .kpi-card__value { font-size: 22px; }
-}
-
-@media (max-width: 576px) {
-    .kpi-cards-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .kpi-card {
-        padding: 22px 14px 14px 14px;
-    }
-    .kpi-card__value { font-size: 20px; }
-    .kpi-card__label { font-size: 12px; }
-
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 22px !important;
-    }
-}
-#analytics-bar-services,
-#analytics-bar-mobile {
-    height: 100% !important;
-    width: 100% !important;
-}
-/* === Выравнивание столбчатых диаграмм аналитики === */
-/* Все три блока диаграмм — одинаковая высота */
-#analytics-dashboard > div:nth-child(3) > div {
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-/* Фиксируем одинаковую высоту обёрток канвасов */
 #analytics-pie-chart,
 #analytics-bar-services,
 #analytics-bar-mobile {
+    display: block;
     width: 100% !important;
     height: 100% !important;
-    display: block !important;
+    min-width: 350px;
+    min-height: 350px;
 }
 
-/* Обёртки канвасов — одинаковая высота */
 #analytics-dashboard canvas {
     max-height: 100% !important;
 }
 
-/* Убираем лишний нижний отступ у блоков диаграмм */
-#analytics-dashboard > div:nth-child(3) {
-    align-items: stretch !important;
-}
-/* ============================================================ */
-/* ===== АДАПТИВ: БОЛЬШЕ МЕСТА ДИАГРАММАМ НА МАЛЫХ/СРЕДНИХ ЭКРАНАХ ===== */
-
-/* ---------- Планшеты и маленькие ноутбуки (<= 1200px) ---------- */
-@media (max-width: 1200px) {
-    /* Карточки KPI — компактнее, чтобы не съедать высоту у диаграмм */
-    .kpi-cards-row {
-        gap: 10px;
-        margin-bottom: 2px;
-    }
-
-    .kpi-card {
-        padding: 18px 12px 10px 12px;
-        border-radius: 12px;
-    }
-
-    .kpi-card::before {
-        height: 6px;
-    }
-
-    .kpi-card__value {
-        font-size: 20px;
-        margin-bottom: 3px;
-    }
-
-    .kpi-card__label {
-        font-size: 12px;
-    }
-
-    /* Заголовок дашборда — компактнее */
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 24px !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:last-child {
-        font-size: 14px !important;
-    }
-
-    /* Отступы внутри дашборда — меньше */
-    #analytics-dashboard {
-        gap: 10px !important;
-        padding: 4px 0 !important;
-    }
-
-    /* Блоки диаграмм — минимальный padding, максимум места канвасу */
-    #analytics-dashboard > div:nth-child(3) > div {
-        padding: 8px 10px !important;
-        gap: 4px !important;
-        border-radius: 10px !important;
-    }
-
-    /* Заголовки диаграмм — компактнее */
-    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
-        font-size: 13px !important;
-        line-height: 1.15 !important;
-    }
-
-    /* Обёртки канвасов — растягиваются по максимуму */
-    #analytics-dashboard > div:nth-child(3) > div > div:last-child {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-    }
+/* HTML-таблица вместо легенды под круговой */
+.pie-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #1a1a1a;
+    table-layout: fixed;
+    flex-shrink: 0;
 }
 
-/* ---------- Планшеты в портретной ориентации (<= 992px) ---------- */
-@media (max-width: 992px) {
-    /* Карточки KPI — в 2 колонки, компактнее */
-    .kpi-cards-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .kpi-card {
-        padding: 14px 10px 8px 10px;
-        border-radius: 10px;
-    }
-
-    .kpi-card::before {
-        height: 5px;
-    }
-
-    .kpi-card__value {
-        font-size: 18px;
-        margin-bottom: 2px;
-    }
-
-    .kpi-card__label {
-        font-size: 11px;
-    }
-
-    /* Дашборд — 3 диаграммы в одну колонку, каждая повыше */
-    #analytics-dashboard > div:nth-child(3) {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    /* Каждая диаграмма получает больше вертикали */
-    #analytics-dashboard > div:nth-child(3) > div {
-        min-height: 260px !important;
-        padding: 10px 12px !important;
-    }
-
-    /* Заголовок — компактнее */
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 20px !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:last-child {
-        font-size: 13px !important;
-    }
-
-    #analytics-dashboard {
-        gap: 8px !important;
-        padding: 2px 0 !important;
-    }
-}
-
-/* ---------- Мобильные (<= 768px) ---------- */
-@media (max-width: 768px) {
-    /* Карточки KPI — 2 в ряд, ещё компактнее */
-    .kpi-cards-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-        margin-bottom: 0;
-    }
-
-    .kpi-card {
-        padding: 12px 8px 6px 8px;
-        border-radius: 8px;
-    }
-
-    .kpi-card::before {
-        height: 4px;
-        border-radius: 8px 8px 0 0;
-    }
-
-    .kpi-card__value {
-        font-size: 16px;
-        margin-bottom: 2px;
-    }
-
-    .kpi-card__label {
-        font-size: 10px;
-    }
-
-    /* Заголовок и подзаголовок — минимальные */
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 18px !important;
-        margin-bottom: 2px !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:last-child {
-        font-size: 12px !important;
-    }
-
-    #analytics-dashboard {
-        gap: 6px !important;
-        padding: 0 !important;
-    }
-
-    /* Диаграммы — в одну колонку, каждая повыше */
-    #analytics-dashboard > div:nth-child(3) {
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div {
-        min-height: 240px !important;
-        padding: 8px 10px !important;
-        border-radius: 8px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
-        font-size: 12px !important;
-        line-height: 1.15 !important;
-    }
-
-    /* Обёртка канваса — максимум высоты */
-    #analytics-dashboard > div:nth-child(3) > div > div:last-child {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-    }
-}
-
-/* ---------- Маленькие телефоны (<= 576px) ---------- */
-@media (max-width: 576px) {
-    /* KPI — в одну колонку, но очень плоские, чтобы не отнимать высоту */
-    .kpi-cards-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-    }
-
-    .kpi-card {
-        padding: 10px 8px 6px 8px;
-    }
-
-    .kpi-card__value {
-        font-size: 15px;
-    }
-
-    .kpi-card__label {
-        font-size: 10px;
-    }
-
-    /* Диаграммы — выше */
-    #analytics-dashboard > div:nth-child(3) > div {
-        min-height: 220px !important;
-    }
-}
-
-/* ---------- Очень маленькие телефоны (<= 400px) ---------- */
-@media (max-width: 400px) {
-    .kpi-card {
-        padding: 8px 6px 5px 6px;
-    }
-
-    .kpi-card::before {
-        height: 3px;
-    }
-
-    .kpi-card__value {
-        font-size: 14px;
-    }
-
-    .kpi-card__label {
-        font-size: 9px;
-    }
-
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 16px !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:last-child {
-        font-size: 11px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div {
-        min-height: 200px !important;
-        padding: 6px 8px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
-        font-size: 11px !important;
-    }
-}
-
-/* ---------- Ландшафт на низких экранах (max-height: 600px) ---------- */
-@media (max-height: 600px) and (orientation: landscape) {
-    /* Карточки KPI — горизонтально, очень плоские */
-    .kpi-cards-row {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 6px;
-        margin-bottom: 0;
-    }
-
-    .kpi-card {
-        padding: 8px 6px 5px 6px;
-    }
-
-    .kpi-card::before {
-        height: 3px;
-    }
-
-    .kpi-card__value {
-        font-size: 13px;
-    }
-
-    .kpi-card__label {
-        font-size: 9px;
-    }
-
-    #analytics-dashboard {
-        gap: 4px !important;
-        padding: 0 !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:first-child {
-        font-size: 16px !important;
-    }
-
-    #analytics-dashboard > div:first-child > div:last-child {
-        font-size: 11px !important;
-    }
-
-    /* Диаграммы — в 3 колонки, но повыше */
-    #analytics-dashboard > div:nth-child(3) {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div {
-        min-height: 180px !important;
-        padding: 6px 8px !important;
-    }
-
-    #analytics-dashboard > div:nth-child(3) > div > div:first-child {
-        font-size: 10px !important;
-    }
-}
-/* Увеличиваем высоту контейнера диаграммы */
-#chart-container {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 6px 8px 8px 8px;
-    box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    border-radius: 3px;
-    height: calc(100vh - 120px);
-    min-height: 500px;
-}
-
-@media (min-width: 1400px) {
-    #chart-container {
-        height: calc(100vh - 140px);
-        min-height: 600px;
-    }
-}
-
-/* Более выразительные тени для карточек */
-.chart-stat-card {
-    position: relative;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 22px 14px 12px 14px;
+.pie-stats-table th,
+.pie-stats-table td {
+    padding: 4px;
     text-align: center;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    min-width: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.chart-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
-}
-
-.kpi-card {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
-}
-
-/* Скрываем ряд с диапазонными карточками, если где-то остался в разметке */
-.chart-stats-row-buckets {
-    display: none !important;
-}
-
-/* Ряд с диапазонами больше не используется */
-.chart-stats-row-buckets {
-    display: none !important;
-}
-/* ============================================================ */
-/* ===== КОНТЕЙНЕР ДИАГРАММЫ РЕЙТИНГА НП ===== */
-
-#chart-container {
-    flex: 1 1 auto;
-    min-height: 0;
-    position: relative;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 6px 8px 8px 8px;
-    box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    border-radius: 3px;
-}
-
-#chart-container canvas {
-    display: block;
-    width: 90% !important;
-    height: 100% !important;
-    flex: 1 1 auto;
-    min-height: 0;
-}
-
-/* .table__rating должен тянуться по flex, а не по calc */
-.table__rating {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Карточки статистики — компактные */
-.chart-stats-row {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
-    gap: 8px !important;
-    padding: 0 !important;
-    margin-bottom: 6px !important;
-    flex-shrink: 0 !important;
-}
-
-.chart-stat-card {
-    position: relative;
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 12px 10px 6px 10px;
-    text-align: center;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    min-width: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.chart-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.14);
-}
-
-.chart-stat-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: var(--kpi-color, #0066ff);
-    border-radius: 8px 8px 0 0;
-}
-
-.chart-stat-card__value {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--kpi-color, #0066ff);
-    line-height: 1.1;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.chart-stat-card__label {
-    font-size: 14px;
     font-weight: 600;
-    color: black;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 15px;
+    color: #1a1a1a;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
 }
 
-.chart-stats-row-buckets {
-    display: none !important;
+.pie-stats-table tr:last-child td {
+    border-bottom: 1px solid #1a1a1a;
 }
-/* ============================================================ */
-/* ===== КОНТЕЙНЕР ДИАГРАММЫ РЕЙТИНГА НП ===== */
 
-#chart-container {
-    /* Квадратный, не растягивается, центрируется */
-    flex: 0 0 auto;
-    align-self: center;
-    width: min(100%, 65vh);
-    aspect-ratio: 1 / 1;
-    min-height: unset;
-    max-height: 65vh;
-    position: relative;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 6px 8px 8px 8px;
+.pie-stats-table__dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ccc;
+    border: 1px solid #000;
+    vertical-align: middle;
+}
+.kpi-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 1fr);
+    gap: 14px;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+
+    /* ← свой горизонтальный скролл при переполнении */
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-width: 0;
+    width: 100%;
     box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    border-radius: 3px;
-    margin: 0 auto;
-}
-/* Когда видна диаграмма — центрируем её внутри .table__rating */
-.table__rating:has(#chart-container[style*="display: flex"]) {
-
-    overflow: auto;
-}
-/* ===== Контейнер диаграммы: адаптивное соотношение ===== */
-
-#chart-container {
-    flex: 0 0 auto;
-    align-self: center;
-    position: relative;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 6px 8px 8px 8px;
-    box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    border-radius: 3px;
-    margin: 0 auto;
-
-    /* По умолчанию — почти квадрат */
-    aspect-ratio: 1 / 1;
-    width: min(100%, 60vh);
-    max-height: 60vh;
-    min-height: unset;
-}
-
-#chart-container canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0;
-}
-
-/* ===== Адаптив по ширине экрана ===== */
-
-/* Широкие мониторы (>= 1600px) — вытянутый по горизонтали */
-@media (min-width: 1600px) {
-    #chart-container {
-        aspect-ratio: 16 / 9;
-        width: min(100%, 110vh);
-        max-height: 80vh;
-    }
-}
-
-/* Обычные десктопы (1200–1599px) — БОЛЕЕ КВАДРАТНЫЙ */
-@media (min-width: 1200px) and (max-width: 1599px) {
-    #chart-container {
-        aspect-ratio: 1 / 1;      /* было 4 / 3 — теперь квадрат */
-        width: min(100%, 70vh);   /* было 90vh */
-        max-height: 80vh;       /* было 70vh */
-    }
-}
-
-/* Ноутбуки (992–1199px) — чуть шире квадрата */
-@media (min-width: 992px) and (max-width: 1199px) {
-    #chart-container {
-        aspect-ratio: 1 / 1;      /* было 3 / 2 — тоже квадрат */
-        width: min(100%, 65vh);
-        max-height: 65vh;
-    }
-}
-
-/* Планшеты (768–991px) — почти квадрат */
-@media (min-width: 768px) and (max-width: 991px) {
-    #chart-container {
-        aspect-ratio: 1 / 1;
-        width: min(100%, 70vh);
-        max-height: 60vh;
-    }
-}
-
-/* Мобильные (<= 767px) — вертикально вытянутый */
-@media (max-width: 767px) {
-    #chart-container {
-        aspect-ratio: 3 / 4;
-        width: 100%;
-        max-height: 70vh;
-    }
+    padding-bottom: 6px;      /* место под скроллбар */
 }
