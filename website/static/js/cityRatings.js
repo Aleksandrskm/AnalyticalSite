@@ -578,11 +578,11 @@ function getValueByDbColumn(obj, dbColumn, map) {
     return '';
 }
 
-// ==================== МАССОВАЯ ЗАГРУЗКА обеспеченностьОВ ====================
+// ==================== МАССОВАЯ ЗАГРУЗКА обеспеченности ====================
 
 async function loadRatingsBulk(regions, popRange) {
     const loader = initLoader();
-    loader.show('Загрузка обеспеченностьов...');
+    loader.show('Загрузка обеспеченности...');
 
     const result = {};
     try {
@@ -611,12 +611,12 @@ async function loadRatingsBulk(regions, popRange) {
             }
         });
 
-        console.log(`Массово загружено обеспеченностьов: ${Object.keys(result).length}`);
+        console.log(`Массово загружено обеспеченности: ${Object.keys(result).length}`);
         loader.close();
         return result;
     } catch (error) {
         loader.close();
-        console.error('Ошибка массовой загрузки обеспеченностьов:', error);
+        console.error('Ошибка массовой загрузки обеспеченности:', error);
         return result;
     }
 }
@@ -3277,7 +3277,7 @@ async function loadSettlements(page = 0, regions, popRange, pageSize) {
     }
 }
 
-// ==================== ЗАГРУЗКА обеспеченностьОВ ====================
+// ==================== ЗАГРУЗКА обеспеченности ====================
 
 async function loadRatingsForSettlements(items, allowPost = false) {
     const total = items.length;
@@ -3295,7 +3295,7 @@ async function loadRatingsForSettlements(items, allowPost = false) {
 
         const modal = createProgressModal(missing.length);
         const titleEl = modal.querySelector('.progress-modal-title');
-        if (titleEl) titleEl.textContent = 'Расчет обеспеченностьов';
+        if (titleEl) titleEl.textContent = 'Расчет обеспеченности';
 
         isCancelled = false;
         let processed = 0;
@@ -6076,7 +6076,7 @@ function createProgressModal(total) {
     content.className = 'progress-modal-content';
 
     const title = document.createElement('h3');
-    title.textContent = 'Расчет обеспеченностьов НП';
+    title.textContent = 'Расчет обеспеченности НП';
     title.className = 'progress-modal-title';
 
     const progressInfo = document.createElement('div');
@@ -6096,7 +6096,7 @@ function createProgressModal(total) {
     const statusInfo = document.createElement('div');
     statusInfo.className = 'status-info';
     statusInfo.id = 'rating-status-info';
-    statusInfo.textContent = 'Получено обеспеченностьов: 0';
+    statusInfo.textContent = 'Получено обеспеченности: 0';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.id = 'rating-cancel-btn';
@@ -6133,7 +6133,7 @@ function updateProgress(current, total, successCount) {
         info.textContent = `Обработано: ${current} / ${total}`;
     }
     if (status) {
-        status.textContent = `Получено обеспеченностьов: ${successCount}`;
+        status.textContent = `Получено обеспеченности: ${successCount}`;
     }
 }
 
