@@ -1934,20 +1934,6 @@ function createRatingChart(data, type) {
         ? 'Все НП'
         : `${popFrom.toLocaleString('ru-RU')}–${popTo.toLocaleString('ru-RU')}`;
 
-    // ==================== КАТЕГОРИИ ПО ДИАПАЗОНАМ ====================
-    const rangeBuckets = [
-        { label: '0-20 %',   min: 0,  max: 20,  count: 0, color: '#FB8C00' },
-        { label: '21-40 %',  min: 21, max: 40,  count: 0, color: '#29B6F6' },
-        { label: '41-60 %',  min: 41, max: 60,  count: 0, color: '#0D47A1' },
-        { label: '61-80 %',  min: 61, max: 80,  count: 0, color: '#43A047' },
-        { label: '81-100 %', min: 81, max: 100, count: 0, color: '#1B5E20' }
-    ];
-
-    ratingsAll.forEach(v => {
-        const bucket = rangeBuckets.find(b => v >= b.min && v <= b.max);
-        if (bucket) bucket.count++;
-    });
-
     // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
     const verticalLines = [];
     {
@@ -1969,7 +1955,14 @@ function createRatingChart(data, type) {
                     if (ratings[i] >= min) pos = i + 1;
                     else break;
                 }
-                verticalLines.push({ pos, topValue, cumulative: pos });
+                const percent = len > 0 ? (pos / len) * 100 : 0;
+                verticalLines.push({
+                    pos,
+                    topValue,
+                    cumulative: pos,
+                    percent: percent,
+                    threshold: min
+                });
             });
 
             {
@@ -1978,17 +1971,22 @@ function createRatingChart(data, type) {
                     if (ratings[i] > 0) posBeforeZero = i + 1;
                     else break;
                 }
+                const percent = len > 0 ? (posBeforeZero / len) * 100 : 0;
                 verticalLines.push({
                     pos: posBeforeZero,
                     topValue: 20,
-                    cumulative: posBeforeZero
+                    cumulative: posBeforeZero,
+                    percent: percent,
+                    threshold: 0
                 });
             }
 
             verticalLines.push({
                 pos: len,
                 topValue: 0,
-                cumulative: len
+                cumulative: len,
+                percent: 100,
+                threshold: null
             });
         }
     }
@@ -2010,8 +2008,8 @@ function createRatingChart(data, type) {
                     categoryPercentage: 0.97,
                     stack: 'total',
                     minBarLength: 0,
-                    hoverBackgroundColor: '#1a73e8',
-                    hoverBorderColor: '#1a73e8',
+                    hoverBackgroundColor: '#ff1a1a',
+                    hoverBorderColor: '#ff1a1a',
                     hoverBorderWidth: 0
                 },
                 {
@@ -2025,8 +2023,8 @@ function createRatingChart(data, type) {
                     categoryPercentage: 0.97,
                     stack: 'total',
                     minBarLength: 0,
-                    hoverBackgroundColor: '#ff6a00',
-                    hoverBorderColor: '#ff6a00',
+                    hoverBackgroundColor: '#cc0000',
+                    hoverBorderColor: '#cc0000',
                     hoverBorderWidth: 0
                 }
             ]
@@ -2035,7 +2033,7 @@ function createRatingChart(data, type) {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { top: 8, bottom: 60 }
+                padding: { top: 8, bottom: 80 }
             },
             interaction: {
                 mode: 'index',
@@ -2074,20 +2072,28 @@ function createRatingChart(data, type) {
                         if (isSelectedAt(i)) return '#ff1a1a';
                         return '#1a73e8';
                     });
+                    ds0.borderColor = ds0.backgroundColor;
+                    ds0.hoverBackgroundColor = '#ff1a1a';
+
                     ds1.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#cc0000';
                         if (isSelectedAt(i)) return '#ffb066';
                         return '#ff6a00';
                     });
+                    ds1.borderColor = ds1.backgroundColor;
+                    ds1.hoverBackgroundColor = '#cc0000';
                 } else {
                     canvas.style.cursor = 'default';
 
                     ds0.backgroundColor = displayData.map((d, i) =>
                         isSelectedAt(i) ? '#ff1a1a' : '#1a73e8'
                     );
+                    ds0.borderColor = ds0.backgroundColor;
+
                     ds1.backgroundColor = displayData.map((d, i) =>
                         isSelectedAt(i) ? '#ffb066' : '#ff6a00'
                     );
+                    ds1.borderColor = ds1.backgroundColor;
                 }
 
                 ratingChart.update('none');
@@ -2113,7 +2119,7 @@ function createRatingChart(data, type) {
                                     index: 0
                                 },
                                 {
-                                    text: 'Дефицит',
+                                    text: 'Дефицит,%',
                                     fillStyle: '#ff6a00',
                                     strokeStyle: '#ff6a00',
                                     lineWidth: 1,
@@ -2186,7 +2192,7 @@ function createRatingChart(data, type) {
                         text: 'Населенные пункты',
                         color: '#000000',
                         font: { size: 16, weight: 'bold' },
-                        padding: { top: 25, bottom: 10 }
+                        padding: { top: 55, bottom: 10 }
                     },
                     ticks: { display: false },
                     border: { color: '#000000', width: 2 }
@@ -2323,20 +2329,173 @@ function createRatingChart(data, type) {
                     };
 
                     ctx.save();
-                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#000000';
                     ctx.textBaseline = 'top';
 
-                    const yBase = chartArea.bottom + 10;
+                    const fontSize = 11;
+                    const lineHeight = 13;
+                    const yBase = chartArea.bottom + 6;
+                    const gap = 6;
 
-                    verticalLines.forEach(({ pos, cumulative }) => {
-                        let x = posToPixel(pos);
+                    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+
+                    // ============================================================
+                    // 1) Собираем основные подписи (по вертикальным линиям)
+                    // ============================================================
+                    const items = [];
+
+                    verticalLines.forEach(({ pos, cumulative, percent, threshold }) => {
+                        const x = posToPixel(pos);
                         if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-                        if (pos <= 0) x += 12;
-                        if (pos >= len) x -= 22;
 
-                        ctx.fillStyle = '#000000';
-                        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
-                        ctx.fillText(String(cumulative), x, yBase);
+                        const percentStr = percent.toFixed(1).replace('.', ',') + '%';
+
+                        let lines;
+                        if (threshold === null) {
+                            lines = [
+                                String(cumulative),
+                                `${percentStr} всех НП`
+                            ];
+                        } else if (threshold > 0) {
+                            lines = [
+                                String(cumulative),
+                                `${percentStr} Обеспеченность>=${threshold}%`
+                            ];
+                        } else {
+                            lines = [
+                                String(cumulative),
+                                `${percentStr} Обеспеченность>${threshold}%`
+                            ];
+                        }
+
+                        let maxWidth = 0;
+                        lines.forEach(line => {
+                            const w = ctx.measureText(line).width;
+                            if (w > maxWidth) maxWidth = w;
+                        });
+
+                        items.push({
+                            x,
+                            lines,
+                            width: maxWidth,
+                            pos
+                        });
+                    });
+
+                    // ============================================================
+                    // 2) Добавляем крайние метки «0» и «последний» —
+                    //    они не участвуют в расталкивании, рисуются отдельно
+                    // ============================================================
+                    const firstValue = len > 0 ? (displayData[0] && (displayData[0].id !== undefined ? '' : '')) : '';
+                    // На самом деле для оси X подписываем «0» и последний индекс (len)
+                    const axisLabels = [];
+
+                    // «0» — у левого края оси
+                    {
+                        const text = '0';
+                        const w = ctx.measureText(text).width;
+                        axisLabels.push({
+                            x: chartArea.left + 4,
+                            align: 'left',
+                            text: text,
+                            width: w
+                        });
+                    }
+
+                    // Последний индекс (len) — у правого края оси
+                    {
+                        const text = String(len);
+                        const w = ctx.measureText(text).width;
+                        axisLabels.push({
+                            x: chartArea.right - 4,
+                            align: 'right',
+                            text: text,
+                            width: w
+                        });
+                    }
+
+                    // ============================================================
+                    // 3) Сортировка и расталкивание основных подписей
+                    // ============================================================
+                    items.sort((a, b) => a.x - b.x);
+
+                    // Зарезервированное место у краёв — под «0» и «последний»
+                    const leftReserve  = axisLabels[0].width + gap;
+                    const rightReserve = axisLabels[1].width + gap;
+
+                    // Первую подпись сдвигаем правее «0»
+                    if (items.length > 0) {
+                        const firstItem = items[0];
+                        const firstLeft = firstItem.x - firstItem.width / 2;
+                        const minLeft = chartArea.left + leftReserve;
+                        if (firstLeft < minLeft) {
+                            firstItem.x = minLeft + firstItem.width / 2;
+                        }
+                    }
+
+                    // Последнюю подпись сдвигаем левее «последнего»
+                    if (items.length > 0) {
+                        const lastItem = items[items.length - 1];
+                        const lastRight = lastItem.x + lastItem.width / 2;
+                        const maxRight = chartArea.right - rightReserve;
+                        if (lastRight > maxRight) {
+                            lastItem.x = maxRight - lastItem.width / 2;
+                        }
+                    }
+
+                    // Расталкивание между собой
+                    for (let i = 1; i < items.length; i++) {
+                        const prev = items[i - 1];
+                        const cur  = items[i];
+
+                        const prevRight = prev.x + prev.width / 2;
+                        const curLeft   = cur.x - cur.width / 2;
+
+                        if (curLeft < prevRight + gap) {
+                            cur.x = prevRight + gap + cur.width / 2;
+                        }
+                    }
+
+                    // Если после расталкивания последняя вылезла — двигаем весь хвост
+                    const last = items[items.length - 1];
+                    if (last) {
+                        const lastRight = last.x + last.width / 2;
+                        const maxRight = chartArea.right - rightReserve;
+                        const overflow = lastRight - maxRight;
+
+                        if (overflow > 0) {
+                            items.forEach(item => { item.x -= overflow; });
+
+                            // Не даём первой вылезти за «0»
+                            const first = items[0];
+                            if (first) {
+                                const firstLeft = first.x - first.width / 2;
+                                const minLeft = chartArea.left + leftReserve;
+                                const overflowLeft = minLeft - firstLeft;
+                                if (overflowLeft > 0) {
+                                    items.forEach(item => { item.x += overflowLeft; });
+                                }
+                            }
+                        }
+                    }
+
+                    // ============================================================
+                    // 4) Отрисовка
+                    // ============================================================
+
+                    // Сначала — основные подписи (2 строки)
+                    ctx.textAlign = 'center';
+                    items.forEach(item => {
+                        item.lines.forEach((line, i) => {
+                            ctx.fillText(line, item.x, yBase + i * lineHeight);
+                        });
+                    });
+
+                    // Потом — крайние «0» и «последний» (1 строка, крупнее)
+                    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+                    axisLabels.forEach(label => {
+                        ctx.textAlign = label.align;
+                        ctx.fillText(label.text, label.x, yBase);
                     });
 
                     ctx.restore();
@@ -2354,17 +2513,14 @@ function createRatingChart(data, type) {
     if (chartHeader) {
         chartHeader.innerHTML = '';
 
-        // 1. Заголовок
         const title = document.createElement('div');
         title.className = 'chart-title';
         title.textContent = 'График обеспеченности НП';
         chartHeader.appendChild(title);
     }
 
-    // 2. Контролы (сортировка / поиск / масштаб)
     renderChartControls(sortField);
 
-    // 3. Карточки статистики
     if (chartHeader) {
         const stats = [
             { label: 'Количество НП',            value: n.toLocaleString('ru-RU'),  color: '#0066ff' },
