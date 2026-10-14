@@ -9,6 +9,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    max-height: 100%;
     overflow: hidden;
 }
 
@@ -20,10 +21,13 @@ body {
     line-height: 1.35;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    min-height: 0;
 }
 
 header {
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
 }
 
 header h2 {
@@ -50,15 +54,17 @@ header h2 {
 }
 
 /* ===== ГЛАВНЫЙ КОНТЕЙНЕР ===== */
-.container__forms {
-    flex: 1;
+main.container__forms {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
     display: grid;
     grid-template-columns: 340px 1fr;
     gap: 16px;
     padding: 12px 16px 16px 16px;
     background: #d4d4d4;
-    min-height: 0;
-    overflow: auto;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 /* ===== ЛЕВАЯ КОЛОНКА ===== */
@@ -66,11 +72,14 @@ header h2 {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 4px;
     min-height: 0;
     min-width: 0;
     height: 100%;
+    max-height: 100%;
+    box-sizing: border-box;
 }
 
 .form__rating {
@@ -97,7 +106,7 @@ header h2 {
 .form__rating select,
 .form__rating input[type="text"],
 .form__rating input[type="number"] {
-    width: 100%;               /* ← было 150px — растягивается по родителю */
+    width: 100%;
     max-width: 100%;
     padding: 6px 10px;
     border: 1.5px solid #000000;
@@ -271,10 +280,13 @@ header h2 {
     min-height: 0;
     min-width: 0;
     height: 100%;
-    overflow: auto;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 4px;
     margin-top: 0;
     gap: 8px;
+    box-sizing: border-box;
 }
 
 /* ===== ЗАГОЛОВКИ ТАБЛИЦ ===== */
@@ -392,8 +404,9 @@ header h2 {
 /* ===== БЛОК ДИАГРАММЫ РЕЙТИНГА НП (ЕДИНСТВЕННЫЙ) ===== */
 
 #chart-container {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
+    max-height: 100%;
     width: 100%;
     display: none;
     flex-direction: column;
@@ -401,63 +414,145 @@ header h2 {
     border: none;
     padding: 0;
     border-radius: 3px;
-    gap: 6px;
-    overflow: hidden;              /* базово без общего скролла */
-    max-height: 100%;
-}
-
-/* Шапка (заголовок + карточки + контролы) — сжимается, но не больше 50% */
-#chart-container > .chart-header {
-    flex: 0 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overflow: hidden;
-    max-height: 50%;
-}
-
-/* Область канваса — ровно 300px, но может сжаться */
-.chart-inner {
-    flex: 0 1 auto;
-    height: 420px;           /* ← было 300px */
-    min-height: 0;
-    max-height: 420px;       /* ← было 300px */
-    width: 100%;
-    overflow: hidden;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    border-radius: 4px;
-    padding: 8px;
-    position: relative;
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+    gap: 8px;
+    overflow: auto;              /* скролл если контент больше */
     box-sizing: border-box;
 }
 
-/* Внутренний контент — растягивается по ширине контейнера */
-.chart-content {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    height: 100%;
+/* Шапка — своя высота, не сжимается */
+#chart-container > .chart-header {
+    flex: 0 0 auto;
     min-height: 0;
-    max-height: 100%;
-    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: visible;
+    max-height: none;
+}
+#chart-container {
+    border: none !important;
+    border-radius: 0 !important;
+}
+/* ============================================================ */
+/* ===== УБИРАЕМ BORDER ВОКРУГ CANVAS ===== */
+
+/* Рамка у .chart-inner (обёртка canvas) */
+.chart-inner {
+    border: none !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Рамка у .chart-content (внутренняя обёртка) */
+.chart-content {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Сам canvas */
+#rating-chart,
+.chart-content canvas {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* На всякий случай — контейнер диаграммы */
+#chart-container {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+/* ============================================================ */
+/* ===== УБИРАЕМ РАМКУ ВОКРУГ CANVAS (.chart-inner) ===== */
+
+.chart-inner {
+    border: 0 none !important;
+    border-top: 0 none !important;
+    border-right: 0 none !important;
+    border-bottom: 0 none !important;
+    border-left: 0 none !important;
+    outline: 0 none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+/* ============================================================ */
+/* ===== УБИРАЕМ РАМКУ У .chart-inner (ОБЁРТКА CANVAS) ===== */
+
+.chart-inner {
+    border: 0 none !important;
+    border-top: 0 none !important;
+    border-right: 0 none !important;
+    border-bottom: 0 none !important;
+    border-left: 0 none !important;
+    outline: 0 none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* И у остальных обёрток диаграммы */
+.chart-content,
+#chart-container,
+#rating-chart,
+.chart-content canvas {
+    border: 0 none !important;
+    outline: 0 none !important;
+    box-shadow: none !important;
+}
+
+/* Область canvas — 1480×420, не сжимается */
+.chart-inner {
+    flex: 0 0 auto;
+    width: 1480px;
+    min-width: 1480px;
+    max-width: 1480px;
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    border-radius: 4px;
+    background: #fff;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    position: relative;
+}
+
+/* Внутренний контент — фиксированный */
+.chart-content {
+    width: 1480px;
+    min-width: 1480px;
+    max-width: 1480px;
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     background: #fff;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .chart-content canvas,
 #rating-chart {
     display: block;
-    width: 100% !important;
-    height: 100% !important;
-    flex: 1 1 auto;
-    min-height: 0;
+    width: 1480px !important;
+    min-width: 1480px !important;
+    max-width: 1480px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto;
 }
 
 .chart-title {
@@ -1072,25 +1167,25 @@ header h2 {
 }
 
 /* ============================================================ */
-/* ===== КАРТОЧКИ СТАТИСТИКИ ДИАГРАММЫ РЕЙТИНГА НП ===== */
+/* ===== КАРТОЧКИ СТАТИСТИКИ ДИАГРАММЫ РЕЙТИНГА НП (КОМПАКТНЫЕ) ===== */
 
 .chart-stats-row,
 .chart-stats-row-buckets {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
-    gap: 12px !important;
+    gap: 8px !important;
     padding: 0 !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 4px !important;
     flex-shrink: 0 !important;
 }
 
 .chart-stat-card {
     position: relative;
     background: #ffffff;
-    border-radius: 12px;
-    padding: 24px 14px 14px 14px;
+    border-radius: 10px;
+    padding: 14px 12px 10px 12px;
     text-align: center;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     min-width: 0;
 }
@@ -1106,24 +1201,24 @@ header h2 {
     top: 0;
     left: 0;
     right: 0;
-    height: 7px;
+    height: 5px;
     background: var(--kpi-color, #0066ff);
-    border-radius: 12px 12px 0 0;
+    border-radius: 10px 10px 0 0;
 }
 
 .chart-stat-card__value {
-    font-size: 22px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--kpi-color, #0066ff);
     line-height: 1.1;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .chart-stat-card__label {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     color: black;
     white-space: nowrap;
@@ -1138,11 +1233,6 @@ header h2 {
 #analytics-dashboard canvas {
     border: none !important;
     outline: none !important;
-}
-
-#analytics-dashboard > div,
-#chart-container > div {
-    border-color: transparent !important;
 }
 
 /* ===== СКРЫТИЕ ПАГИНАЦИИ В АНАЛИТИКЕ ===== */
@@ -1164,9 +1254,7 @@ body.analytics-mode #chart-pagination {
 }
 
 /* ============================================================ */
-/* ===== АНАЛИТИЧЕСКИЙ ДАШБОРД ===== */
-/* Базово: 1920×1080 — всё вписано, без скролла.
-   Меньше 1920px — появляются скроллы (см. @media ниже). */
+/* ===== АНАЛИТИЧЕСКИЙ ДАШБОРД (под 1920×1080, без адаптива) ===== */
 
 #analytics-dashboard {
     display: flex;
@@ -1204,9 +1292,6 @@ body.analytics-mode #chart-pagination {
     color: black;
     margin: 0;
 }
-
-/* ============================================================ */
-/* ===== БЛОК ДИАГРАММ АНАЛИТИКИ (базово 1920×1080) ===== */
 
 .analytics-charts-scroll {
     flex: 1 1 auto;
@@ -1314,74 +1399,111 @@ body.analytics-mode #chart-pagination {
 }
 
 /* ============================================================ */
-/* ===== МЕНЬШЕ 1920px — ВКЛЮЧАЕМ СКРОЛЛЫ (И ДЛЯ ДИАГРАММЫ, И ДЛЯ АНАЛИТИКИ) ===== */
-@media (max-width: 1919px) {
+/* ===== ЧИСЛЕННОСТЬ: КОМПАКТНАЯ РАСКЛАДКА В ОДНУ СТРОКУ ===== */
+/* (регионы и все остальные поля — не трогаем) */
 
-    /* --- Диаграмма рейтинга --- */
-    #chart-container {
-        overflow: auto;
-    }
+.form__rating .form__div .form__div__div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    min-height: 28px !important;
+    flex-wrap: nowrap !important;
+}
 
-    .chart-inner {
-        overflow-x: auto;
-        overflow-y: hidden;
-    }
+.form__rating .form__div .form__div__div:last-child {
+    margin-bottom: 0 !important;
+}
 
-    .chart-content {
-        width: 1600px;
-        min-width: 1600px;
-        max-width: 1600px;
-    }
+.form__rating .form__div .form__div__div:empty {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+}
 
-    /* --- Аналитический дашборд --- */
-    #analytics-dashboard {
-        overflow: auto;
-    }
+.form__rating .form__div .form__div__div[style*="display: none"],
+.form__rating .form__div .form__div__div:has(> #type-connect) {
+    display: none !important;
+}
 
-    .analytics-charts-scroll {
-        overflow: auto;
-    }
+.form__rating .h5-label {
+    display: inline-block !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    margin: 0 4px 0 0 !important;
+    white-space: nowrap !important;
+    width: auto !important;
+}
 
-    .analytics-charts-row {
-        min-width: 1300px;
-        min-height: 500px;
-    }
+.form__rating .form__div .form__div__div label {
+    display: inline-block !important;
+    margin: 0 !important;
+    font-weight: normal !important;
+    font-size: 15px !important;
+    color: #1a1a1a !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    width: auto !important;
+}
 
-    .analytics-chart-block {
-        min-width: 400px;
-        min-height: 600px;
-        overflow: auto;
-    }
+.form__rating .form__div .form__div__div label:empty {
+    display: none !important;
+}
 
-    .analytics-chart-block__canvas-wrap {
-        min-height: 350px;
-        overflow: auto;
-    }
+.form__rating .form__div .form__div__div input[type="radio"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    accent-color: #8a8a8a !important;
+    flex-shrink: 0 !important;
+}
 
-    #analytics-pie-chart,
-    #analytics-bar-services,
-    #analytics-bar-mobile {
-        min-width: 350px;
-        min-height: 350px;
-    }
+.form__rating .form__div .form__div__div input[type="number"] {
+    width: 90px !important;
+    min-width: 90px !important;
+    padding: 4px 6px !important;
+    font-size: 14px !important;
+    text-align: right !important;
+    flex-shrink: 1 !important;
+    box-sizing: border-box !important;
+    font-variant-numeric: tabular-nums;
+}
 
-    .analytics-title {
-        font-size: 22px;
-    }
+.form__rating .form__div .form__div__div input[type="number"]::-webkit-outer-spin-button,
+.form__rating .form__div .form__div__div input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
-    .analytics-subtitle {
-        font-size: 14px;
-    }
+.form__rating .form__div .form__div__div input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
 
-    .analytics-chart-block__title {
-        font-size: 15px;
-    }
+.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-wrap: nowrap !important;
+}
 
-    .pie-stats-table,
-    .pie-stats-table th,
-    .pie-stats-table td {
-        font-size: 13px;
-    }
+.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="number-settlement"] {
+    display: none !important;
+}
+
+.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="numbers-settlement"],
+.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="numbers-settlements"] {
+    flex-shrink: 0;
+}
+
+.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > input[type="number"] {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 70px !important;
+    max-width: 90px !important;
 }
 
 /* ===== ЧЁРНАЯ ОКАНТОВКА ДЛЯ ВСЕХ ПОЛЕЙ ВВОДА ===== */
@@ -1415,7 +1537,6 @@ textarea:focus {
 input[type="checkbox"],
 input[type="radio"] {
     accent-color: #000000;
-    /*outline: 1px solid #000000;*/
 }
 
 button,
@@ -1439,123 +1560,231 @@ button,
     border: 1.5px solid #000000 !important;
 }
 /* ============================================================ */
-/* ===== ЧИСЛЕННОСТЬ: КОМПАКТНАЯ РАСКЛАДКА В ОДНУ СТРОКУ ===== */
-/* (регионы и все остальные поля — не трогаем) */
+/* ===== CANVAS ФИКСИРОВАННЫЙ, НЕ РЕЖЕТСЯ, СКРОЛЛ У КОНТЕЙНЕРА ===== */
 
-/* Все .form__div__div внутри .form__div — flex-строки */
-.form__rating .form__div .form__div__div {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 6px !important;
-    margin-bottom: 6px !important;
-    min-height: 28px !important;
-    flex-wrap: nowrap !important;
-}
-
-.form__rating .form__div .form__div__div:last-child {
-    margin-bottom: 0 !important;
-}
-
-/* Пустой .form__div__div — не занимает места */
-.form__rating .form__div .form__div__div:empty {
-    display: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    min-height: 0 !important;
-}
-
-/* Блок «Вид связи» — скрыт всегда */
-.form__rating .form__div .form__div__div[style*="display: none"],
-.form__rating .form__div .form__div__div:has(> #type-connect) {
-    display: none !important;
-}
-
-/* Заголовок «Численность:» */
-.form__rating .h5-label {
-    display: inline-block !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    margin: 0 4px 0 0 !important;
-    white-space: nowrap !important;
-    width: auto !important;
-}
-
-/* Label внутри строк численности */
-.form__rating .form__div .form__div__div label {
-    display: inline-block !important;
-    margin: 0 !important;
-    font-weight: normal !important;
-    font-size: 15px !important;
-    color: #1a1a1a !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
-    width: auto !important;
-}
-
-/* Пустой label */
-.form__rating .form__div .form__div__div label:empty {
-    display: none !important;
-}
-
-/* Radio внутри численности */
-.form__rating .form__div .form__div__div input[type="radio"] {
-    width: 16px !important;
-    height: 16px !important;
-    margin: 0 !important;
-    accent-color: #8a8a8a !important;
-    flex-shrink: 0 !important;
-}
-
-/* ============================================================ */
-/* ===== ИНПУТЫ ЧИСЕЛ (только внутри .form__div) ===== */
-
-.form__rating .form__div .form__div__div input[type="number"] {
-    width: 90px !important;
-    min-width: 90px !important;
-    padding: 4px 6px !important;
-    font-size: 14px !important;
-    text-align: right !important;
-    flex-shrink: 1 !important;
-    box-sizing: border-box !important;
-    font-variant-numeric: tabular-nums;
-}
-
-/* Скрываем спиннеры ▲▼ */
-.form__rating .form__div .form__div__div input[type="number"]::-webkit-outer-spin-button,
-.form__rating .form__div .form__div__div input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.form__rating .form__div .form__div__div input[type="number"] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-/* ============================================================ */
-/* ===== БЛОК «от [1] до [10000]» — одна строка ===== */
-
-.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 5px !important;
-    flex-wrap: nowrap !important;
-}
-
-.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="number-settlement"] {
-    display: none !important;
-}
-
-.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="numbers-settlement"],
-.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > label[for="numbers-settlements"] {
-    flex-shrink: 0;
-}
-
-.form__rating .form__div .form__div__div:has(> #numbers-settlement):has(> #numbers-settlements) > input[type="number"] {
+/* #chart-container — даёт горизонтальный скролл, если canvas не влезает */
+#chart-container {
     flex: 1 1 0 !important;
-    width: auto !important;
-    min-width: 70px !important;
-    max-width: 90px !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: auto !important;           /* ← и по X, и по Y */
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+}
+
+/* Шапка — своя высота */
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* .chart-inner — по ширине canvas, БЕЗ фиксации, БЕЗ обрезки */
+.chart-inner {
+    flex: 0 0 auto !important;
+    width: max-content !important;       /* ← растягивается по canvas */
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    padding: 0 !important;
+    overflow: visible !important;        /* ← НЕ режем canvas */
+    box-sizing: border-box !important;
+
+    border-radius: 4px !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+/* .chart-content — по ширине canvas */
+.chart-content {
+    width: max-content !important;       /* ← растягивается по canvas */
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;        /* ← НЕ режем canvas */
+    box-sizing: border-box !important;
+}
+
+/* А canvas — фиксированный 1440×420 */
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 1440px !important;
+    min-width: 1440px !important;
+    max-width: 1440px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+}
+/* ============================================================ */
+/* ===== CANVAS: РАСТЯГИВАЕТСЯ ПО МЕСТУ, МИНИМУМ 1440px ===== */
+
+#chart-container {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: auto !important;
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+}
+
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.chart-inner {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+
+    border-radius: 4px !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+.chart-content {
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+}
+/* ============================================================ */
+/* ===== CANVAS: РАСТЯГИВАЕТСЯ ПО ШИРИНЕ, ФИКС ПО ВЫСОТЕ, НЕ ВЫЛЕЗАЕТ ===== */
+
+/* #chart-container — скроллится, если контент больше */
+#chart-container {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: auto !important;             /* и по X, и по Y */
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+}
+
+/* Шапка — своя высота, не сжимается */
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* .chart-inner — растягивается по ширине, фикс по высоте, НЕ режет */
+.chart-inner {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+
+    border-radius: 4px !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+/* .chart-content — растягивается по ширине, фикс по высоте */
+.chart-content {
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* CANVAS — растягивается по ширине, фикс 420px по высоте */
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 100% !important;
+    min-width: 1440px !important;
+    max-width: none !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+}
+/* ============================================================ */
+/* ===== РАМКА .table__rating ЧЕРЕЗ OUTLINE — ВИДНА СО ВСЕХ СТОРОН ===== */
+
+.table__rating {
+    border: none !important;                    /* убираем обычную рамку */
+    outline: 2px solid #1a1a1a !important;      /* ← не обрезается скроллом */
+    outline-offset: -2px !important;            /* ← внутрь, не наружу */
+    border-radius: 4px !important;
 }
