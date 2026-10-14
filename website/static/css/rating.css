@@ -1297,7 +1297,7 @@ body.analytics-mode #chart-pagination {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
-    overflow: hidden;
+    overflow: auto;
     background: transparent;
     border-radius: 4px;
     box-sizing: border-box;
@@ -1310,7 +1310,7 @@ body.analytics-mode #chart-pagination {
     gap: 12px;
     width: 100%;
     min-width: 0;
-    height: 100%;
+    height: 450px;
     min-height: 0;
     box-sizing: border-box;
     padding: 2px;
@@ -1788,3 +1788,4 @@ button,
     outline-offset: -2px !important;            /* ← внутрь, не наружу */
     border-radius: 4px !important;
 }
+
