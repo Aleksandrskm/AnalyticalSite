@@ -1854,6 +1854,33 @@ function createRatingChart(data, type) {
 
     destroyChart();
 
+    // ===== УБИРАЕМ ВСЕ РАМКИ У CANVAS И ЕГО ОБЁРТОК =====
+    canvas.style.border = 'none';
+    canvas.style.outline = 'none';
+    canvas.style.boxShadow = 'none';
+    canvas.style.background = 'transparent';
+
+    const parentInner = canvas.closest('.chart-inner');
+    if (parentInner) {
+        parentInner.style.border = 'none';
+        parentInner.style.outline = 'none';
+        parentInner.style.boxShadow = 'none';
+    }
+
+    const parentContent = canvas.closest('.chart-content');
+    if (parentContent) {
+        parentContent.style.border = 'none';
+        parentContent.style.outline = 'none';
+        parentContent.style.boxShadow = 'none';
+    }
+
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer) {
+        chartContainer.style.border = 'none';
+        chartContainer.style.outline = 'none';
+        chartContainer.style.boxShadow = 'none';
+    }
+
     const ctx = canvas.getContext('2d');
 
     chartAllData = [...data];
@@ -2033,7 +2060,7 @@ function createRatingChart(data, type) {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { top: 8, bottom: 80 }
+                padding: { top: 8, bottom: 0 }
             },
             interaction: {
                 mode: 'index',
@@ -2339,9 +2366,6 @@ function createRatingChart(data, type) {
 
                     ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
 
-                    // ============================================================
-                    // 1) Собираем основные подписи (по вертикальным линиям)
-                    // ============================================================
                     const items = [];
 
                     verticalLines.forEach(({ pos, cumulative, percent, threshold }) => {
@@ -2382,15 +2406,8 @@ function createRatingChart(data, type) {
                         });
                     });
 
-                    // ============================================================
-                    // 2) Добавляем крайние метки «0» и «последний» —
-                    //    они не участвуют в расталкивании, рисуются отдельно
-                    // ============================================================
-                    const firstValue = len > 0 ? (displayData[0] && (displayData[0].id !== undefined ? '' : '')) : '';
-                    // На самом деле для оси X подписываем «0» и последний индекс (len)
                     const axisLabels = [];
 
-                    // «0» — у левого края оси
                     {
                         const text = '0';
                         const w = ctx.measureText(text).width;
@@ -2402,7 +2419,6 @@ function createRatingChart(data, type) {
                         });
                     }
 
-                    // Последний индекс (len) — у правого края оси
                     {
                         const text = String(len);
                         const w = ctx.measureText(text).width;
@@ -2414,16 +2430,11 @@ function createRatingChart(data, type) {
                         });
                     }
 
-                    // ============================================================
-                    // 3) Сортировка и расталкивание основных подписей
-                    // ============================================================
                     items.sort((a, b) => a.x - b.x);
 
-                    // Зарезервированное место у краёв — под «0» и «последний»
                     const leftReserve  = axisLabels[0].width + gap;
                     const rightReserve = axisLabels[1].width + gap;
 
-                    // Первую подпись сдвигаем правее «0»
                     if (items.length > 0) {
                         const firstItem = items[0];
                         const firstLeft = firstItem.x - firstItem.width / 2;
@@ -2433,7 +2444,6 @@ function createRatingChart(data, type) {
                         }
                     }
 
-                    // Последнюю подпись сдвигаем левее «последнего»
                     if (items.length > 0) {
                         const lastItem = items[items.length - 1];
                         const lastRight = lastItem.x + lastItem.width / 2;
@@ -2443,7 +2453,6 @@ function createRatingChart(data, type) {
                         }
                     }
 
-                    // Расталкивание между собой
                     for (let i = 1; i < items.length; i++) {
                         const prev = items[i - 1];
                         const cur  = items[i];
@@ -2456,7 +2465,6 @@ function createRatingChart(data, type) {
                         }
                     }
 
-                    // Если после расталкивания последняя вылезла — двигаем весь хвост
                     const last = items[items.length - 1];
                     if (last) {
                         const lastRight = last.x + last.width / 2;
@@ -2466,7 +2474,6 @@ function createRatingChart(data, type) {
                         if (overflow > 0) {
                             items.forEach(item => { item.x -= overflow; });
 
-                            // Не даём первой вылезти за «0»
                             const first = items[0];
                             if (first) {
                                 const firstLeft = first.x - first.width / 2;
@@ -2479,11 +2486,6 @@ function createRatingChart(data, type) {
                         }
                     }
 
-                    // ============================================================
-                    // 4) Отрисовка
-                    // ============================================================
-
-                    // Сначала — основные подписи (2 строки)
                     ctx.textAlign = 'center';
                     items.forEach(item => {
                         item.lines.forEach((line, i) => {
@@ -2491,7 +2493,6 @@ function createRatingChart(data, type) {
                         });
                     });
 
-                    // Потом — крайние «0» и «последний» (1 строка, крупнее)
                     ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
                     axisLabels.forEach(label => {
                         ctx.textAlign = label.align;
@@ -2504,11 +2505,16 @@ function createRatingChart(data, type) {
         ]
     });
 
+    // ===== ЕЩЁ РАЗ УБИРАЕМ РАМКИ ПОСЛЕ СОЗДАНИЯ CHART.JS =====
+    canvas.style.border = 'none';
+    canvas.style.outline = 'none';
+    canvas.style.boxShadow = 'none';
+
     isChartMode = true;
 
     // ==================== ЗАГОЛОВОК, КОНТРОЛЫ, КАРТОЧКИ ====================
-    const chartContainer = document.getElementById('chart-container');
-    const chartHeader = chartContainer ? chartContainer.querySelector('.chart-header') : null;
+    const chartContainer2 = document.getElementById('chart-container');
+    const chartHeader = chartContainer2 ? chartContainer2.querySelector('.chart-header') : null;
 
     if (chartHeader) {
         chartHeader.innerHTML = '';
