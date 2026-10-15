@@ -6395,11 +6395,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const regionsParam = urlParams.get('regions');
+    const typeParam = urlParams.get('type');
+
     if (regionsParam) {
         setTimeout(async () => {
             const selectedCount = document.getElementById('region').selectedOptions.length;
             if (selectedCount > 0) {
-                await handleAnalyticsDashboardButton();
+                if (typeParam === '2') {
+                    // type=2 → логика кнопки "График" (btn-rating-chart)
+                    await handleRatingChartButton();
+                } else {
+                    // type=1 или отсутствует → логика кнопки "Диаграммы" (analytics dashboard)
+                    await handleAnalyticsDashboardButton();
+                }
             }
         }, 500);
     }
