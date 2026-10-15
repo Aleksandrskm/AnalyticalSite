@@ -1844,7 +1844,6 @@ function rebuildChartPreservingZoom() {
 }
 
 // ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
-
 function createRatingChart(data, type) {
     const canvas = document.getElementById('rating-chart');
     if (!canvas) {
@@ -1854,7 +1853,6 @@ function createRatingChart(data, type) {
 
     destroyChart();
 
-    // ===== УБИРАЕМ ВСЕ РАМКИ У CANVAS И ЕГО ОБЁРТОК =====
     canvas.style.border = 'none';
     canvas.style.outline = 'none';
     canvas.style.boxShadow = 'none';
@@ -1969,51 +1967,32 @@ function createRatingChart(data, type) {
             const ratings = displayData.map(it => Number(it.rating) || 0);
 
             const bounds = [
-                { min: 81, topValue: 100 },
-                { min: 61, topValue: 80  },
-                { min: 41, topValue: 60  },
-                { min: 21, topValue: 40  },
-                { min: 0,  topValue: 20  }
+                { min: 81, topValue: 100, label: 80, strict: false },
+                { min: 61, topValue: 80,  label: 60, strict: false },
+                { min: 41, topValue: 60,  label: 40, strict: false },
+                { min: 21, topValue: 40,  label: 20, strict: false },
+                { min: 0,  topValue: 20,  label: 0,  strict: true  }
             ];
 
-            bounds.forEach(({ min, topValue }) => {
+            bounds.forEach(({ min, topValue, label, strict }) => {
                 let pos = 0;
                 for (let i = 0; i < len; i++) {
-                    if (ratings[i] >= min) pos = i + 1;
+                    const ok = strict ? (ratings[i] > min) : (ratings[i] >= min);
+                    if (ok) pos = i + 1;
                     else break;
                 }
-                const percent = len > 0 ? (pos / len) * 100 : 0;
+
+                if (pos <= 0) return;
+
+                const percent = (pos / len) * 100;
                 verticalLines.push({
                     pos,
                     topValue,
                     cumulative: pos,
                     percent: percent,
-                    threshold: min
+                    threshold: min,
+                    label: label
                 });
-            });
-
-            {
-                let posBeforeZero = 0;
-                for (let i = 0; i < len; i++) {
-                    if (ratings[i] > 0) posBeforeZero = i + 1;
-                    else break;
-                }
-                const percent = len > 0 ? (posBeforeZero / len) * 100 : 0;
-                verticalLines.push({
-                    pos: posBeforeZero,
-                    topValue: 20,
-                    cumulative: posBeforeZero,
-                    percent: percent,
-                    threshold: 0
-                });
-            }
-
-            verticalLines.push({
-                pos: len,
-                topValue: 0,
-                cumulative: len,
-                percent: 100,
-                threshold: null
             });
         }
     }
@@ -2060,7 +2039,7 @@ function createRatingChart(data, type) {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { top: 8, bottom: 0 }
+                padding: { top: 8, bottom: 90, right: 100 }
             },
             interaction: {
                 mode: 'index',
@@ -2214,13 +2193,7 @@ function createRatingChart(data, type) {
                 x: {
                     stacked: true,
                     grid: { display: false },
-                    title: {
-                        display: true,
-                        text: 'Населенные пункты',
-                        color: '#000000',
-                        font: { size: 16, weight: 'bold' },
-                        padding: { top: 55, bottom: 10 }
-                    },
+                    title: { display: false },
                     ticks: { display: false },
                     border: { color: '#000000', width: 2 }
                 },
@@ -2358,6 +2331,7 @@ function createRatingChart(data, type) {
                     ctx.save();
                     ctx.fillStyle = '#000000';
                     ctx.textBaseline = 'top';
+                    ctx.textAlign = 'left';
 
                     const fontSize = 11;
                     const lineHeight = 13;
@@ -2366,31 +2340,22 @@ function createRatingChart(data, type) {
 
                     ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
 
+                    // Собираем подписи под вертикальными линиями
                     const items = [];
 
-                    verticalLines.forEach(({ pos, cumulative, percent, threshold }) => {
+                    verticalLines.forEach(({ pos, cumulative, percent, threshold, label }) => {
                         const x = posToPixel(pos);
                         if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
 
-                        const percentStr = percent.toFixed(1).replace('.', ',') + '%';
+                        const percentRounded = Math.round(percent);
+                        const displayThreshold = (typeof label !== 'undefined' && label !== null)
+                            ? label
+                            : threshold;
 
-                        let lines;
-                        if (threshold === null) {
-                            lines = [
-                                String(cumulative),
-                                `${percentStr} всех НП`
-                            ];
-                        } else if (threshold > 0) {
-                            lines = [
-                                String(cumulative),
-                                `${percentStr} Обеспеченность>=${threshold}%`
-                            ];
-                        } else {
-                            lines = [
-                                String(cumulative),
-                                `${percentStr} Обеспеченность>${threshold}%`
-                            ];
-                        }
+                        const lines = [
+                            `${cumulative} (${percentRounded}%)НП`,
+                            `Ур. обеспеч. > ${displayThreshold}%`
+                        ];
 
                         let maxWidth = 0;
                         lines.forEach(line => {
@@ -2398,106 +2363,40 @@ function createRatingChart(data, type) {
                             if (w > maxWidth) maxWidth = w;
                         });
 
-                        items.push({
-                            x,
-                            lines,
-                            width: maxWidth,
-                            pos
-                        });
+                        items.push({ x, lines, width: maxWidth, pos });
                     });
 
-                    const axisLabels = [];
-
-                    {
-                        const text = '0';
-                        const w = ctx.measureText(text).width;
-                        axisLabels.push({
-                            x: chartArea.left + 4,
-                            align: 'left',
-                            text: text,
-                            width: w
-                        });
-                    }
-
-                    {
-                        const text = String(len);
-                        const w = ctx.measureText(text).width;
-                        axisLabels.push({
-                            x: chartArea.right - 4,
-                            align: 'right',
-                            text: text,
-                            width: w
-                        });
-                    }
-
+                    // Расталкивание подписей — БЕЗ резерва справа
                     items.sort((a, b) => a.x - b.x);
-
-                    const leftReserve  = axisLabels[0].width + gap;
-                    const rightReserve = axisLabels[1].width + gap;
-
-                    if (items.length > 0) {
-                        const firstItem = items[0];
-                        const firstLeft = firstItem.x - firstItem.width / 2;
-                        const minLeft = chartArea.left + leftReserve;
-                        if (firstLeft < minLeft) {
-                            firstItem.x = minLeft + firstItem.width / 2;
-                        }
-                    }
-
-                    if (items.length > 0) {
-                        const lastItem = items[items.length - 1];
-                        const lastRight = lastItem.x + lastItem.width / 2;
-                        const maxRight = chartArea.right - rightReserve;
-                        if (lastRight > maxRight) {
-                            lastItem.x = maxRight - lastItem.width / 2;
-                        }
-                    }
 
                     for (let i = 1; i < items.length; i++) {
                         const prev = items[i - 1];
-                        const cur  = items[i];
-
-                        const prevRight = prev.x + prev.width / 2;
-                        const curLeft   = cur.x - cur.width / 2;
-
-                        if (curLeft < prevRight + gap) {
-                            cur.x = prevRight + gap + cur.width / 2;
-                        }
+                        const cur = items[i];
+                        const prevRight = prev.x + prev.width;
+                        if (cur.x < prevRight + gap) cur.x = prevRight + gap;
                     }
 
-                    const last = items[items.length - 1];
-                    if (last) {
-                        const lastRight = last.x + last.width / 2;
-                        const maxRight = chartArea.right - rightReserve;
-                        const overflow = lastRight - maxRight;
-
-                        if (overflow > 0) {
-                            items.forEach(item => { item.x -= overflow; });
-
-                            const first = items[0];
-                            if (first) {
-                                const firstLeft = first.x - first.width / 2;
-                                const minLeft = chartArea.left + leftReserve;
-                                const overflowLeft = minLeft - firstLeft;
-                                if (overflowLeft > 0) {
-                                    items.forEach(item => { item.x += overflowLeft; });
-                                }
-                            }
-                        }
-                    }
-
-                    ctx.textAlign = 'center';
+                    // Отрисовка подписей (строго под линиями)
+                    ctx.textAlign = 'left';
                     items.forEach(item => {
                         item.lines.forEach((line, i) => {
                             ctx.fillText(line, item.x, yBase + i * lineHeight);
                         });
                     });
 
+                    // Левая метка «0»
                     ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
-                    axisLabels.forEach(label => {
-                        ctx.textAlign = label.align;
-                        ctx.fillText(label.text, label.x, yBase);
-                    });
+                    ctx.textAlign = 'left';
+                    ctx.fillText('0', chartArea.left + 4, yBase);
+
+                    // «Всего N НП» — справа, на ВТОРОЙ строке
+                    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = '#000000';
+
+                    const totalText = `Всего ${len} НП`;
+                    ctx.fillText(totalText, chartArea.right + 6, yBase - 16);   // ← НАД подписями
 
                     ctx.restore();
                 }
@@ -2505,14 +2404,12 @@ function createRatingChart(data, type) {
         ]
     });
 
-    // ===== ЕЩЁ РАЗ УБИРАЕМ РАМКИ ПОСЛЕ СОЗДАНИЯ CHART.JS =====
     canvas.style.border = 'none';
     canvas.style.outline = 'none';
     canvas.style.boxShadow = 'none';
 
     isChartMode = true;
 
-    // ==================== ЗАГОЛОВОК, КОНТРОЛЫ, КАРТОЧКИ ====================
     const chartContainer2 = document.getElementById('chart-container');
     const chartHeader = chartContainer2 ? chartContainer2.querySelector('.chart-header') : null;
 
