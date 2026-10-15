@@ -1788,4 +1788,194 @@ button,
     outline-offset: -2px !important;            /* ← внутрь, не наружу */
     border-radius: 4px !important;
 }
+/* ============================================================ */
+/* ===== ДИАГРАММА: ШАПКА ОТДЕЛЬНО, СКРОЛЛ ТОЛЬКО У .chart-inner ===== */
+
+/* Контейнер — flex-колонка, БЕЗ общего скролла */
+#chart-container {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: hidden !important;             /* ← ОБЩЕГО СКРОЛЛА НЕТ */
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Шапка — своя высота, НЕ скроллится, НЕ сжимается */
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;               /* ← своя высота */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;            /* ← без скролла */
+    max-height: none !important;
+    min-height: 0 !important;
+}
+
+/* .chart-inner — занимает ВСЁ оставшееся место, СВОЙ скролл */
+.chart-inner {
+    flex: 1 1 0 !important;                  /* ← растягивается на остаток */
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    overflow: auto !important;               /* ← СВОЙ СКРОЛЛ (X и Y) */
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+/* .chart-content — по размеру canvas, БЕЗ своего скролла */
+.chart-content {
+    flex: 0 0 auto !important;
+    width: 1440px !important;
+    min-width: 1440px !important;
+    max-width: 1440px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;            /* ← не режет canvas */
+    box-sizing: border-box !important;
+}
+
+/* Canvas — фиксированный 1440×420 */
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 1440px !important;
+    min-width: 1440px !important;
+    max-width: 1440px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+/* ============================================================ */
+/* ===== KPI-КАРТОЧКИ: СИЛЬНЫЕ ТЕНИ ===== */
+
+.kpi-card {
+    box-shadow:
+            0 12px 32px rgba(0, 0, 0, 0.28),
+            0 4px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+.kpi-card:hover {
+    box-shadow:
+            0 20px 48px rgba(0, 0, 0, 0.38),
+            0 8px 20px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* То же для карточек статистики диаграммы */
+.chart-stat-card {
+    box-shadow:
+            0 10px 28px rgba(0, 0, 0, 0.25),
+            0 3px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chart-stat-card:hover {
+    box-shadow:
+            0 18px 42px rgba(0, 0, 0, 0.35),
+            0 6px 16px rgba(0, 0, 0, 0.22) !important;
+}
+/* ============================================================ */
+/* ===== CANVAS — 1500×420 (шире, чем 1440) ===== */
+
+#chart-container {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: 0 !important;
+}
+
+.chart-inner {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+/* .chart-content — 1500×420 */
+.chart-content {
+    flex: 0 0 auto !important;
+    width: 1500px !important;
+    min-width: 1500px !important;
+    max-width: 1500px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* Canvas — 1500×420 */
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 1500px !important;
+    min-width: 1500px !important;
+    max-width: 1500px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
 
