@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/planning_development.css') }}">
+
+<div class="loader-container loader-container--hidden">
+    <span class="loader"></span>
+    <span class="loader-container__title">Загрузка...</span>
+</div>
+
+<h2>Планирование развития ТИ НП</h2>
+
+<main class="pd-container">
+
+    <!-- ============ ЧАСТЬ 1: ВЕРХНЯЯ ПАНЕЛЬ ============ -->
+    <section class="pd-top-panel">
+        <div class="pd-top-panel__inner">
+            <div class="pd-select-group">
+                <label for="pd-region">Регион:</label>
+                <select id="pd-region">
+                    <option value="">— Выберите регион —</option>
+                </select>
+            </div>
+
+            <div class="pd-select-group">
+                <label for="pd-settlement">Населённый пункт:</label>
+                <select id="pd-settlement">
+                    <option value="">— Выберите населённый пункт —</option>
+                </select>
+            </div>
+
+            <div class="pd-top-panel__hint">
+                Выберите регион и НП для планирования развития
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ ЧАСТИ 2–4: ТРИ СТОЛБЦА ============ -->
+    <section class="pd-columns">
+
+        <!-- Столбец 1: Информация о НП -->
+        <div class="pd-col pd-col--info">
+            <h3 class="pd-col__title">Информация о НП</h3>
+            <div id="pd-settlement-info" class="pd-settlement-info">
+                <div class="pd-empty">Выберите населённый пункт</div>
+            </div>
+        </div>
+
+        <!-- Столбец 2: Сетка 5 цветов × 5 заголовков -->
+        <div class="pd-col pd-col--grid">
+            <h3 class="pd-col__title">Направления планирования</h3>
+            <div id="pd-grid" class="pd-grid"></div>
+        </div>
+
+        <!-- Столбец 3: Детализация -->
+        <div class="pd-col pd-col--details">
+            <h3 class="pd-col__title">Детализация</h3>
+            <div id="pd-details" class="pd-details">
+                <div class="pd-empty">Наведите курсор на заголовок</div>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/planning_development.js') }}" type="module"></script>
+{% endblock %}

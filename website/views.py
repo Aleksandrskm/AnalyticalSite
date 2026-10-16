@@ -30,3 +30,7 @@ def function_editor_nas():
 @views.route('/norms')
 def function_norms():
     return render_template('norms.html')
+
+@views.route('/planning_development')
+def function_planning_development():
+    return render_template('planning_development.html')
