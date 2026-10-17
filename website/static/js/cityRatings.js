@@ -6904,6 +6904,8 @@ function handleSelectedClear() {
     // ГЛАВНОЕ: говорим onHover и плагинам, что подсветка выключена
     selectedSettlementHighlighted = false;
 }
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
 document.addEventListener('DOMContentLoaded', function() {
     initLoader();
     loadRegions();
@@ -6961,19 +6963,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     hideSelectedSettlementBlock();
 
+    // ===== ОБРАБОТКА URL ПАРАМЕТРОВ =====
     const urlParams = new URLSearchParams(window.location.search);
     const regionsParam = urlParams.get('regions');
     const typeParam = urlParams.get('type');
+    const idNpParam = urlParams.get('id_np'); // ← Читаем ID НП из URL
 
     if (regionsParam) {
         setTimeout(async () => {
             const selectedCount = document.getElementById('region').selectedOptions.length;
             if (selectedCount > 0) {
                 if (typeParam === '2') {
-                    // type=2 → логика кнопки "График" (btn-rating-chart)
+                    // type=2 → логика кнопки "График"
                     await handleRatingChartButton();
+
+                    // Если передан id_np — выбираем и подсвечиваем этот НП
+                    if (idNpParam) {
+                        // Ждем немного, чтобы график успел отрисоваться
+                        setTimeout(() => {
+                            const targetId = String(idNpParam).trim();
+
+                            // Ищем НП в загруженных данных
+                            const item = settlementsData.items.find(it => String(it.id) === targetId);
+
+                            if (item) {
+                                // 1. Выбираем НП (заполняет блок «Выбранный НП» в левом меню)
+                                setSelectedSettlement(item, 'chart');
+
+                                // 2. Подсвечиваем его на графике (красная полоса + тултип)
+                                handleSelectedHighlight();
+                            } else {
+                                console.warn(`НП с ID ${targetId} не найден в загруженных данных.`);
+                            }
+                        }, 800); // Задержка, чтобы график успел отрисоваться
+                    }
                 } else {
-                    // type=1 или отсутствует → логика кнопки "Диаграммы" (analytics dashboard)
+                    // type=1 или отсутствует → логика кнопки "Диаграммы"
                     await handleAnalyticsDashboardButton();
                 }
             }
