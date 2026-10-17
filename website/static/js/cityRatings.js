@@ -1,6 +1,4 @@
-// cityRatings.js
 'use strict';
-
 import { Loader } from './Loader.js';
 import {
     getRegions,
@@ -226,6 +224,18 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'TAKS_PROC_OPERATOR': 'operators_percent_payphones',
     'TAKS_SCORE': 'rating_payphones',
 
+    // КА (спутниковая связь)
+    'KA_KOL_KA': 'count_satellites',
+    'KA_KOL_AB': 'count_abonents_satellites',
+    'KA_PROC_NAS': 'population_percent_satellites',
+    'KA_POKRITIE': 'communication_coverage_satellites',
+    'KA_PROC_POKRITIE': 'communication_coverage_percent_satellites',
+    'KA_TRAFIK': 'traffic_satellites',
+    'KA_PROC_TRAFIK': 'traffic_percent_satellites',
+    'KA_KOL_OPERATOR': 'count_operators_satellites',
+    'KA_PROC_OPERATOR': 'operators_percent_satellites',
+    'KA_SCORE': 'rating_satellites',
+
     // Мобильная связь
     'MOB_KOL_RES': 'count_res_mobile',
     'MOB_KOL_AB': 'count_abonents_mobile',
@@ -239,13 +249,13 @@ const RANKING_DB_TO_OBJECT_KEY = {
     'MOB_SCORE': 'rating_mobile',
 
     // Суммарные
-    'RAT_NP_KOL_AB': 'count_abonents_summary',
-    'RAT_NP_PROC_NAS': 'population_percent_summary',
-    'RAT_NP_POKRITIE': 'communication_coverage_summary',
-    'RAT_NP_PROC_POKRITIE': 'communication_coverage_percent_summary',
-    'RAT_NP_TRAFIK': 'traffic_summary',
-    'RAT_NP_PROC_TRAFIK': 'traffic_percent_summary',
-    'RAT_NP_PROC_OPERATOR': 'operators_percent_summary',
+    // 'RAT_NP_KOL_AB': 'count_abonents_summary',
+    // 'RAT_NP_PROC_NAS': 'population_percent_summary',
+    // 'RAT_NP_POKRITIE': 'communication_coverage_summary',
+    // 'RAT_NP_PROC_POKRITIE': 'communication_coverage_percent_summary',
+    // 'RAT_NP_TRAFIK': 'traffic_summary',
+    // 'RAT_NP_PROC_TRAFIK': 'traffic_percent_summary',
+    // 'RAT_NP_PROC_OPERATOR': 'operators_percent_summary',
 
     'RAT_SUM_NP': 'rating'
 };
@@ -378,6 +388,18 @@ const RANKING_COLUMN_LABELS = {
     'TAKS_PROC_OPERATOR': 'Процент операторов таксофонов',
     'TAKS_SCORE': 'Оценка таксофонов',
 
+    // КА (спутниковая связь)
+    'KA_KOL_KA': 'Количество КА',
+    'KA_KOL_AB': 'Количество абонентов КА',
+    'KA_PROC_NAS': 'Процент охвата населения КА',
+    'KA_POKRITIE': 'Покрытие КА',
+    'KA_PROC_POKRITIE': 'Процент покрытия КА',
+    'KA_TRAFIK': 'Объем трафика КА',
+    'KA_PROC_TRAFIK': 'Процент трафика КА',
+    'KA_KOL_OPERATOR': 'Количество операторов КА',
+    'KA_PROC_OPERATOR': 'Процент операторов КА',
+    'KA_SCORE': 'Оценка КА',
+
     // Мобильная связь
     'MOB_KOL_RES': 'Количество БС моб. связи',
     'MOB_KOL_AB': 'Количество абонентов моб. связи',
@@ -391,13 +413,13 @@ const RANKING_COLUMN_LABELS = {
     'MOB_SCORE': 'Оценка моб. связи',
 
     // Суммарные
-    'RAT_NP_KOL_AB': 'Общее количество абонентов',
-    'RAT_NP_PROC_NAS': 'Общий процент охвата населения',
-    'RAT_NP_POKRITIE': 'Общее покрытие',
-    'RAT_NP_PROC_POKRITIE': 'Общий процент покрытия',
-    'RAT_NP_TRAFIK': 'Общий объем трафика',
-    'RAT_NP_PROC_TRAFIK': 'Общий процент трафика',
-    'RAT_NP_PROC_OPERATOR': 'Общий процент операторов',
+    // 'RAT_NP_KOL_AB': 'Общее количество абонентов',
+    // 'RAT_NP_PROC_NAS': 'Общий процент охвата населения',
+    // 'RAT_NP_POKRITIE': 'Общее покрытие',
+    // 'RAT_NP_PROC_POKRITIE': 'Общий процент покрытия',
+    // 'RAT_NP_TRAFIK': 'Общий объем трафика',
+    // 'RAT_NP_PROC_TRAFIK': 'Общий процент трафика',
+    // 'RAT_NP_PROC_OPERATOR': 'Общий процент операторов',
 
     'RAT_SUM_NP': 'Обеспеченность'
 };
@@ -423,6 +445,10 @@ let chartAllData = [];
 let chartCurrentData = [];
 let chartDisplayData = [];
 
+// Для блока «Выбранный НП»
+let selectedSettlementMode = null;       // 'chart' | 'table' | 'rating' | null
+let selectedSettlementForInfo = null;    // объект { id, name, ... } для модалки
+
 let selectedSettlementId = null;
 let selectedSettlementLat = null;
 let selectedSettlementLon = null;
@@ -445,6 +471,8 @@ let currentSettlementsFiltered = [];
 let currentFilterField = '';
 let currentFilterValue = '';
 let currentFilterExact = false;
+
+let selectedSettlementHighlighted = false;
 
 let showRatings = false;
 
@@ -523,6 +551,301 @@ function hideResPageSize() {
     const el = document.getElementById('res-page-size');
     if (el) el.style.display = 'none';
 }
+// ==================== БЛОК "ВЫБРАННЫЙ НП" ====================
+
+function showSelectedSettlementBlock() {
+    const el = document.getElementById('selected-settlement-block');
+    if (el) el.style.display = 'flex';
+}
+
+function hideSelectedSettlementBlock() {
+    const el = document.getElementById('selected-settlement-block');
+    if (el) el.style.display = 'none';
+}
+
+function setSelectedSettlement(item, mode) {
+    if (!item || item.id === undefined || item.id === null) {
+        clearSelectedSettlement();
+        return;
+    }
+
+    const newIdStr = String(item.id);
+
+    // ===== Снимаем визуальное выделение со старого НП =====
+    // (в таблице — со всех, КРОМЕ строки с новым id)
+    document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+        if (String(tr.dataset.id) !== newIdStr) {
+            tr.classList.remove('selected');
+        }
+    });
+
+    // (на графике)
+    if (ratingChart) {
+        const displayData = getChartDisplayData();
+        if (displayData && displayData.length > 0) {
+            const ds0 = ratingChart.data.datasets[0];
+            const ds1 = ratingChart.data.datasets[1];
+            ds0.backgroundColor = displayData.map(() => '#1a73e8');
+            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.borderWidth     = displayData.map(() => 0);
+            if (ds1) {
+                ds1.backgroundColor = displayData.map(() => '#ff6a00');
+                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.borderWidth     = displayData.map(() => 0);
+            }
+            ratingChart.update('none');
+        }
+    }
+
+    // (старый тултип)
+    const oldTooltip = document.getElementById('chart-item-tooltip');
+    if (oldTooltip) oldTooltip.remove();
+
+    // (сбрасываем указатели на выбранный в поиске элемент)
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    // ===== Записываем данные нового НП =====
+    selectedSettlementForInfo = item;
+    selectedSettlementId = newIdStr;
+    selectedSettlementName = item.name || item.NAME || `ID: ${item.id}`;
+    selectedSettlementMode = mode;
+
+    // ВКЛЮЧАЕМ флаг (при выборе нового НП подсветка доступна)
+    selectedSettlementHighlighted = true;
+
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = selectedSettlementName;
+        nameEl.title = selectedSettlementName;
+    }
+
+    const hlBtn = document.getElementById('ss-btn-highlight');
+    if (hlBtn) {
+        hlBtn.disabled = !isChartMode;
+        hlBtn.title = isChartMode
+            ? 'Отобразить на графике'
+            : 'Доступно только в режиме графика';
+    }
+
+    showSelectedSettlementBlock();
+}
+function resetAndHideSelectedSettlement() {
+    // Сбрасываем данные
+    selectedSettlementForInfo = null;
+    selectedSettlementId = null;
+    selectedSettlementName = null;
+    selectedSettlementMode = null;
+    selectedSettlementHighlighted = false;
+
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = '—';
+        nameEl.title = '';
+    }
+
+    // Снимаем выделение в таблицах
+    document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+        tr.classList.remove('selected');
+    });
+
+    // Снимаем выделение на графике
+    if (ratingChart) {
+        const displayData = getChartDisplayData();
+        if (displayData && displayData.length > 0) {
+            const ds0 = ratingChart.data.datasets[0];
+            const ds1 = ratingChart.data.datasets[1];
+            ds0.backgroundColor = displayData.map(() => '#1a73e8');
+            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.borderWidth     = displayData.map(() => 0);
+            if (ds1) {
+                ds1.backgroundColor = displayData.map(() => '#ff6a00');
+                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.borderWidth     = displayData.map(() => 0);
+            }
+            ratingChart.update('none');
+        }
+    }
+
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    const tooltip = document.getElementById('chart-item-tooltip');
+    if (tooltip) tooltip.remove();
+
+    // Скрываем блок
+    hideSelectedSettlementBlock();
+}
+function clearSelectedSettlement() {
+    selectedSettlementForInfo = null;
+    selectedSettlementId = null;
+    selectedSettlementName = null;
+    selectedSettlementMode = null;
+    selectedSettlementHighlighted = false;
+
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = '—';
+        nameEl.title = '';
+    }
+
+    document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+        tr.classList.remove('selected');
+    });
+
+    if (ratingChart) {
+        const displayData = getChartDisplayData();
+        if (displayData && displayData.length > 0) {
+            const ds0 = ratingChart.data.datasets[0];
+            const ds1 = ratingChart.data.datasets[1];
+
+            ds0.backgroundColor = displayData.map(() => '#1a73e8');
+            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.borderWidth     = displayData.map(() => 0);
+
+            if (ds1) {
+                ds1.backgroundColor = displayData.map(() => '#ff6a00');
+                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.borderWidth     = displayData.map(() => 0);
+            }
+            ratingChart.update('none');
+        }
+    }
+
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    const tooltip = document.getElementById('chart-item-tooltip');
+    if (tooltip) tooltip.remove();
+
+    const hlBtn = document.getElementById('ss-btn-highlight');
+    if (hlBtn) hlBtn.disabled = true;
+}
+
+function onTableRowSelected(row) {
+    if (!row) return;
+
+    const id = row.dataset.id;
+    if (!id) return;
+
+    let item = settlementsData.items.find(it => String(it.id) === String(id));
+
+    if (!item) {
+        item = {
+            id: id,
+            name: row.dataset.name || `ID: ${id}`,
+            lat: row.dataset.lat,
+            lon: row.dataset.lon,
+            area: row.dataset.area
+        };
+    }
+
+    let mode = 'table';
+    if (isChartMode) mode = 'chart';
+    else if (showRatings) mode = 'rating';
+
+    setSelectedSettlement(item, mode);
+}
+
+function handleSelectedHighlight() {
+    if (!selectedSettlementId) return;
+
+    if (!isChartMode || !ratingChart) {
+        renderPopup('Откройте «График обеспеченности НП», чтобы использовать подсветку');
+        return;
+    }
+
+    const displayData = getChartDisplayData();
+    if (!displayData || displayData.length === 0) return;
+
+    let foundIndex = -1;
+    let foundItem = null;
+    for (let i = 0; i < displayData.length; i++) {
+        const d = displayData[i];
+        if (String(d.id) === String(selectedSettlementId)) {
+            foundIndex = i;
+            foundItem = d;
+            break;
+        }
+    }
+
+    if (foundIndex === -1) {
+        renderPopup('НП не найден среди отображаемых на графике');
+        return;
+    }
+
+    // Прокрутить к элементу, если зум ограничивает
+    const totalLen = currentDisplayDataLength || displayData.length;
+    const currentMin = ratingChart.options.scales.x.min || 0;
+    const currentMax = ratingChart.options.scales.x.max || totalLen;
+    const visibleCount = currentMax - currentMin;
+
+    if (foundIndex < currentMin || foundIndex >= currentMin + visibleCount) {
+        const newMin = Math.max(0, foundIndex - Math.floor(visibleCount / 2));
+        const newMax = Math.min(totalLen, newMin + visibleCount);
+        ratingChart.options.scales.x.min = newMin;
+        ratingChart.options.scales.x.max = newMax;
+    }
+
+    selectedSearchItem = foundItem;
+    selectedSearchIndex = foundIndex;
+
+    // ВКЛЮЧАЕМ флаг
+    selectedSettlementHighlighted = true;
+
+    const ds0 = ratingChart.data.datasets[0];
+    const ds1 = ratingChart.data.datasets[1];
+
+    const isSel = (d) => String(d.id) === String(selectedSettlementId);
+
+    ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
+    ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
+    ds0.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
+
+    if (ds1) {
+        ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
+        ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
+        ds1.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
+    }
+
+    ratingChart.update();
+
+    // Показать тултип ПОСЛЕ перерисовки canvas
+    requestAnimationFrame(() => {
+        const dd = getChartDisplayData();
+        let idx = -1;
+        for (let i = 0; i < dd.length; i++) {
+            if (String(dd[i].id) === String(selectedSettlementId)) { idx = i; break; }
+        }
+        if (idx !== -1) {
+            selectedSearchIndex = idx;
+            showItemTooltip(dd[idx], idx);
+        }
+    });
+}
+
+function handleSelectedInfo() {
+    if (!selectedSettlementId) return;
+
+    const mode = selectedSettlementMode || (isChartMode ? 'chart' : 'table');
+
+    if (mode === 'chart') {
+        const item = settlementsData.items.find(
+            it => String(it.id) === String(selectedSettlementId)
+        ) || selectedSettlementForInfo;
+
+        if (item) {
+            openSettlementInfoModal(item);
+        } else {
+            renderPopup('Нет данных о выбранном НП');
+        }
+        return;
+    }
+
+    const type = showRatings ? 'rating' : 'settlement';
+    openEditModal(selectedSettlementId, type);
+}
+
 
 function hideAutoRating() {
     const el = document.querySelector('.form__rating .checkbox-container');
@@ -639,6 +962,8 @@ function showPlaceholder() {
     hideSettlementButtons();
     hideCalculateAllButton();
     hideCalculateSelectedButton();
+
+    resetAndHideSelectedSettlement();
 
     const filterContainer = document.querySelector('.filter-container');
     if (filterContainer) filterContainer.remove();
@@ -882,9 +1207,10 @@ function renderSearchResults(results, query, container) {
 function selectSearchResult(item, index) {
     if (!ratingChart) return;
 
-    selectedSearchItem = item;
-    selectedSearchIndex = index;
+    // 1. Сначала фиксируем выбранный НП (сброс старого, запись ID, показ блока)
+    setSelectedSettlement(item, 'chart');
 
+    // 2. Находим индекс в displayData
     const displayData = getChartDisplayData();
     if (!displayData || displayData.length === 0) return;
 
@@ -908,29 +1234,54 @@ function selectSearchResult(item, index) {
         if (item.id !== undefined && item.id !== null && d.id !== undefined && d.id !== null) {
             return String(d.id) === String(item.id);
         }
-        // fallback, если id нет
         return (d.name && item.name && d.name === item.name);
     };
 
+    // 3. Красим выделенный столбец
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff1a1a' : '#1a73e8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#1a73e8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6a00');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
         ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
     ratingChart.update();
 
+    // 4. Восстанавливаем указатели (setSelectedSettlement их обнулил)
+    selectedSearchItem = item;
+    selectedSearchIndex = chartIndex;
+
+    // ВКЛЮЧАЕМ флаг
+    selectedSettlementHighlighted = true;
+
+    // 5. Скрываем список результатов
     const container = document.getElementById('chart-search-results');
     if (container) container.style.display = 'none';
 
-    showItemTooltip(item, chartIndex);
+    // 6. Показываем тултип ПОСЛЕ перерисовки
+    requestAnimationFrame(() => {
+        const dd = getChartDisplayData();
+        let idx = -1;
+        for (let i = 0; i < dd.length; i++) {
+            if (item.id !== undefined && item.id !== null && String(dd[i].id) === String(item.id)) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx === -1) idx = chartIndex;
 
+        if (idx !== -1 && dd[idx]) {
+            selectedSearchIndex = idx;
+            showItemTooltip(dd[idx], idx);
+        }
+    });
+
+    // 7. Заполняем поисковое поле
     const searchInput = document.getElementById('chart-search-input');
     if (searchInput) {
         searchInput.value = item.name || `ID: ${item.id}`;
@@ -975,7 +1326,6 @@ function showItemTooltip(item, chartIndex) {
     const district = item.district_name || 'Н/Д';
     const name = item.name || `ID: ${item.id}`;
 
-    // ---- Место в обеспеченностье ----
     let placeText = '—';
     let totalPlaces = ratingPlacesTotal;
     if (ratingPlacesMap && ratingPlacesMap.size > 0) {
@@ -996,7 +1346,7 @@ function showItemTooltip(item, chartIndex) {
             ${name}
         </div>
         <div style="font-size: 13px; font-weight: bold; color: #000000; line-height: 1.8;">
-                        <div>
+            <div>
                 <span style="display:inline-block; width:10px; height:10px; background:#1a73e8; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
                 Обеспеченность: ${ratingText}
             </div>
@@ -1004,7 +1354,7 @@ function showItemTooltip(item, chartIndex) {
                 <span style="display:inline-block; width:10px; height:10px; background:#ff6a00; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
                 Дефицит: ${deficitText}
             </div>
-            <div>Место в обеспеченностье: ${placeText} из ${totalPlaces}</div>
+            <div>Место в обеспеченности: ${placeText} из ${totalPlaces}</div>
             <div>Население: ${population.toLocaleString()}</div>
             <div>Регион: ${region}</div>
             <div>Район: ${district}</div>
@@ -1013,89 +1363,118 @@ function showItemTooltip(item, chartIndex) {
     `;
 
     document.body.appendChild(tooltip);
-    positionTooltipOverBar(tooltip, chartIndex);
+
+    // Позиционируем ПОСЛЕ отрисовки — иначе координаты устаревшие
+    requestAnimationFrame(() => {
+        positionTooltipOverBar(tooltip, chartIndex);
+    });
 }
 
 // ==================== ПОЗИЦИОНИРОВАНИЕ ПЛАШКИ ====================
 
 function positionTooltipOverBar(tooltip, chartIndex) {
-    if (!ratingChart || chartIndex === undefined || chartIndex === -1) {
+    if (!ratingChart) {
         positionTooltipInChartArea(tooltip, null);
         return;
     }
 
     try {
+        const displayData = getChartDisplayData();
+        if (!displayData || displayData.length === 0) {
+            positionTooltipInChartArea(tooltip, null);
+            return;
+        }
+
+        // Ищем индекс СТРОГО ПО ID — он стабильнее, чем переданный chartIndex
+        let idx = -1;
+        if (selectedSettlementId !== undefined && selectedSettlementId !== null) {
+            for (let i = 0; i < displayData.length; i++) {
+                if (String(displayData[i].id) === String(selectedSettlementId)) {
+                    idx = i;
+                    break;
+                }
+            }
+        }
+        if (idx === -1 && typeof chartIndex === 'number' && chartIndex >= 0 && chartIndex < displayData.length) {
+            idx = chartIndex;
+        }
+        if (idx === -1) {
+            positionTooltipInChartArea(tooltip, null);
+            return;
+        }
+
         const meta = ratingChart.getDatasetMeta(0);
-        if (meta && meta.data && meta.data[chartIndex]) {
-            const bar = meta.data[chartIndex];
-            const canvas = ratingChart.canvas;
-            const rect = canvas.getBoundingClientRect();
-            const chartArea = ratingChart.chartArea;
+        if (!meta || !meta.data || !meta.data[idx]) {
+            positionTooltipInChartArea(tooltip, null);
+            return;
+        }
 
-            const barX = bar.x;
-            const barY = bar.y;
+        const bar = meta.data[idx];
+        const canvas = ratingChart.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const chartArea = ratingChart.chartArea;
 
-            const scaleX = rect.width / ratingChart.width;
-            const scaleY = rect.height / ratingChart.height;
+        const scaleX = rect.width / ratingChart.width;
+        const scaleY = rect.height / ratingChart.height;
 
-            let pixelX = rect.left + barX * scaleX;
-            let pixelY = rect.top + barY * scaleY;
+        const barX = bar.x;
+        const barY = bar.y;
 
-            const chartLeft = rect.left + chartArea.left * scaleX;
-            const chartRight = rect.left + chartArea.right * scaleX;
-            const chartTop = rect.top + chartArea.top * scaleY;
-            const chartBottom = rect.top + chartArea.bottom * scaleY;
+        const pixelX = rect.left + barX * scaleX;
+        const pixelY = rect.top + barY * scaleY;
 
-            const tooltipWidth = Math.min(parseInt(tooltip.style.maxWidth) || 400, window.innerWidth - 40);
-            const tooltipHeight = 220;
+        const chartLeft = rect.left + chartArea.left * scaleX;
+        const chartRight = rect.left + chartArea.right * scaleX;
+        const chartTop = rect.top + chartArea.top * scaleY;
+        const chartBottom = rect.top + chartArea.bottom * scaleY;
 
-            let left = pixelX - tooltipWidth / 2;
-            let top = pixelY - 15;
+        const tooltipWidth = Math.min(parseInt(tooltip.style.maxWidth) || 400, window.innerWidth - 40);
+        const tooltipHeight = 220;
 
-            if (left < chartLeft + 10) left = chartLeft + 10;
-            if (left + tooltipWidth > chartRight - 10) left = chartRight - tooltipWidth - 10;
+        let left = pixelX - tooltipWidth / 2;
+        let top = pixelY - 15;
 
-            const showAbove = top - tooltipHeight > chartTop + 10;
+        if (left < chartLeft + 10) left = chartLeft + 10;
+        if (left + tooltipWidth > chartRight - 10) left = chartRight - tooltipWidth - 10;
 
-            if (showAbove) {
-                top = top - 10;
+        const showAbove = top - tooltipHeight > chartTop + 10;
+
+        if (showAbove) {
+            top = top - 10;
+            tooltip.style.transform = 'translateY(-100%)';
+            if (top - tooltipHeight < chartTop + 10) {
+                top = chartTop + 10 + tooltipHeight;
+                tooltip.style.transform = 'translateY(0)';
+            }
+        } else {
+            top = pixelY + 30;
+            tooltip.style.transform = 'translateY(0)';
+            if (top + tooltipHeight > chartBottom - 10) {
+                top = pixelY - 15;
                 tooltip.style.transform = 'translateY(-100%)';
                 if (top - tooltipHeight < chartTop + 10) {
-                    top = chartTop + 10 + tooltipHeight;
-                    tooltip.style.transform = 'translateY(0)';
-                }
-            } else {
-                top = pixelY + 30;
-                tooltip.style.transform = 'translateY(0)';
-                if (top + tooltipHeight > chartBottom - 10) {
-                    top = pixelY - 15;
-                    tooltip.style.transform = 'translateY(-100%)';
-                    if (top - tooltipHeight < chartTop + 10) {
-                        positionTooltipInChartArea(tooltip, chartArea);
-                        return;
-                    }
+                    positionTooltipInChartArea(tooltip, chartArea);
+                    return;
                 }
             }
-
-            if (left < chartLeft + 10) left = chartLeft + 10;
-            if (left + tooltipWidth > chartRight - 10) left = chartRight - tooltipWidth - 10;
-
-            if (top < chartTop + 10) {
-                top = chartTop + 10;
-                tooltip.style.transform = 'translateY(0)';
-            }
-            if (top + tooltipHeight > chartBottom - 10) {
-                top = chartBottom - tooltipHeight - 10;
-                tooltip.style.transform = 'translateY(-100%)';
-            }
-
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
-            tooltip.style.maxWidth = Math.min(400, window.innerWidth - 40) + 'px';
-
-        } else {
-            positionTooltipInChartArea(tooltip, null);
         }
+
+        if (left < chartLeft + 10) left = chartLeft + 10;
+        if (left + tooltipWidth > chartRight - 10) left = chartRight - tooltipWidth - 10;
+
+        if (top < chartTop + 10) {
+            top = chartTop + 10;
+            tooltip.style.transform = 'translateY(0)';
+        }
+        if (top + tooltipHeight > chartBottom - 10) {
+            top = chartBottom - tooltipHeight - 10;
+            tooltip.style.transform = 'translateY(-100%)';
+        }
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.style.maxWidth = Math.min(400, window.innerWidth - 40) + 'px';
+
     } catch (e) {
         console.warn('Ошибка позиционирования плашки:', e);
         positionTooltipInChartArea(tooltip, null);
@@ -1170,7 +1549,10 @@ if (window.ResizeObserver) {
 
 function updateTooltipPosition() {
     const tooltip = document.getElementById('chart-item-tooltip');
-    if (tooltip && selectedSearchItem && selectedSearchIndex !== -1) {
+    if (!tooltip) return;
+
+    // Позиционируем если есть выбранный НП (по ID — внутри positionTooltipOverBar)
+    if (selectedSettlementId !== undefined && selectedSettlementId !== null) {
         positionTooltipOverBar(tooltip, selectedSearchIndex);
     }
 }
@@ -1222,7 +1604,6 @@ function restoreSelectionAfterUpdate() {
             foundIndex = i;
             break;
         }
-
     }
 
     if (foundIndex === -1) return;
@@ -1236,22 +1617,37 @@ function restoreSelectionAfterUpdate() {
         return (d.name && selectedSearchItem.name && d.name === selectedSearchItem.name);
     };
 
-
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff1a1a' : '#1a73e8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#1a73e8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ffb066' : '#ff6a00');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
         ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
     ratingChart.update();
 
-    showItemTooltip(selectedSearchItem, foundIndex);
+    requestAnimationFrame(() => {
+        const dd = getChartDisplayData();
+        let idx = -1;
+        for (let i = 0; i < dd.length; i++) {
+            if (selectedSearchItem.id !== undefined && selectedSearchItem.id !== null &&
+                String(dd[i].id) === String(selectedSearchItem.id)) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx === -1) idx = foundIndex;
+
+        if (idx !== -1 && dd[idx]) {
+            selectedSearchIndex = idx;
+            showItemTooltip(dd[idx], idx);
+        }
+    });
 }
 
 // ==================== МАСШТАБИРОВАНИЕ ====================
@@ -1391,6 +1787,9 @@ function applyZoom() {
     ratingChart.update();
 
     updateZoomInfo();
+
+    // Обновить позицию тултипа после пересчёта зума
+    requestAnimationFrame(() => updateTooltipPosition());
 }
 
 // ==================== ПАНЕЛЬ УПРАВЛЕНИЯ ДИАГРАММОЙ ====================
@@ -2051,6 +2450,9 @@ function createRatingChart(data, type) {
                 const idx = elements[0].index;
                 const item = displayData[idx];
                 if (!item) return;
+
+                setSelectedSettlement(item, 'chart');
+                handleSelectedHighlight();
                 openSettlementInfoModal(item);
             },
             onHover: function(event, elements) {
@@ -2061,12 +2463,13 @@ function createRatingChart(data, type) {
                 const ds0 = ratingChart.data.datasets[0];
                 const ds1 = ratingChart.data.datasets[1];
 
-                const selectedId = selectedSearchItem && selectedSearchItem.id;
                 const isSelectedAt = (i) => {
-                    if (selectedId === undefined || selectedId === null) return false;
+                    // Если флаг выключен — не подсвечиваем
+                    if (!selectedSettlementHighlighted) return false;
+                    if (selectedSettlementId === undefined || selectedSettlementId === null) return false;
                     const d = displayData[i];
                     if (!d || d.id === undefined) return false;
-                    return String(d.id) === String(selectedId);
+                    return String(d.id) === String(selectedSettlementId);
                 };
 
                 if (elements && elements.length > 0) {
@@ -2075,7 +2478,7 @@ function createRatingChart(data, type) {
 
                     ds0.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#ff1a1a';
-                        if (isSelectedAt(i)) return '#ff1a1a';
+                        if (isSelectedAt(i)) return '#ff0000';
                         return '#1a73e8';
                     });
                     ds0.borderColor = ds0.backgroundColor;
@@ -2083,7 +2486,7 @@ function createRatingChart(data, type) {
 
                     ds1.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#cc0000';
-                        if (isSelectedAt(i)) return '#ffb066';
+                        if (isSelectedAt(i)) return '#cc0000';
                         return '#ff6a00';
                     });
                     ds1.borderColor = ds1.backgroundColor;
@@ -2092,12 +2495,12 @@ function createRatingChart(data, type) {
                     canvas.style.cursor = 'default';
 
                     ds0.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#ff1a1a' : '#1a73e8'
+                        isSelectedAt(i) ? '#ff0000' : '#1a73e8'
                     );
                     ds0.borderColor = ds0.backgroundColor;
 
                     ds1.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#ffb066' : '#ff6a00'
+                        isSelectedAt(i) ? '#cc0000' : '#ff6a00'
                     );
                     ds1.borderColor = ds1.backgroundColor;
                 }
@@ -2340,7 +2743,6 @@ function createRatingChart(data, type) {
 
                     ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
 
-                    // Собираем подписи под вертикальными линиями
                     const items = [];
 
                     verticalLines.forEach(({ pos, cumulative, percent, threshold, label }) => {
@@ -2366,7 +2768,6 @@ function createRatingChart(data, type) {
                         items.push({ x, lines, width: maxWidth, pos });
                     });
 
-                    // Расталкивание подписей — БЕЗ резерва справа
                     items.sort((a, b) => a.x - b.x);
 
                     for (let i = 1; i < items.length; i++) {
@@ -2376,7 +2777,6 @@ function createRatingChart(data, type) {
                         if (cur.x < prevRight + gap) cur.x = prevRight + gap;
                     }
 
-                    // Отрисовка подписей (строго под линиями)
                     ctx.textAlign = 'left';
                     items.forEach(item => {
                         item.lines.forEach((line, i) => {
@@ -2384,19 +2784,73 @@ function createRatingChart(data, type) {
                         });
                     });
 
-                    // Левая метка «0»
                     ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
                     ctx.textAlign = 'left';
                     ctx.fillText('0', chartArea.left + 4, yBase);
 
-                    // «Всего N НП» — справа, на ВТОРОЙ строке
                     ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'top';
                     ctx.fillStyle = '#000000';
 
                     const totalText = `Всего ${len} НП`;
-                    ctx.fillText(totalText, chartArea.right + 6, yBase - 16);   // ← НАД подписями
+                    ctx.fillText(totalText, chartArea.right + 6, yBase - 16);
+
+                    ctx.restore();
+                }
+            },
+            {
+                id: 'highlightMarker',
+                afterDatasetsDraw(chart) {
+                    // Если флаг выключен — не рисуем красную полосу
+                    if (!selectedSettlementId || !selectedSettlementHighlighted) return;
+
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+
+                    const displayData = getChartDisplayData();
+                    if (!displayData || displayData.length === 0) return;
+
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta || !meta.data || meta.data.length === 0) return;
+
+                    let foundIndex = -1;
+                    for (let i = 0; i < displayData.length; i++) {
+                        if (String(displayData[i].id) === String(selectedSettlementId)) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+                    if (foundIndex === -1) return;
+
+                    const bar = meta.data[foundIndex];
+                    if (!bar) return;
+
+                    const barWidth = bar.width || 1;
+                    const markerWidth = Math.max(barWidth, 6);
+                    const x = bar.x - markerWidth / 2;
+
+                    ctx.save();
+
+                    ctx.fillStyle = 'rgba(255, 26, 26, 0.45)';
+                    ctx.fillRect(
+                        x,
+                        chartArea.top,
+                        markerWidth,
+                        chartArea.bottom - chartArea.top
+                    );
+
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(bar.x, chartArea.top);
+                    ctx.lineTo(bar.x, chartArea.bottom);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(bar.x, chartArea.top + 6, 5, 0, Math.PI * 2);
+                    ctx.fill();
 
                     ctx.restore();
                 }
@@ -2596,14 +3050,14 @@ async function openSettlementInfoModal(item) {
     addRow('Обеспеченность', rating.rating);
     addRow('Место в обеспеченности', `${placeInRating} из ${totalInRating}`);
 
-    addSection('Суммарные показатели');
-    addRow('Общее количество абонентов', rating.count_abonents_summary);
-    addRow('Общий процент охвата населения', rating.population_percent_summary);
-    addRow('Общее покрытие', rating.communication_coverage_summary);
-    addRow('Общий процент покрытия', rating.communication_coverage_percent_summary);
-    addRow('Общий объем трафика', rating.traffic_summary);
-    addRow('Общий процент трафика', rating.traffic_percent_summary);
-    addRow('Общий процент операторов', rating.operators_percent_summary);
+    // addSection('Суммарные показатели');
+    // addRow('Общее количество абонентов', rating.count_abonents_summary);
+    // addRow('Общий процент охвата населения', rating.population_percent_summary);
+    // addRow('Общее покрытие', rating.communication_coverage_summary);
+    // addRow('Общий процент покрытия', rating.communication_coverage_percent_summary);
+    // addRow('Общий объем трафика', rating.traffic_summary);
+    // addRow('Общий процент трафика', rating.traffic_percent_summary);
+    // addRow('Общий процент операторов', rating.operators_percent_summary);
 
     const groups = buildRatingGroups();
     groups.forEach(group => {
@@ -2613,7 +3067,6 @@ async function openSettlementInfoModal(item) {
         });
     });
 
-    // ===== Нижняя панель с кнопками =====
     const buttonsBar = document.createElement('div');
     buttonsBar.style.cssText = `
         display: flex;
@@ -2623,7 +3076,6 @@ async function openSettlementInfoModal(item) {
         flex-wrap: wrap;
     `;
 
-    // Кнопка "Детализация обеспеченности НП"
     const detailBtn = document.createElement('button');
     detailBtn.textContent = 'Детализация обеспеченности НП';
     detailBtn.className = 'res-modal-close-btn';
@@ -2637,7 +3089,6 @@ async function openSettlementInfoModal(item) {
         window.open(url, '_blank');
     });
 
-    // Кнопка "Закрыть"
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
@@ -2745,6 +3196,21 @@ function buildRatingGroups() {
                 { key: 'traffic_percent_tetra', label: 'Процент трафика Tetra' },
                 { key: 'count_operators_tetra', label: 'Количество операторов Tetra' },
                 { key: 'rating_tetra', label: 'Оценка Tetra' }
+            ]
+        },
+        {
+            title: 'Спутниковая связь (КА)',
+            fields: [
+                { key: 'count_satellites', label: 'Количество КА' },
+                { key: 'count_abonents_satellites', label: 'Количество абонентов КА' },
+                { key: 'population_percent_satellites', label: 'Процент охвата населения КА' },
+                { key: 'communication_coverage_satellites', label: 'Покрытие КА' },
+                { key: 'communication_coverage_percent_satellites', label: 'Процент покрытия КА' },
+                { key: 'traffic_satellites', label: 'Объем трафика КА' },
+                { key: 'traffic_percent_satellites', label: 'Процент трафика КА' },
+                { key: 'count_operators_satellites', label: 'Количество операторов КА' },
+                { key: 'operators_percent_satellites', label: 'Процент операторов КА' },
+                { key: 'rating_satellites', label: 'Оценка КА' }
             ]
         },
         {
@@ -3242,6 +3708,11 @@ function filterDataWithRatings(data, ratings, field, value, exactMatch = false) 
         'count_abonents_tetra', 'population_percent_tetra',
         'communication_coverage_tetra', 'communication_coverage_percent_tetra',
         'traffic_tetra', 'traffic_percent_tetra',
+        'count_satellites', 'count_abonents_satellites',
+        'population_percent_satellites', 'communication_coverage_satellites',
+        'communication_coverage_percent_satellites', 'traffic_satellites',
+        'traffic_percent_satellites', 'count_operators_satellites',
+        'operators_percent_satellites', 'rating_satellites',
         'count_res_mobile', 'count_abonents_mobile',
         'population_percent_mobile', 'communication_coverage_mobile',
         'communication_coverage_percent_mobile', 'traffic_mobile',
@@ -3385,6 +3856,11 @@ function sortDataWithRatings(data, ratings, sortField, sortOrder) {
         'count_abonents_tetra', 'population_percent_tetra',
         'communication_coverage_tetra', 'communication_coverage_percent_tetra',
         'traffic_tetra', 'traffic_percent_tetra',
+        'count_satellites', 'count_abonents_satellites',
+        'population_percent_satellites', 'communication_coverage_satellites',
+        'communication_coverage_percent_satellites', 'traffic_satellites',
+        'traffic_percent_satellites', 'count_operators_satellites',
+        'operators_percent_satellites', 'rating_satellites',
         'count_res_mobile', 'count_abonents_mobile',
         'population_percent_mobile', 'communication_coverage_mobile',
         'communication_coverage_percent_mobile', 'traffic_mobile',
@@ -3646,7 +4122,8 @@ function applyLocalUpdates(settlementId, table, updates) {
                     'DISTRICT', 'FIAS_GUID'
                 ];
                 if (!textFields.includes(dbColumn)) {
-                    newValue = Number(newValue);
+                    const num = Number(newValue);
+                    newValue = Number.isInteger(num) ? num : Math.round(num);
                 }
             }
 
@@ -3667,7 +4144,8 @@ function applyLocalUpdates(settlementId, table, updates) {
             }
 
             if (newValue !== '' && !isNaN(newValue)) {
-                newValue = Number(newValue);
+                const num = Number(newValue);
+                newValue = Number.isInteger(num) ? num : Math.round(num);
             }
 
             rating[objKey] = newValue;
@@ -3798,6 +4276,9 @@ async function handleRatingChartButton() {
 
     const chartRadio = document.querySelector('input[name="view-mode"][value="chart"]');
     if (chartRadio) chartRadio.checked = true;
+
+    // Блок показываем пустым — заполнится после клика по столбцу
+    showSelectedSettlementBlock();
 }
 
 async function handleRatingTableButton() {
@@ -3811,6 +4292,8 @@ async function handleRatingTableButton() {
 
     const tableRadio = document.querySelector('input[name="view-mode"][value="table"]');
     if (tableRadio) tableRadio.checked = true;
+
+    showSelectedSettlementBlock();
 }
 
 // ==================== Диаграмма обеспеченности НП ====================
@@ -3823,6 +4306,8 @@ async function handleAnalyticsDashboardButton() {
 
     const radio = document.querySelector('input[name="view-mode"][value="analytics"]');
     if (radio) radio.checked = true;
+
+    resetAndHideSelectedSettlement();
 }
 
 function destroyAnalyticsDashboard() {
@@ -3873,6 +4358,8 @@ function switchToAnalyticsMode() {
         paginationContainer.style.display = 'none';
         paginationContainer.innerHTML = '';
     }
+
+    resetAndHideSelectedSettlement();
 
     isAnalyticsMode = true;
     renderAnalyticsDashboard();
@@ -3984,11 +4471,22 @@ function renderAnalyticsDashboard() {
 
     const chartsRow = document.createElement('div');
     chartsRow.className = 'analytics-charts-row';
+
+    // Добавляем стили для скролла и минимальной ширины
+    chartsRow.style.display = 'flex';
+    chartsRow.style.gap = '20px';
+    chartsRow.style.overflowX = 'auto';
+    chartsRow.style.paddingBottom = '10px';
+
     chartsScroll.appendChild(chartsRow);
 
     const makeChartBlock = (titleText, canvasId) => {
         const block = document.createElement('div');
         block.className = 'analytics-chart-block';
+
+        // ЗАДАЕМ МИНИМАЛЬНУЮ ШИРИНУ 425px
+        block.style.minWidth = '425px';
+        block.style.flex = '1 1 425px';
 
         const t = document.createElement('div');
         t.className = 'analytics-chart-block__title';
@@ -3997,6 +4495,10 @@ function renderAnalyticsDashboard() {
 
         const wrap = document.createElement('div');
         wrap.className = 'analytics-chart-block__canvas-wrap';
+
+        // Контейнер для canvas тоже должен занимать всю ширину
+        wrap.style.width = '100%';
+        wrap.style.position = 'relative';
 
         const canvas = document.createElement('canvas');
         canvas.id = canvasId;
@@ -4162,7 +4664,7 @@ function renderAnalyticsDashboard() {
         { key: 'rating_wifi',   label: 'ШПД(Wi-Fi)' },
         { key: 'rating_tv',     label: 'ТВ' },
         { key: 'rating_rv',     label: 'РВ' },
-        { key: 'rating_sput',   label: 'Спутниковая связь' },
+        { key: 'rating_satellites', label: 'Спутниковая связь' },
         { keys: ['rating_focl', 'rating_payphones'], label: 'Проводная связь' },
         { key: 'rating_posts',  label: 'Почтовая связь' }
     ];
@@ -5005,6 +5507,8 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
                 selectedSettlementArea = parseFloat(this.dataset.area);
                 selectedSettlementName = this.dataset.name;
 
+                onTableRowSelected(this);
+
                 showResPageSize();
                 showSettlementButtons();
             });
@@ -5328,6 +5832,8 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
                 selectedSettlementLon = parseFloat(this.dataset.lon);
                 selectedSettlementArea = parseFloat(this.dataset.area);
                 selectedSettlementName = this.dataset.name;
+
+                onTableRowSelected(this);
 
                 showResPageSize();
                 showSettlementButtons();
@@ -6181,6 +6687,13 @@ function switchToChartMode() {
         paginationContainer.style.display = 'none';
         paginationContainer.innerHTML = '';
     }
+
+    // Если НП уже выбран — активируем кнопку подсветки
+    const hlBtn = document.getElementById('ss-btn-highlight');
+    if (hlBtn && selectedSettlementId) {
+        hlBtn.disabled = false;
+        hlBtn.title = 'Отобразить на графике';
+    }
 }
 
 async function handleSettlementsButton() {
@@ -6235,6 +6748,8 @@ async function handleSettlementsButton() {
         renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
 
         showSettlementButtons();
+
+        showSelectedSettlementBlock();
     }
 }
 
@@ -6279,6 +6794,10 @@ function handleClear() {
     hideSettlementButtons();
     hideCalculateAllButton();
     hideCalculateSelectedButton();
+
+    // Сброс выбранного НП и скрытие блока
+
+    resetAndHideSelectedSettlement();
 
     savedFilterField = '';
     savedFilterValue = '';
@@ -6347,7 +6866,44 @@ function handleClear() {
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+function handleSelectedClear() {
+    // Убираем тултип
+    const tooltip = document.getElementById('chart-item-tooltip');
+    if (tooltip) tooltip.remove();
 
+    // Убираем выделение в таблицах (если вдруг таблица тоже открыта)
+    document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+        tr.classList.remove('selected');
+    });
+
+    // Убираем красную подсветку на графике (возвращаем базовые цвета)
+    if (ratingChart) {
+        const displayData = getChartDisplayData();
+        if (displayData && displayData.length > 0) {
+            const ds0 = ratingChart.data.datasets[0];
+            const ds1 = ratingChart.data.datasets[1];
+
+            ds0.backgroundColor = displayData.map(() => '#1a73e8');
+            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.borderWidth     = displayData.map(() => 0);
+
+            if (ds1) {
+                ds1.backgroundColor = displayData.map(() => '#ff6a00');
+                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.borderWidth     = displayData.map(() => 0);
+            }
+            ratingChart.update('none');
+        }
+    }
+
+    // Сбрасываем указатели на выбранный элемент в поиске,
+    // чтобы onHover не подсвечивал столбец заново
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    // ГЛАВНОЕ: говорим onHover и плагинам, что подсветка выключена
+    selectedSettlementHighlighted = false;
+}
 document.addEventListener('DOMContentLoaded', function() {
     initLoader();
     loadRegions();
@@ -6392,6 +6948,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     setupDoubleClickHandler();
+
+    // ===== Обработчики кнопок блока «Выбранный НП» =====
+    const ssHighlight = document.getElementById('ss-btn-highlight');
+    if (ssHighlight) ssHighlight.addEventListener('click', handleSelectedHighlight);
+
+    const ssInfo = document.getElementById('ss-btn-info');
+    if (ssInfo) ssInfo.addEventListener('click', handleSelectedInfo);
+
+    const ssClear = document.getElementById('ss-btn-clear');
+    if (ssClear) ssClear.addEventListener('click', handleSelectedClear);
+
+    hideSelectedSettlementBlock();
 
     const urlParams = new URLSearchParams(window.location.search);
     const regionsParam = urlParams.get('regions');
