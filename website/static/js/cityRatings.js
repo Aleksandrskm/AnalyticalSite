@@ -843,7 +843,8 @@ function handleSelectedInfo() {
     }
 
     const type = showRatings ? 'rating' : 'settlement';
-    openEditModal(selectedSettlementId, type);
+    const tableMode = showRatings ? 'rating' : 'settlements';
+    openEditModal(selectedSettlementId, type, tableMode);
 }
 
 
@@ -1104,12 +1105,7 @@ function renderSearchResults(results, query, container) {
     if (!results || results.length === 0) {
         const emptyItem = document.createElement('div');
         emptyItem.textContent = 'Ничего не найдено';
-        emptyItem.style.cssText = `
-            padding: 10px 15px;
-            color: #999;
-            font-style: italic;
-            text-align: center;
-        `;
+        emptyItem.className = 'search-result-empty';
         container.appendChild(emptyItem);
         container.style.display = 'block';
         return;
@@ -1119,16 +1115,6 @@ function renderSearchResults(results, query, container) {
         const resultItem = document.createElement('div');
         resultItem.className = 'search-result-item';
         resultItem.dataset.index = index;
-        resultItem.style.cssText = `
-            padding: 8px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.15s;
-            font-size: 13px;
-        `;
 
         const name = item.name || `ID: ${item.id}`;
         const queryLower = query.toLowerCase();
@@ -1140,17 +1126,17 @@ function renderSearchResults(results, query, container) {
             const before = name.substring(0, indexMatch);
             const match = name.substring(indexMatch, indexMatch + query.length);
             const after = name.substring(indexMatch + query.length);
-            nameDisplay = `${before}<strong style="color: #0066ff;">${match}</strong>${after}`;
+            // Экранируем HTML в before/after, match подсвечиваем <strong>
+            const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            nameDisplay = `${esc(before)}<strong>${esc(match)}</strong>${esc(after)}`;
+        } else {
+            const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            nameDisplay = esc(name);
         }
 
         const nameSpan = document.createElement('span');
+        nameSpan.className = 'search-result-item__name';
         nameSpan.innerHTML = nameDisplay;
-        nameSpan.style.cssText = `
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        `;
 
         const infoSpan = document.createElement('span');
         const rating = item.rating;
@@ -1158,26 +1144,10 @@ function renderSearchResults(results, query, container) {
             rating.toFixed(1) : 'не получен';
         const regionText = item.region_name || '—';
         infoSpan.textContent = `Обеспеченность: ${ratingText} | ${regionText}`;
-        infoSpan.style.cssText = `
-            font-size: 12px;
-            color: #666;
-            margin-left: 10px;
-            flex-shrink: 0;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        `;
+        infoSpan.className = 'search-result-item__info';
 
         resultItem.appendChild(nameSpan);
         resultItem.appendChild(infoSpan);
-
-        resultItem.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#e8f0fe';
-        });
-        resultItem.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
 
         resultItem.addEventListener('click', function() {
             const idx = parseInt(this.dataset.index);
@@ -1191,14 +1161,7 @@ function renderSearchResults(results, query, container) {
 
     const counter = document.createElement('div');
     counter.textContent = `Найдено: ${results.length}`;
-    counter.style.cssText = `
-        padding: 6px 15px;
-        background: #f5f5f5;
-        color: #666;
-        font-size: 12px;
-        border-top: 1px solid #eee;
-        text-align: center;
-    `;
+    counter.className = 'search-result-counter';
     container.appendChild(counter);
 
     container.style.display = 'block';
@@ -1296,22 +1259,7 @@ function showItemTooltip(item, chartIndex) {
 
     const tooltip = document.createElement('div');
     tooltip.id = 'chart-item-tooltip';
-    tooltip.style.cssText = `
-        position: fixed;
-        background: #bdbdbd;
-        color: #000000;
-        padding: 12px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        z-index: 9999;
-        max-width: 400px;
-        min-width: 260px;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.4);
-        pointer-events: none;
-        border: 2px solid #000000;
-        transition: opacity 0.2s;
-        font-family: inherit;
-    `;
+    tooltip.className = 'chart-tooltip';
 
     const rating = Number(item.rating) || 0;
     const ratingText = (item.rating !== undefined && item.rating !== null && !isNaN(item.rating))
@@ -1341,30 +1289,38 @@ function showItemTooltip(item, chartIndex) {
         if (idx !== -1) placeText = idx + 1;
     }
 
-    tooltip.innerHTML = `
-        <div style="font-weight: bold; font-size: 15px; color: #000000; margin-bottom: 8px; border-bottom: 1px solid #000000; padding-bottom: 6px;">
-            ${name}
-        </div>
-        <div style="font-size: 13px; font-weight: bold; color: #000000; line-height: 1.8;">
-            <div>
-                <span style="display:inline-block; width:10px; height:10px; background:#1a73e8; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
-                Обеспеченность: ${ratingText}
-            </div>
-            <div>
-                <span style="display:inline-block; width:10px; height:10px; background:#ff6a00; border:1px solid #000000; border-radius:2px; margin-right:6px; vertical-align:middle;"></span>
-                Дефицит: ${deficitText}
-            </div>
-            <div>Место в обеспеченности: ${placeText} из ${totalPlaces}</div>
-            <div>Население: ${population.toLocaleString()}</div>
-            <div>Регион: ${region}</div>
-            <div>Район: ${district}</div>
-            <div>ID: ${item.id}</div>
-        </div>
-    `;
+    // ---------- Заголовок ----------
+    const titleEl = document.createElement('div');
+    titleEl.className = 'chart-tooltip__title';
+    titleEl.textContent = name;
+    tooltip.appendChild(titleEl);
 
+    // ---------- Тело ----------
+    const bodyEl = document.createElement('div');
+    bodyEl.className = 'chart-tooltip__body';
+
+    const addRow = (swatchClass, text) => {
+        const row = document.createElement('div');
+        if (swatchClass) {
+            const sw = document.createElement('span');
+            sw.className = 'chart-tooltip__swatch ' + swatchClass;
+            row.appendChild(sw);
+        }
+        row.appendChild(document.createTextNode(text));
+        bodyEl.appendChild(row);
+    };
+
+    addRow('chart-tooltip__swatch--provided', `Обеспеченность: ${ratingText}`);
+    addRow('chart-tooltip__swatch--deficit',  `Дефицит: ${deficitText}`);
+    addRow(null, `Место в обеспеченности: ${placeText} из ${totalPlaces}`);
+    addRow(null, `Население: ${population.toLocaleString()}`);
+    addRow(null, `Регион: ${region}`);
+    addRow(null, `Район: ${district}`);
+    addRow(null, `ID: ${item.id}`);
+
+    tooltip.appendChild(bodyEl);
     document.body.appendChild(tooltip);
 
-    // Позиционируем ПОСЛЕ отрисовки — иначе координаты устаревшие
     requestAnimationFrame(() => {
         positionTooltipOverBar(tooltip, chartIndex);
     });
@@ -1803,40 +1759,17 @@ function renderChartControls(currentSortField) {
 
     const controls = document.createElement('div');
     controls.id = 'chart-controls';
-    controls.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        gap: 15px !important;
-        padding: 10px 15px !important;
-        flex-shrink: 0 !important;
-        margin-bottom: 10px !important;
-        background: #f5f5f5 !important;
-        border-radius: 8px !important;
-        border: 1px solid #ddd !important;
-        flex-wrap: wrap !important;
-    `;
+    controls.className = 'chart-controls';
 
+    // ---------- Сортировка ----------
     const sortLabel = document.createElement('label');
     sortLabel.textContent = 'Сортировка:';
-    sortLabel.style.cssText = `
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        color: #1a1a1a !important;
-        white-space: nowrap !important;
-    `;
+    sortLabel.className = 'chart-controls__label';
     controls.appendChild(sortLabel);
 
     const sortSelect = document.createElement('select');
     sortSelect.id = 'chart-sort-select';
-    sortSelect.style.cssText = `
-        padding: 6px 12px !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        font-size: 15px !important;
-        height: 36px !important;
-        background: #fff !important;
-        cursor: pointer !important;
-    `;
+    sortSelect.className = 'chart-controls__select';
 
     const options = [
         { value: 'rating', label: 'По обеспеченности (убывание)' },
@@ -1877,68 +1810,29 @@ function renderChartControls(currentSortField) {
 
     const divider = document.createElement('span');
     divider.textContent = '|';
-    divider.style.cssText = `
-        color: #ccc !important;
-        font-size: 22px !important;
-        padding: 0 5px !important;
-    `;
+    divider.className = 'chart-controls__divider';
     controls.appendChild(divider);
 
+    // ---------- Поиск ----------
     const searchLabel = document.createElement('label');
     searchLabel.textContent = 'Поиск:';
-    searchLabel.style.cssText = `
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        color: #1a1a1a !important;
-        white-space: nowrap !important;
-    `;
+    searchLabel.className = 'chart-controls__label';
     controls.appendChild(searchLabel);
 
     const searchContainer = document.createElement('div');
     searchContainer.id = 'chart-search-container';
-    searchContainer.style.cssText = `
-        position: relative;
-        flex: 1;
-        min-width: 200px;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    `;
+    searchContainer.className = 'chart-search';
 
     const searchInput = document.createElement('input');
     searchInput.id = 'chart-search-input';
     searchInput.type = 'text';
     searchInput.placeholder = 'Введите название НП...';
     searchInput.value = chartSearchQuery;
-    searchInput.style.cssText = `
-        flex: 1;
-        min-width: 150px;
-        padding: 6px 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 15px;
-        height: 36px;
-        box-sizing: border-box;
-    `;
+    searchInput.className = 'chart-search__input';
 
     const resultsContainer = document.createElement('div');
     resultsContainer.id = 'chart-search-results';
-    resultsContainer.style.cssText = `
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        max-height: 300px;
-        overflow-y: auto;
-        background: #ffffff;
-        border: 1px solid #ccc;
-        border-top: none;
-        border-radius: 0 0 4px 4px;
-        z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        display: none;
-        margin-top: -1px;
-    `;
+    resultsContainer.className = 'chart-search__results';
     searchContainer.appendChild(resultsContainer);
 
     searchInput.addEventListener('input', function() {
@@ -1998,17 +1892,7 @@ function renderChartControls(currentSortField) {
     const clearBtn = document.createElement('button');
     clearBtn.textContent = '✕';
     clearBtn.title = 'Очистить поиск и снять выделение';
-    clearBtn.style.cssText = `
-        padding: 0 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: #fff;
-        cursor: pointer;
-        font-size: 17px;
-        height: 36px;
-        color: #666;
-        flex-shrink: 0;
-    `;
+    clearBtn.className = 'chart-search__clear';
     clearBtn.addEventListener('click', function() {
         chartSearchQuery = '';
         searchInput.value = '';
@@ -2032,84 +1916,40 @@ function renderChartControls(currentSortField) {
 
     const divider2 = document.createElement('span');
     divider2.textContent = '|';
-    divider2.style.cssText = `
-        color: #ccc !important;
-        font-size: 22px !important;
-        padding: 0 5px !important;
-    `;
+    divider2.className = 'chart-controls__divider';
     controls.appendChild(divider2);
 
+    // ---------- Масштаб ----------
     const zoomLabel = document.createElement('label');
     zoomLabel.textContent = 'Масштаб:';
-    zoomLabel.style.cssText = `
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        color: #1a1a1a !important;
-        white-space: nowrap !important;
-    `;
+    zoomLabel.className = 'chart-controls__label';
     controls.appendChild(zoomLabel);
 
     const zoomInBtn = document.createElement('button');
     zoomInBtn.textContent = '+';
     zoomInBtn.title = 'Увеличить масштаб';
-    zoomInBtn.style.cssText = `
-        padding: 0 16px !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        background: #fff !important;
-        cursor: pointer !important;
-        font-size: 19px !important;
-        height: 36px !important;
-        font-weight: 700 !important;
-        color: #1a1a1a !important;
-    `;
+    zoomInBtn.className = 'chart-zoom__btn chart-zoom__btn--in';
     zoomInBtn.addEventListener('click', zoomIn);
     controls.appendChild(zoomInBtn);
 
     const zoomOutBtn = document.createElement('button');
     zoomOutBtn.textContent = '−';
     zoomOutBtn.title = 'Уменьшить масштаб';
-    zoomOutBtn.style.cssText = `
-        padding: 0 16px !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        background: #fff !important;
-        cursor: pointer !important;
-        font-size: 19px !important;
-        height: 36px !important;
-        font-weight: 700 !important;
-        color: #1a1a1a !important;
-    `;
+    zoomOutBtn.className = 'chart-zoom__btn chart-zoom__btn--out';
     zoomOutBtn.addEventListener('click', zoomOut);
     controls.appendChild(zoomOutBtn);
 
     const resetZoomBtn = document.createElement('button');
     resetZoomBtn.textContent = 'Сброс';
     resetZoomBtn.title = 'Сбросить масштаб';
-    resetZoomBtn.style.cssText = `
-        padding: 0 16px !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        background: #fff !important;
-        cursor: pointer !important;
-        font-size: 15px !important;
-        height: 36px !important;
-        font-weight: 500 !important;
-        color: #1a1a1a !important;
-    `;
+    resetZoomBtn.className = 'chart-zoom__btn chart-zoom__btn--reset';
     resetZoomBtn.addEventListener('click', resetZoom);
     controls.appendChild(resetZoomBtn);
 
     const zoomInfo = document.createElement('span');
     zoomInfo.id = 'zoom-info';
     zoomInfo.textContent = 'Видно: все';
-    zoomInfo.style.cssText = `
-        font-size: 15px !important;
-        color: #555 !important;
-        margin-left: auto !important;
-        font-weight: 500 !important;
-        display: none;
-    `;
+    zoomInfo.className = 'chart-zoom__info';
     controls.appendChild(zoomInfo);
 
     const header = chartContainer.querySelector('.chart-header') || chartContainer;
@@ -2996,6 +2836,9 @@ async function openSettlementInfoModal(item) {
             font-weight: 700;
             border: 1px solid #000;
             font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         `;
         tr.appendChild(th);
         tbody.appendChild(tr);
@@ -3015,9 +2858,7 @@ async function openSettlementInfoModal(item) {
             font-weight: 600;
             color: #1a1a1a;
             font-size: 14px;
-            position: sticky;
-            top: 0;
-            z-index: 1;
+            position: static;
         `;
         const td = document.createElement('td');
         td.textContent = value;
@@ -3028,6 +2869,7 @@ async function openSettlementInfoModal(item) {
             color: #2a2a2a;
             background: #fff;
             font-weight: 600;
+            position: static;
         `;
         tr.appendChild(th);
         tr.appendChild(td);
@@ -3049,15 +2891,6 @@ async function openSettlementInfoModal(item) {
     addSection('Обеспеченность');
     addRow('Обеспеченность', rating.rating);
     addRow('Место в обеспеченности', `${placeInRating} из ${totalInRating}`);
-
-    // addSection('Суммарные показатели');
-    // addRow('Общее количество абонентов', rating.count_abonents_summary);
-    // addRow('Общий процент охвата населения', rating.population_percent_summary);
-    // addRow('Общее покрытие', rating.communication_coverage_summary);
-    // addRow('Общий процент покрытия', rating.communication_coverage_percent_summary);
-    // addRow('Общий объем трафика', rating.traffic_summary);
-    // addRow('Общий процент трафика', rating.traffic_percent_summary);
-    // addRow('Общий процент операторов', rating.operators_percent_summary);
 
     const groups = buildRatingGroups();
     groups.forEach(group => {
@@ -4065,7 +3898,7 @@ function setupDoubleClickHandler() {
                 selectedSettlementArea = area || 1;
                 selectedSettlementName = name || '';
 
-                openEditModal(id, 'settlement');
+                openEditModal(id, 'settlement', 'settlements');
             }
         });
     }
@@ -4092,7 +3925,7 @@ function setupDoubleClickHandler() {
         });
         row.classList.add('selected');
 
-        openEditModal(row.dataset.id, 'rating');
+        openEditModal(row.dataset.id, 'rating', 'rating');
     });
 }
 
@@ -4365,6 +4198,9 @@ function switchToAnalyticsMode() {
     renderAnalyticsDashboard();
 }
 
+
+
+// ==================== МОДАЛКА РЕДАКТИРОВАНИЯ ====================
 function renderAnalyticsDashboard() {
     const placeholder = document.getElementById('placeholder-message');
     if (placeholder) placeholder.style.display = 'none';
@@ -4470,23 +4306,13 @@ function renderAnalyticsDashboard() {
     chartsScroll.className = 'analytics-charts-scroll';
 
     const chartsRow = document.createElement('div');
-    chartsRow.className = 'analytics-charts-row';
-
-    // Добавляем стили для скролла и минимальной ширины
-    chartsRow.style.display = 'flex';
-    chartsRow.style.gap = '20px';
-    chartsRow.style.overflowX = 'auto';
-    chartsRow.style.paddingBottom = '10px';
+    chartsRow.className = 'analytics-charts-row analytics-charts-row--scroll';
 
     chartsScroll.appendChild(chartsRow);
 
     const makeChartBlock = (titleText, canvasId) => {
         const block = document.createElement('div');
-        block.className = 'analytics-chart-block';
-
-        // ЗАДАЕМ МИНИМАЛЬНУЮ ШИРИНУ 425px
-        block.style.minWidth = '425px';
-        block.style.flex = '1 1 425px';
+        block.className = 'analytics-chart-block analytics-chart-block--min';
 
         const t = document.createElement('div');
         t.className = 'analytics-chart-block__title';
@@ -4495,10 +4321,6 @@ function renderAnalyticsDashboard() {
 
         const wrap = document.createElement('div');
         wrap.className = 'analytics-chart-block__canvas-wrap';
-
-        // Контейнер для canvas тоже должен занимать всю ширину
-        wrap.style.width = '100%';
-        wrap.style.position = 'relative';
 
         const canvas = document.createElement('canvas');
         canvas.id = canvasId;
@@ -4861,10 +4683,7 @@ function renderAnalyticsDashboard() {
         options: commonBarOptions
     });
 }
-
-// ==================== МОДАЛКА РЕДАКТИРОВАНИЯ ====================
-
-async function openEditModal(settlementId, type) {
+async function openEditModal(settlementId, type, tableMode = 'auto') {
     if (!settlementId) return;
 
     await loadTableStructures();
@@ -4872,13 +4691,29 @@ async function openEditModal(settlementId, type) {
     const settlement = settlementsData.items.find(it => String(it.id) === String(settlementId)) || {};
     const ranking = allRatings[String(settlementId)] || {};
 
+    // Определяем, какие поля показывать
+    // 'settlements' — только базовые поля НП
+    // 'rating' — базовые поля НП + поля рейтинга из шапки таблицы (БЕЗ buildRatingGroups)
+    // 'auto' — старое поведение (всё)
+    let allowedTables = [];
+    let allowExtraRatingFields = false;
+
+    if (tableMode === 'settlements') {
+        allowedTables = ['settlements'];
+    } else if (tableMode === 'rating') {
+        allowedTables = ['settlements', 'ranking']; // Разрешаем и НП, и рейтинг
+        allowExtraRatingFields = false;             // Но НЕ докидываем всё из buildRatingGroups
+    } else {
+        allowedTables = ['settlements', 'ranking'];
+        allowExtraRatingFields = true;
+    }
+
     const getColumnOrderFromTable = (tableSelector) => {
         const order = [];
         const table = document.querySelector(tableSelector);
         if (!table) return order;
-        const ths = table.querySelectorAll('thead th');
-        ths.forEach(th => {
-            let key = th.dataset.key;
+        table.querySelectorAll('thead th').forEach(th => {
+            const key = th.dataset.key;
             if (key) order.push(key);
         });
         return order;
@@ -4890,13 +4725,9 @@ async function openEditModal(settlementId, type) {
     const rankingDbToKey = RANKING_DB_TO_OBJECT_KEY;
 
     const settlementsKeyToDb = {};
-    Object.keys(settlementsDbToKey).forEach(db => {
-        settlementsKeyToDb[settlementsDbToKey[db]] = db;
-    });
+    Object.keys(settlementsDbToKey).forEach(db => { settlementsKeyToDb[settlementsDbToKey[db]] = db; });
     const rankingKeyToDb = {};
-    Object.keys(rankingDbToKey).forEach(db => {
-        rankingKeyToDb[rankingDbToKey[db]] = db;
-    });
+    Object.keys(rankingDbToKey).forEach(db => { rankingKeyToDb[rankingDbToKey[db]] = db; });
 
     const settlementsLabelByKey = {};
     Object.keys(SETTLEMENTS_COLUMN_LABELS).forEach(db => {
@@ -4912,17 +4743,17 @@ async function openEditModal(settlementId, type) {
     const orderedFields = [];
     const seen = new Set();
 
+    // 1. Берем поля из шапки таблицы
     tableHeaderOrder.forEach(key => {
         if (seen.has(key)) return;
         seen.add(key);
 
         if (rankingKeyToDb[key]) {
+            if (!allowedTables.includes('ranking')) return;
             const dbColumn = rankingKeyToDb[key];
-            if (dbColumn === 'ID') return;
+            if (dbColumn === 'ID') return; // ID не дублируем
             orderedFields.push({
-                table: 'ranking',
-                dbColumn: dbColumn,
-                objectKey: key,
+                table: 'ranking', dbColumn, objectKey: key,
                 label: rankingLabelByKey[key] || dbColumn,
                 value: getValueByDbColumn(ranking, dbColumn, rankingDbToKey)
             });
@@ -4930,11 +4761,10 @@ async function openEditModal(settlementId, type) {
         }
 
         if (settlementsKeyToDb[key]) {
+            if (!allowedTables.includes('settlements')) return;
             const dbColumn = settlementsKeyToDb[key];
             orderedFields.push({
-                table: 'settlements',
-                dbColumn: dbColumn,
-                objectKey: key,
+                table: 'settlements', dbColumn, objectKey: key,
                 label: settlementsLabelByKey[key] || dbColumn,
                 value: getValueByDbColumn(settlement, dbColumn, settlementsDbToKey)
             });
@@ -4942,33 +4772,32 @@ async function openEditModal(settlementId, type) {
         }
 
         if (key === 'rating') {
+            if (!allowedTables.includes('ranking')) return;
             orderedFields.push({
-                table: 'ranking',
-                dbColumn: 'RAT_SUM_NP',
-                objectKey: 'rating',
-                label: 'обеспеченность',
+                table: 'ranking', dbColumn: 'RAT_SUM_NP', objectKey: 'rating',
+                label: 'Обеспеченность',
                 value: getValueByDbColumn(ranking, 'RAT_SUM_NP', rankingDbToKey)
             });
         }
     });
 
-    // === Fallback: добавляем поля из buildRatingGroups, которых нет в шапке таблицы ===
-    const allGroups = buildRatingGroups();
-    allGroups.forEach(group => {
-        group.fields.forEach(f => {
-            if (seen.has(f.key)) return;
-            const dbColumn = rankingKeyToDb[f.key];
-            if (!dbColumn) return;
-            seen.add(f.key);
-            orderedFields.push({
-                table: 'ranking',
-                dbColumn: dbColumn,
-                objectKey: f.key,
-                label: f.label,
-                value: getValueByDbColumn(ranking, dbColumn, rankingDbToKey)
+    // 2. Добор полей из buildRatingGroups (только для 'auto')
+    if (allowExtraRatingFields) {
+        const allGroups = buildRatingGroups();
+        allGroups.forEach(group => {
+            group.fields.forEach(f => {
+                if (seen.has(f.key)) return;
+                const dbColumn = rankingKeyToDb[f.key];
+                if (!dbColumn) return;
+                seen.add(f.key);
+                orderedFields.push({
+                    table: 'ranking', dbColumn, objectKey: f.key,
+                    label: f.label,
+                    value: getValueByDbColumn(ranking, dbColumn, rankingDbToKey)
+                });
             });
         });
-    });
+    }
 
     const existing = document.getElementById('row-data-modal');
     if (existing) existing.remove();
@@ -4983,7 +4812,7 @@ async function openEditModal(settlementId, type) {
 
     const nameForTitle = settlement['name'] || settlement['NAME'] || settlementId;
     const titleText = (type === 'rating')
-        ? `обеспеченность НП: ${nameForTitle}`
+        ? `Обеспеченность НП: ${nameForTitle}`
         : `НП: ${nameForTitle}`;
 
     const title = document.createElement('h3');
@@ -4997,7 +4826,7 @@ async function openEditModal(settlementId, type) {
     tableWrapper.style.position = 'relative';
 
     const table = document.createElement('table');
-    table.className = 'res-modal-table';
+    table.className = 'res-modal-table edit-modal-table';
     table.style.width = '100%';
     table.style.borderCollapse = 'separate';
     table.style.borderSpacing = '0';
@@ -5012,22 +4841,8 @@ async function openEditModal(settlementId, type) {
 
         const th = document.createElement('th');
         th.textContent = field.label;
-        th.style.cssText = `
-            text-align: left;
-            padding: 8px 12px;
-            border: 1px solid #000;
-            background: #f2f2f2;
-            width: 40%;
-            font-weight: 600;
-            color: #1a1a1a;
-            font-size: 13px;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        `;
 
         const td = document.createElement('td');
-        td.style.cssText = 'padding: 8px 12px; border: 1px solid #000; background: #fff;';
 
         if (field.dbColumn === 'ID') {
             td.textContent = field.value !== '' ? field.value : '-';
@@ -5037,19 +4852,12 @@ async function openEditModal(settlementId, type) {
             input.value = field.value;
             input.dataset.dbColumn = field.dbColumn;
             input.dataset.tableName = field.table;
-            input.style.cssText = `
-                width: 100%;
-                box-sizing: border-box;
-                padding: 6px 8px;
-                border: 1px solid #000;
-                border-radius: 4px;
-                font-size: 13px;
-            `;
+            input.className = 'edit-modal-input';
             td.appendChild(input);
             fieldRefs.push({
                 table: field.table,
                 dbColumn: field.dbColumn,
-                input: input,
+                input,
                 originalValue: String(field.value)
             });
         }
@@ -5059,35 +4867,28 @@ async function openEditModal(settlementId, type) {
         tbody.appendChild(tr);
     });
 
-    // ===== Нижняя панель с кнопками =====
     const buttonsBar = document.createElement('div');
-    buttonsBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; flex-wrap: wrap;';
+    buttonsBar.className = 'edit-modal-buttons';
 
-    // 1) Кнопка "Детализация обеспеченности НП" — ПЕРВОЙ
     const detailBtn = document.createElement('button');
     detailBtn.textContent = 'Детализация обеспеченности НП';
     detailBtn.className = 'res-modal-close-btn';
     detailBtn.style.background = '#0066ff';
     detailBtn.style.color = '#fff';
-    detailBtn.style.border = '1.5px solid #0044cc';
+    detailBtn.style.border = '1.5px solid #000';
     detailBtn.addEventListener('click', () => {
         const id = settlementId !== undefined && settlementId !== null ? settlementId : null;
         if (!id) return;
-        const url = `http://185.192.247.60:9105/ns/${encodeURIComponent(id)}`;
-        window.open(url, '_blank');
+        window.open(`http://185.192.247.60:9105/ns/${encodeURIComponent(id)}`, '_blank');
     });
 
-    // 2) Кнопка "Сохранить изменения"
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Сохранить изменения';
     editBtn.className = 'res-modal-close-btn';
     editBtn.style.background = '#0066ff';
     editBtn.style.color = '#fff';
-    editBtn.addEventListener('click', async () => {
-        await handleEditRow(fieldRefs, settlementId, modal);
-    });
+    editBtn.addEventListener('click', async () => { await handleEditRow(fieldRefs, settlementId, modal); });
 
-    // 3) Кнопка "Закрыть"
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
@@ -6067,9 +5868,7 @@ function openResModal(data, settlementId) {
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.className = 'res-modal-close-btn';
-    closeBtn.addEventListener('click', () => {
-        modal.remove();
-    });
+    closeBtn.addEventListener('click', () => { modal.remove(); });
 
     const tableWrapper = document.createElement('div');
     tableWrapper.className = 'res-table-wrapper';
@@ -6083,17 +5882,7 @@ function openResModal(data, settlementId) {
     table.appendChild(tbody);
 
     const countInfo = document.createElement('div');
-    countInfo.style.cssText = `
-        padding: 8px 12px;
-        background: #f0f0f0;
-        border-radius: 4px;
-        margin-bottom: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #1a1a1a;
-        border: 1px solid #000;
-        flex-shrink: 0;
-    `;
+    countInfo.className = 'res-modal-count';
     countInfo.textContent = `Всего БС: ${data.length}`;
 
     content.appendChild(title);
@@ -6118,8 +5907,7 @@ function openResModal(data, settlementId) {
             const cell = document.createElement('td');
             cell.colSpan = 18;
             cell.textContent = 'Нет БС для отображения';
-            cell.className = 'empty-message';
-            cell.style.cssText = 'text-align: center; padding: 30px; font-size: 16px; color: #666; border: 1px solid #000;';
+            cell.className = 'empty-message res-empty-cell';
             row.appendChild(cell);
             tbody.appendChild(row);
             return;
@@ -6150,25 +5938,10 @@ function openResModal(data, settlementId) {
         headers.forEach(header => {
             const th = document.createElement('th');
             th.textContent = header.label;
-            th.style.cssText = `
-                min-width: 80px;
-                padding: 8px 10px;
-                border: 1px solid #000;
-                font-weight: 700;
-                color: #1a1a1a;
-                background: #e8e8e8;
-                font-size: 12px;
-                text-align: left;
-                white-space: nowrap;
-                cursor: pointer;
-                user-select: none;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            `;
+            th.className = 'res-modal-th';
 
             const sortIcon = document.createElement('span');
-            sortIcon.style.cssText = 'margin-left: 5px; font-size: 10px;';
+            sortIcon.className = 'sort-icon';
             if (currentSortField === header.key) {
                 sortIcon.textContent = currentSortOrder === 'asc' ? '▲' : '▼';
             } else {
@@ -6195,14 +5968,8 @@ function openResModal(data, settlementId) {
             try {
                 const date = new Date(dateStr);
                 if (isNaN(date.getTime())) return dateStr;
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            } catch (e) {
-                return dateStr || '-';
-            }
+                return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            } catch (e) { return dateStr || '-'; }
         };
 
         const formatCoord = (coord) => {
@@ -6237,20 +6004,8 @@ function openResModal(data, settlementId) {
             cells.forEach(cell => {
                 const td = document.createElement('td');
                 td.textContent = cell.value;
-                td.style.cssText = `
-                    padding: 6px 10px;
-                    border: 1px solid #000;
-                    font-size: 12px;
-                    color: #2a2a2a;
-                    word-break: break-word;
-                    max-width: 150px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                `;
-                if (cell.value && cell.value !== '-') {
-                    td.title = cell.value;
-                }
+                td.className = 'res-modal-td';
+                if (cell.value && cell.value !== '-') td.title = cell.value;
                 row.appendChild(td);
             });
 
@@ -6258,14 +6013,13 @@ function openResModal(data, settlementId) {
             const certificateEnd = item.certificate_end_date;
             const now = new Date();
             let isExpired = false;
-            let statusColor = '';
 
             if (permissionEnd) {
                 try {
                     const endDate = new Date(permissionEnd);
                     if (!isNaN(endDate.getTime()) && endDate < now) {
                         isExpired = true;
-                        statusColor = '#fff3f3';
+                        row.classList.add('res-modal-tr--expired-permission');
                     }
                 } catch (e) {}
             }
@@ -6274,28 +6028,18 @@ function openResModal(data, settlementId) {
                 try {
                     const endDate = new Date(certificateEnd);
                     if (!isNaN(endDate.getTime()) && endDate < now) {
-                        statusColor = '#fff8e1';
+                        row.classList.add('res-modal-tr--expired-certificate');
                     }
                 } catch (e) {}
             }
 
-            if (statusColor) {
-                row.style.backgroundColor = statusColor;
-            }
-
-            row.addEventListener('dblclick', () => {
-                showResDetailsModal(item);
-            });
-
+            row.addEventListener('dblclick', () => { showResDetailsModal(item); });
             tbody.appendChild(row);
         });
     }
 
     function sortAndRender() {
-        if (!currentSortField) {
-            renderResTable(currentData);
-            return;
-        }
+        if (!currentSortField) { renderResTable(currentData); return; }
 
         const sorted = [...currentData].sort((a, b) => {
             let valA = a[currentSortField] || '';
@@ -6305,12 +6049,10 @@ function openResModal(data, settlementId) {
                 valA = valA ? new Date(valA).getTime() : 0;
                 valB = valB ? new Date(valB).getTime() : 0;
             }
-
             if (currentSortField === 'id' || currentSortField === 'kind_id' || currentSortField === 'type_id') {
                 valA = parseInt(valA) || 0;
                 valB = parseInt(valB) || 0;
             }
-
             if (typeof valA === 'string') {
                 valA = valA.toLowerCase().trim();
                 valB = valB.toLowerCase().trim();
@@ -6325,31 +6067,23 @@ function openResModal(data, settlementId) {
     }
 
     function showResDetailsModal(item) {
-        const existing = document.getElementById('res-details-modal');
-        if (existing) existing.remove();
+        const existingD = document.getElementById('res-details-modal');
+        if (existingD) existingD.remove();
 
-        const modal = document.createElement('div');
-        modal.id = 'res-details-modal';
-        modal.className = 'res-modal-overlay';
+        const m = document.createElement('div');
+        m.id = 'res-details-modal';
+        m.className = 'res-modal-overlay';
 
-        const content = document.createElement('div');
-        content.className = 'res-modal-content';
-        content.style.maxWidth = '600px';
+        const c = document.createElement('div');
+        c.className = 'res-modal-content';
+        c.style.maxWidth = '600px';
 
-        const title = document.createElement('h3');
-        title.textContent = `БС #${item.id || 'Н/Д'}`;
-        title.className = 'res-modal-title';
+        const t = document.createElement('h3');
+        t.textContent = `БС #${item.id || 'Н/Д'}`;
+        t.className = 'res-modal-title';
 
         const details = document.createElement('div');
-        details.style.cssText = `
-            padding: 15px;
-            background: #f8f8f8;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            max-height: 60vh;
-            overflow-y: auto;
-            border: 1px solid #000;
-        `;
+        details.className = 'res-details';
 
         const fields = [
             { key: 'id', label: 'ID' },
@@ -6372,75 +6106,48 @@ function openResModal(data, settlementId) {
             { key: 'permission_end_date', label: 'Окончание разрешения' }
         ];
 
-        const formatDate = (dateStr) => {
+        const fmtDate = (dateStr) => {
             if (!dateStr) return '-';
             try {
                 const date = new Date(dateStr);
                 if (isNaN(date.getTime())) return dateStr;
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            } catch (e) {
-                return dateStr || '-';
-            }
+                return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            } catch (e) { return dateStr || '-'; }
         };
 
         fields.forEach(field => {
             const row = document.createElement('div');
-            row.style.cssText = `
-                display: flex;
-                padding: 8px 0;
-                border-bottom: 1px solid #000;
-            `;
+            row.className = 'res-details__row';
 
             const label = document.createElement('div');
+            label.className = 'res-details__label';
             label.textContent = field.label + ':';
-            label.style.cssText = `
-                font-weight: 600;
-                color: #1a1a1a;
-                min-width: 180px;
-                flex-shrink: 0;
-            `;
 
             let value = item[field.key];
-            if (field.key.includes('_date')) {
-                value = formatDate(value);
-            } else {
-                value = value || '-';
-            }
+            if (field.key.includes('_date')) value = fmtDate(value);
+            else value = value || '-';
 
             const valueEl = document.createElement('div');
+            valueEl.className = 'res-details__value';
             valueEl.textContent = value;
-            valueEl.style.cssText = `
-                color: #2a2a2a;
-                word-break: break-word;
-            `;
 
             row.appendChild(label);
             row.appendChild(valueEl);
             details.appendChild(row);
         });
 
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Закрыть';
-        closeBtn.className = 'res-modal-close-btn';
-        closeBtn.addEventListener('click', () => {
-            modal.remove();
-        });
+        const closeB = document.createElement('button');
+        closeB.textContent = 'Закрыть';
+        closeB.className = 'res-modal-close-btn';
+        closeB.addEventListener('click', () => { m.remove(); });
 
-        content.appendChild(title);
-        content.appendChild(details);
-        content.appendChild(closeBtn);
-        modal.appendChild(content);
-        document.body.appendChild(modal);
+        c.appendChild(t);
+        c.appendChild(details);
+        c.appendChild(closeB);
+        m.appendChild(c);
+        document.body.appendChild(m);
 
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
+        m.addEventListener('click', (e) => { if (e.target === m) m.remove(); });
     }
 
     renderResTable(currentData);
