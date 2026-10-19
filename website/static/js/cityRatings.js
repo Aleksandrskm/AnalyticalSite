@@ -1262,12 +1262,10 @@ function showItemTooltip(item, chartIndex) {
     tooltip.className = 'chart-tooltip';
 
     const rating = Number(item.rating) || 0;
-    const ratingText = (item.rating !== undefined && item.rating !== null && !isNaN(item.rating))
-        ? rating.toFixed(2)
-        : 'не получен';
-    const deficitText = (item.rating !== undefined && item.rating !== null && !isNaN(item.rating))
-        ? (100 - rating).toFixed(2)
-        : 'не получен';
+    const hasRating = item.rating !== undefined && item.rating !== null && !isNaN(item.rating);
+
+    const ratingText   = hasRating ? `${Math.round(rating)}%` : 'не получен';
+    const deficitText  = hasRating ? `${Math.round(100 - rating)}%` : 'не получен';
 
     const population = item.population || 0;
     const region = item.region_name || 'Н/Д';
@@ -1313,9 +1311,9 @@ function showItemTooltip(item, chartIndex) {
     addRow('chart-tooltip__swatch--provided', `Обеспеченность: ${ratingText}`);
     addRow('chart-tooltip__swatch--deficit',  `Дефицит: ${deficitText}`);
     addRow(null, `Место в обеспеченности: ${placeText} из ${totalPlaces}`);
-    addRow(null, `Население: ${population.toLocaleString()}`);
-    addRow(null, `Регион: ${region}`);
-    addRow(null, `Район: ${district}`);
+    addRow(null, `Население: ${population.toLocaleString()} чел.`);
+    addRow(null, region);
+    addRow(null, district);
     addRow(null, `ID: ${item.id}`);
 
     tooltip.appendChild(bodyEl);
@@ -2018,7 +2016,51 @@ function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', i
     container.appendChild(row);
 }
 // ==================== ПЕРЕСБОРКА С СОХРАНЕНИЕМ ЗУМА ====================
+// ==================== ДИНАМИЧЕСКИЙ РАЗМЕР ГРАФИКА ====================
 
+function resizeRatingChart() {
+    if (!ratingChart) return;
+
+    const chartContainer = document.getElementById('chart-container');
+    const chartHeader = chartContainer ? chartContainer.querySelector('.chart-header') : null;
+    const chartInner = chartContainer ? chartContainer.querySelector('.chart-inner') : null;
+    const chartContent = chartContainer ? chartContainer.querySelector('.chart-content') : null;
+    const canvas = document.getElementById('rating-chart');
+
+    if (!chartContainer || !chartInner || !chartContent || !canvas) return;
+
+    const MIN_W = 1500;
+    const MIN_H = 430;
+
+    // Доступная высота: высота окна минус всё, что занимает шапка контейнера
+    const containerRect = chartContainer.getBoundingClientRect();
+    const headerHeight = chartHeader ? chartHeader.getBoundingClientRect().height : 0;
+    const availableHeight = Math.max(
+        containerRect.height - headerHeight - 16, // 16 — небольшой отступ/зазор
+        MIN_H
+    );
+
+    // Доступная ширина
+    const availableWidth = Math.max(containerRect.width, MIN_W);
+
+    // Применяем к обёртке (там скролл при нехватке)
+    chartInner.style.width = '100%';
+    chartInner.style.height = (containerRect.height - headerHeight) + 'px';
+
+    // Применяем к контенту и canvas
+    chartContent.style.width = availableWidth + 'px';
+    chartContent.style.height = availableHeight + 'px';
+
+    canvas.style.width = availableWidth + 'px';
+    canvas.style.height = availableHeight + 'px';
+
+    // Просим Chart.js пересчитать
+    ratingChart.resize();
+    ratingChart.update('none');
+
+    // Перепозиционируем тултип, если он открыт
+    requestAnimationFrame(() => updateTooltipPosition());
+}
 function rebuildChartPreservingZoom() {
     if (!ratingChart) return;
 
@@ -2082,6 +2124,7 @@ function rebuildChartPreservingZoom() {
     }
 }
 
+// ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
 // ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
 function createRatingChart(data, type) {
     const canvas = document.getElementById('rating-chart');
@@ -2198,44 +2241,6 @@ function createRatingChart(data, type) {
         ? 'Все НП'
         : `${popFrom.toLocaleString('ru-RU')}–${popTo.toLocaleString('ru-RU')}`;
 
-    // ==================== ПОЗИЦИИ ВЕРТИКАЛЬНЫХ ЛИНИЙ ====================
-    const verticalLines = [];
-    {
-        const len = displayData.length;
-        if (len > 0) {
-            const ratings = displayData.map(it => Number(it.rating) || 0);
-
-            const bounds = [
-                { min: 81, topValue: 100, label: 80, strict: false },
-                { min: 61, topValue: 80,  label: 60, strict: false },
-                { min: 41, topValue: 60,  label: 40, strict: false },
-                { min: 21, topValue: 40,  label: 20, strict: false },
-                { min: 0,  topValue: 20,  label: 0,  strict: true  }
-            ];
-
-            bounds.forEach(({ min, topValue, label, strict }) => {
-                let pos = 0;
-                for (let i = 0; i < len; i++) {
-                    const ok = strict ? (ratings[i] > min) : (ratings[i] >= min);
-                    if (ok) pos = i + 1;
-                    else break;
-                }
-
-                if (pos <= 0) return;
-
-                const percent = (pos / len) * 100;
-                verticalLines.push({
-                    pos,
-                    topValue,
-                    cumulative: pos,
-                    percent: percent,
-                    threshold: min,
-                    label: label
-                });
-            });
-        }
-    }
-
     // ==================== ДИАГРАММА ====================
     ratingChart = new Chart(ctx, {
         type: 'bar',
@@ -2243,7 +2248,7 @@ function createRatingChart(data, type) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Обеспеченность',
+                    label: 'Обеспеченность,%',
                     data: providedValues,
                     backgroundColor: providedColors,
                     borderColor: providedColors,
@@ -2258,7 +2263,7 @@ function createRatingChart(data, type) {
                     hoverBorderWidth: 0
                 },
                 {
-                    label: 'Дефицит',
+                    label: 'Дефицит,%',
                     data: deficitValues,
                     backgroundColor: deficitColors,
                     borderColor: deficitColors,
@@ -2304,7 +2309,6 @@ function createRatingChart(data, type) {
                 const ds1 = ratingChart.data.datasets[1];
 
                 const isSelectedAt = (i) => {
-                    // Если флаг выключен — не подсвечиваем
                     if (!selectedSettlementHighlighted) return false;
                     if (selectedSettlementId === undefined || selectedSettlementId === null) return false;
                     const d = displayData[i];
@@ -2403,9 +2407,9 @@ function createRatingChart(data, type) {
                             if (!item) return '';
                             const rating = Number(item.rating) || 0;
                             if (context.datasetIndex === 0) {
-                                return `Обеспеченность: ${rating.toFixed(2)}`;
+                                return `Обеспеченность: ${Math.round(rating)}%`;
                             }
-                            return `Дефицит: ${(100 - rating).toFixed(2)}`;
+                            return `Дефицит: ${Math.round(100 - rating)}%`;
                         },
                         labelColor: function(context) {
                             if (context.datasetIndex === 0) {
@@ -2423,9 +2427,9 @@ function createRatingChart(data, type) {
                             const total = ratingPlacesTotal || 0;
                             return [
                                 `Место в обеспеченности: ${place} из ${total}`,
-                                `Население: ${item.population || 0}`,
-                                `Регион: ${item.region_name || 'Н/Д'}`,
-                                `Район: ${item.district_name || 'Н/Д'}`,
+                                `Население: ${item.population || 0} чел.`,
+                                `${item.region_name || 'Н/Д'}`,
+                                `${item.district_name || 'Н/Д'}`,
                                 `ID: ${item.id}`
                             ];
                         }
@@ -2446,18 +2450,18 @@ function createRatingChart(data, type) {
                     min: 0,
                     max: 100,
                     grid: {
-                        color: 'rgba(0,0,0,0.1)',
+                        display: false,
                         drawBorder: true
                     },
                     ticks: {
                         stepSize: 5,
                         font: { size: 14 },
                         color: '#000000',
-                        callback: function(value) { return value.toFixed(0); }
+                        callback: function(value) { return value + '%'; }
                     },
                     title: {
                         display: true,
-                        text: 'Обеспеченность',
+                        text: 'Обеспеченность,%',
                         color: '#000000',
                         font: { size: 16, weight: 'bold' }
                     },
@@ -2479,62 +2483,61 @@ function createRatingChart(data, type) {
 
                     ctx.save();
 
-                    ctx.strokeStyle = 'rgb(70, 70, 70)';
-                    ctx.lineWidth = 0.8;
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta || !meta.data || meta.data.length === 0) return;
 
-                    [20, 40, 60, 80].forEach(v => {
-                        const y = yScale.getPixelForValue(v);
-                        if (y < chartArea.top || y > chartArea.bottom) return;
+                    const len = displayData.length;
+
+                    const getXForIndex = (idx) => {
+                        if (idx < 0) return chartArea.left;
+                        if (idx >= len) {
+                            const lastBar = meta.data[len - 1];
+                            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+                        }
+                        const bar = meta.data[idx];
+                        return bar.x + (bar.width || 0) / 2;
+                    };
+
+                    const ratings = displayData.map(d => Number(d.rating) || 0);
+                    const steps = [
+                        { threshold: 80, yLevel: 80 },
+                        { threshold: 60, yLevel: 60 },
+                        { threshold: 40, yLevel: 40 },
+                        { threshold: 20, yLevel: 20 },
+                        { threshold: 0,  yLevel: 0  }
+                    ];
+
+                    ctx.strokeStyle = 'rgb(70, 70, 70)';
+                    ctx.lineWidth = 1;
+
+                    steps.forEach(({ threshold, yLevel }) => {
+                        let count = 0;
+                        for (let i = 0; i < len; i++) {
+                            if (ratings[i] > threshold) {
+                                count++;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        if (count === 0) return;
+
+                        const x = getXForIndex(count - 1);
+                        const yPixel = yScale.getPixelForValue(yLevel);
+                        const yBottom = yScale.getPixelForValue(0);
+
+                        if (yLevel > 0) {
+                            ctx.beginPath();
+                            ctx.moveTo(chartArea.left, yPixel);
+                            ctx.lineTo(x, yPixel);
+                            ctx.stroke();
+                        }
+
                         ctx.beginPath();
-                        ctx.moveTo(chartArea.left, y);
-                        ctx.lineTo(chartArea.right, y);
+                        ctx.moveTo(x, yPixel);
+                        ctx.lineTo(x, yBottom);
                         ctx.stroke();
                     });
-
-                    const meta = chart.getDatasetMeta(0);
-                    if (meta && meta.data && meta.data.length > 0) {
-                        const len = displayData.length;
-
-                        const posToPixel = (pos) => {
-                            const firstBar = meta.data[0];
-                            const lastBar  = meta.data[len - 1];
-                            if (!firstBar || !lastBar) return chartArea.left;
-
-                            let barWidth = chartArea.right - chartArea.left;
-                            if (len > 1) {
-                                barWidth = Math.abs(meta.data[1].x - meta.data[0].x);
-                            }
-
-                            if (pos <= 0)  return firstBar.x - barWidth / 2;
-                            if (pos >= len) return lastBar.x + barWidth / 2;
-
-                            const barLeft  = meta.data[pos - 1];
-                            const barRight = meta.data[pos];
-                            if (!barLeft || !barRight) {
-                                return chartArea.left + (chartArea.right - chartArea.left) * (pos / len);
-                            }
-                            return (barLeft.x + barRight.x) / 2;
-                        };
-
-                        verticalLines.forEach(({ pos, topValue }) => {
-                            let x = posToPixel(pos);
-                            if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-                            if (pos <= 0) x += 2;
-
-                            const yTop = topValue > 0
-                                ? yScale.getPixelForValue(topValue)
-                                : chartArea.bottom;
-                            const yClamped = Math.max(yTop, chartArea.top);
-
-                            ctx.strokeStyle = 'rgb(70, 70, 70)';
-                            ctx.lineWidth = 0.8;
-
-                            ctx.beginPath();
-                            ctx.moveTo(x, yClamped);
-                            ctx.lineTo(x, chartArea.bottom);
-                            ctx.stroke();
-                        });
-                    }
 
                     ctx.restore();
                 }
@@ -2550,25 +2553,14 @@ function createRatingChart(data, type) {
 
                     const len = displayData.length;
 
-                    const posToPixel = (pos) => {
-                        const firstBar = meta.data[0];
-                        const lastBar  = meta.data[len - 1];
-                        if (!firstBar || !lastBar) return chartArea.left;
-
-                        let barWidth = chartArea.right - chartArea.left;
-                        if (len > 1) {
-                            barWidth = Math.abs(meta.data[1].x - meta.data[0].x);
+                    const getXForIndex = (idx) => {
+                        if (idx < 0) return chartArea.left;
+                        if (idx >= len) {
+                            const lastBar = meta.data[len - 1];
+                            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
                         }
-
-                        if (pos <= 0)  return firstBar.x - barWidth / 2;
-                        if (pos >= len) return lastBar.x + barWidth / 2;
-
-                        const barLeft  = meta.data[pos - 1];
-                        const barRight = meta.data[pos];
-                        if (!barLeft || !barRight) {
-                            return chartArea.left + (chartArea.right - chartArea.left) * (pos / len);
-                        }
-                        return (barLeft.x + barRight.x) / 2;
+                        const bar = meta.data[idx];
+                        return bar.x + (bar.width || 0) / 2;
                     };
 
                     ctx.save();
@@ -2576,27 +2568,44 @@ function createRatingChart(data, type) {
                     ctx.textBaseline = 'top';
                     ctx.textAlign = 'left';
 
-                    const fontSize = 11;
-                    const lineHeight = 13;
+                    const fontSize = 12;
+                    const lineHeight = 14;
                     const yBase = chartArea.bottom + 6;
-                    const gap = 6;
+                    const gap = 10;
 
                     ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
 
                     const items = [];
 
-                    verticalLines.forEach(({ pos, cumulative, percent, threshold, label }) => {
-                        const x = posToPixel(pos);
+                    const ratings = displayData.map(d => Number(d.rating) || 0);
+                    const steps = [
+                        { threshold: 80, yLevel: 80 },
+                        { threshold: 60, yLevel: 60 },
+                        { threshold: 40, yLevel: 40 },
+                        { threshold: 20, yLevel: 20 },
+                        { threshold: 0,  yLevel: 0  }
+                    ];
+
+                    steps.forEach(({ threshold, yLevel }) => {
+                        let count = 0;
+                        for (let i = 0; i < len; i++) {
+                            if (ratings[i] > threshold) {
+                                count++;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        if (count === 0) return;
+
+                        const x = getXForIndex(count - 1);
                         if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
 
-                        const percentRounded = Math.round(percent);
-                        const displayThreshold = (typeof label !== 'undefined' && label !== null)
-                            ? label
-                            : threshold;
+                        const percentRounded = Math.round((count / len) * 100);
 
                         const lines = [
-                            `${cumulative} (${percentRounded}%)НП`,
-                            `Ур. обеспеч. > ${displayThreshold}%`
+                            `${count} (${percentRounded}%) НП`,
+                            `Ур.обесп.>${yLevel}%`
                         ];
 
                         let maxWidth = 0;
@@ -2605,7 +2614,10 @@ function createRatingChart(data, type) {
                             if (w > maxWidth) maxWidth = w;
                         });
 
-                        items.push({ x, lines, width: maxWidth, pos });
+                        const exists = items.some(it => Math.abs(it.x - x) < 1);
+                        if (!exists) {
+                            items.push({ x, lines, width: maxWidth });
+                        }
                     });
 
                     items.sort((a, b) => a.x - b.x);
@@ -2624,17 +2636,9 @@ function createRatingChart(data, type) {
                         });
                     });
 
-                    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+                    ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
                     ctx.textAlign = 'left';
-                    ctx.fillText('0', chartArea.left + 4, yBase);
-
-                    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'top';
-                    ctx.fillStyle = '#000000';
-
-                    const totalText = `Всего ${len} НП`;
-                    ctx.fillText(totalText, chartArea.right + 6, yBase - 16);
+                    ctx.fillText(`Всего ${len} НП`, chartArea.right + 6, yBase - 16);
 
                     ctx.restore();
                 }
@@ -2642,7 +2646,6 @@ function createRatingChart(data, type) {
             {
                 id: 'highlightMarker',
                 afterDatasetsDraw(chart) {
-                    // Если флаг выключен — не рисуем красную полосу
                     if (!selectedSettlementId || !selectedSettlementHighlighted) return;
 
                     const { ctx, chartArea } = chart;
@@ -2722,9 +2725,9 @@ function createRatingChart(data, type) {
         const stats = [
             { label: 'Количество НП',            value: n.toLocaleString('ru-RU'),  color: '#0066ff' },
             { label: 'Численность населения',    value: populationLabel,           color: '#4c00a8' },
-            { label: 'Средняя обеспеченность',   value: avgRating.toFixed(2),      color: 'rgba(78 215 41 / 90%)' },
+            { label: 'Средняя обеспеченность',   value: avgRating.toFixed(2),      color: '#228028' },
             { label: 'Средний дефицит',          value: avgDeficit.toFixed(2),     color: '#cc0000' },
-            { label: 'Медианная обеспеченность', value: medianRating.toFixed(2),   color: 'rgba(78 215 41 / 90%)' },
+            { label: 'Медианная обеспеченность', value: medianRating.toFixed(2),   color: '#228028' },
             { label: 'Медианный дефицит',        value: medianDeficit.toFixed(2),  color: '#cc0000' }
         ];
 
@@ -2746,6 +2749,9 @@ function createRatingChart(data, type) {
     }
 
     updateZoomInfo();
+
+    // Подгоняем размер под экран
+    setTimeout(() => resizeRatingChart(), 0);
 
     if (selectedSearchItem) {
         setTimeout(() => restoreSelectionAfterUpdate(), 100);
@@ -4565,7 +4571,7 @@ function renderAnalyticsDashboard() {
                     stepSize: 20,
                     color: '#000',
                     font: { size: 12, weight: 'bold' },
-                    callback: v => v
+                    callback: function(value) { return value + '%'; }
                 },
                 grid: { color: 'rgba(0,0,0,0.08)' },
                 title: {
@@ -4594,7 +4600,7 @@ function renderAnalyticsDashboard() {
                 borderColor: '#ffffff',
                 borderWidth: 0,
                 callbacks: {
-                    label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
+                    label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} %`
                 }
             }
         }
@@ -4607,7 +4613,7 @@ function renderAnalyticsDashboard() {
             labels: serviceStats.map(s => s.label),
             datasets: [
                 {
-                    label: 'Обеспеченность',
+                    label: 'Обеспеченность,%',
                     data: serviceStats.map(s => s.provided),
                     backgroundColor: '#1a73e8',
                     borderColor: '#1a73e8',
@@ -4615,7 +4621,7 @@ function renderAnalyticsDashboard() {
                     stack: 'total'
                 },
                 {
-                    label: 'Дефицит',
+                    label: 'Дефицит,%',
                     data: serviceStats.map(s => s.deficit),
                     backgroundColor: '#ff6a00',
                     borderColor: '#ff6a00',
@@ -4663,7 +4669,7 @@ function renderAnalyticsDashboard() {
             labels: mobileStats.map(s => s.label),
             datasets: [
                 {
-                    label: 'Обеспеченность',
+                    label: 'Обеспеченность,%',
                     data: mobileStats.map(s => s.provided),
                     backgroundColor: '#1a73e8',
                     borderColor: '#1a73e8',
@@ -4671,7 +4677,7 @@ function renderAnalyticsDashboard() {
                     stack: 'total'
                 },
                 {
-                    label: 'Дефицит',
+                    label: 'Дефицит,%',
                     data: mobileStats.map(s => s.deficit),
                     backgroundColor: '#ff6a00',
                     borderColor: '#ff6a00',
