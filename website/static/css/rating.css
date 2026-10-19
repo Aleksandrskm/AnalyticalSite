@@ -2477,4 +2477,154 @@ button,
     min-width: 425px;
     flex: 1 1 425px;
 }
+/* ============================================================ */
+/* ===== КАНВАС: РАСТЯГИВАЕТСЯ ПОД ЭКРАН, МИНИМУМ 1500×430 ===== */
+
+/* Контейнер — flex-колонка, общий скролл только при нехватке места */
+#chart-container {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    display: none;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Шапка — своя высота, не сжимается, не скроллится */
+#chart-container > .chart-header {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: 0 !important;
+}
+
+/* Обёртка canvas — занимает остаток места, скролл при нехватке */
+.chart-inner {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+}
+
+/* Внутренний контейнер canvas — растягивается, но не меньше 1500×430 */
+.chart-content {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 1500px !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 430px !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* Сам canvas — 100% от контейнера, но не меньше 1500×430 */
+.chart-content canvas,
+#rating-chart {
+    display: block !important;
+    width: 100% !important;
+    min-width: 1500px !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 430px !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+/* ============================================================ */
+/* ===== ЕДИНЫЙ СТИЛЬ ДЛЯ СЕКЦИЙ ФОРМЫ (Регионы / НП / Выбранный НП) ===== */
+
+/* Общая обёртка секции */
+.form__rating .form-section {
+    background: #e0e0e0;
+    border: 1.5px solid #2a2a2a;
+    border-radius: 4px;
+    padding: 10px 12px 12px 12px;
+    margin-bottom: 10px;
+}
+
+.form__rating .form-section:last-of-type {
+    margin-bottom: 8px;
+}
+
+/* Заголовок секции — единый для всех */
+.form__rating .form-section__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+    padding: 0;
+    line-height: 1.25;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid black;
+    padding-bottom: 6px;
+}
+
+/* Внутренняя область секции */
+.form__rating .form-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Подсказка внутри секции */
+.form__rating .form-section__hint {
+    font-size: 12px;
+    color: black;
+    margin-top: 2px;
+}
+
+/* Внутри секции убираем двойные рамки у .form__div */
+.form__rating .form-section .form__div {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Обёртки «Выбранный НП» — переопределяем старый стиль .selected-settlement-block,
+   чтобы он наследовал оформление секции, а не дублировал рамку */
+.form__rating .form-section#selected-settlement-block {
+    /* Значения те же, что у .form-section, поэтому ничего лишнего не задаём */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Внутри «Выбранного НП» — убираем лишние отступы у старой обёртки */
+.form__rating .form-section#selected-settlement-block .selected-settlement-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+}.form__rating .form-section__title
 
