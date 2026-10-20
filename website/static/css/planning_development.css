@@ -1,140 +1,85 @@
-/* ==================== КОНТЕЙНЕР ==================== */
+/* ==================== ОБЩИЙ КОНТЕЙНЕР ==================== */
 .pd-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 12px 16px 16px;
-    box-sizing: border-box;
-    height: calc(100vh - 130px);
-    min-height: 540px;
-}
-
-/* ==================== ВЕРХНЯЯ ПАНЕЛЬ ==================== */
-.pd-top-panel {
-    flex: 0 0 auto;
-    background: #ffffff;
-    border: 1px solid #d8d8d8;
-    border-radius: 8px;
-    padding: 10px 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.pd-top-panel__inner {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.pd-select-group {
-    display: flex;
-    align-items: center;
     gap: 8px;
-}
-
-.pd-select-group label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #1a1a1a;
-    white-space: nowrap;
-}
-
-.pd-select-group select {
-    padding: 6px 12px;
-    border: 1px solid #c8c8c8;
-    border-radius: 4px;
-    font-size: 14px;
-    background: #ffffff;
-    min-width: 260px;
-    height: 36px;
+    padding: 6px 16px;
+    height: calc(100vh - 120px);
+    min-height: 420px;
     box-sizing: border-box;
-    cursor: pointer;
-    color: #1a1a1a;
-    transition: border-color 0.15s;
-}
-
-.pd-select-group select:hover,
-.pd-select-group select:focus {
-    border-color: #1a73e8;
-    outline: none;
-}
-
-.pd-top-panel__hint {
-    margin-left: auto;
-    font-size: 13px;
-    color: #666;
-    font-style: italic;
+    overflow: hidden;
+    font-family: inherit;
 }
 
 /* ==================== ТРИ СТОЛБЦА ==================== */
 .pd-columns {
     flex: 1 1 auto;
     display: grid;
-    grid-template-columns: 1fr 1.5fr 1.5fr;
-    gap: 12px;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 15px;
     min-height: 0;
 }
 
 .pd-col {
-    background: #ffffff;
-    border: 1px solid #d8d8d8;
+    background: #fff;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     min-height: 0;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .pd-col__title {
-    margin: 0 0 10px 0;
-    padding-bottom: 8px;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #1a73e8;
     font-size: 16px;
-    font-weight: 700;
     color: #1a1a1a;
-    border-bottom: 2px solid #e8e8e8;
+    font-weight: 700;
     flex-shrink: 0;
 }
 
-.pd-empty {
-    color: #999;
-    font-style: italic;
-    text-align: center;
-    padding: 30px 10px;
-    font-size: 14px;
+/* ==================== СТОЛБЕЦ 1 ==================== */
+.pd-col--info {
+    overflow: hidden;
 }
 
-/* ==================== СТОЛБЕЦ 1: ИНФО ==================== */
-.pd-settlement-info {
-    flex: 1;
+.pd-info-scroll {
+    flex: 0 1 auto;
     overflow-y: auto;
+    min-height: 0;
     padding-right: 4px;
+    margin-bottom: 10px;
 }
 
 .pd-settlement-info__name {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     color: #1a73e8;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px dashed #d8d8d8;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    word-break: break-word;
 }
 
 .pd-info-row {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    padding: 7px 4px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
     font-size: 13px;
-    line-height: 1.4;
+}
+
+.pd-info-row:last-child {
+    border-bottom: none;
 }
 
 .pd-info-row__label {
-    color: #555;
-    font-weight: 600;
-    flex: 0 0 48%;
+    color: #666;
+    font-weight: 500;
+    flex-shrink: 0;
 }
 
 .pd-info-row__value {
@@ -144,163 +89,396 @@
     word-break: break-word;
 }
 
-/* ==================== СТОЛБЕЦ 2: СЕТКА ==================== */
-.pd-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 4px;
+/* ==================== БЛОК ФАКТ/ПЛАН (общий для обеих колонок) ==================== */
+.pd-provision-section {
+    flex-shrink: 0;
+    padding: 16px;
+    background: #f8f9fb;
+    border-radius: 8px;
+    border: 1px solid #e3e6eb;
 }
 
-.pd-grid__col {
+.pd-provision-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.pd-provision-input-wrap {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    border-radius: 6px;
-    padding: 6px;
-    background: rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    gap: 10px;
 }
 
-.pd-grid__col-header {
-    text-align: center;
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #ffffff;
-    padding: 8px 4px;
-    border-radius: 4px;
-    line-height: 1.2;
-    letter-spacing: 0.2px;
-    min-height: 46px;
+.pd-provision-input-wrap input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(
+        90deg,
+        #FB8C00 0%,
+        #B3E5FC 25%,
+        #42A5F5 45%,
+        #81C784 65%,
+        #2E7D32 100%
+    );
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.pd-provision-input-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #1a73e8;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pd-provision-input-wrap input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #1a73e8;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pd-provision-number-wrap {
     display: flex;
     align-items: center;
+    gap: 4px;
     justify-content: center;
 }
 
-.pd-grid__item {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-left: 4px solid #999;
+.pd-provision-number-wrap input[type="number"] {
+    width: 100px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 8px 6px;
-    font-size: 11.5px;
-    line-height: 1.3;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.pd-provision-number-wrap input[type="number"]:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.pd-provision-suffix {
+    font-size: 22px;
+    font-weight: 700;
     color: #1a1a1a;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-    min-height: 40px;
+}
+
+.pd-provision-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #888;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ==================== СТОЛБЕЦ 2: ДИАГРАММА ==================== */
+.pd-col--chart {
+    overflow: visible;
+    min-width: 0;
+}
+
+.pd-chart-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4px 0;
+    overflow: visible;
+}
+
+.pd-chart-wrapper {
+    width: 92%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: visible;
+}
+
+.pd-chart-labels {
+    display: grid;
+    grid-template-columns: 1fr min(256px, 100%) 1fr;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.pd-chart-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.pd-chart-label--fact { grid-column: 1; }
+.pd-chart-label--plan { grid-column: 3; }
+
+.pd-chart-inner {
+    height: clamp(200px, 40vh, 340px);
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    position: relative;
+    overflow: visible;
+}
+
+.pd-bar-positioner {
+    position: relative;
+    width: min(256px, 100%);
+    height: 100%;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+/* ==================== ШКАЛА ==================== */
+.pd-scale {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: calc(100% + 2px);
+    width: 26px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.pd-scale__tick {
+    position: absolute;
+    right: 0;
+    transform: translateY(50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+    padding-right: 4px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.pd-scale__tick[data-value="0"]   { bottom: 0%; }
+.pd-scale__tick[data-value="20"]  { bottom: 20%; }
+.pd-scale__tick[data-value="40"]  { bottom: 40%; }
+.pd-scale__tick[data-value="60"]  { bottom: 60%; }
+.pd-scale__tick[data-value="80"]  { bottom: 80%; }
+.pd-scale__tick[data-value="100"] { bottom: 100%; }
+
+/* ==================== СТОЛБ ==================== */
+.pd-bar {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #000;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15), 0 4px 15px rgba(0, 0, 0, 0.15);
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.pd-zone {
+    flex: 1 1 auto;
+    border-top: 2px solid #000;
+    box-sizing: border-box;
+}
+
+.pd-zone:first-child {
+    border-top: none;
+}
+
+.pd-zone--excellent { background: #2E7D32; }
+.pd-zone--good      { background: #81C784; }
+.pd-zone--medium    { background: #42A5F5; }
+.pd-zone--low       { background: #B3E5FC; }
+.pd-zone--critical  { background: #FB8C00; }
+
+/* ==================== СТРЕЛКИ ==================== */
+.pd-arrow {
+    position: absolute;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: stretch;
+    height: 40px;
+    z-index: 5;
+    pointer-events: none;
+    transition: top 0.25s ease;
+    filter:
+        drop-shadow(1px 0 0 #000)
+        drop-shadow(-1px 0 0 #000)
+        drop-shadow(0 1px 0 #000)
+        drop-shadow(0 -1px 0 #000)
+        drop-shadow(2px 3px 3px rgba(0, 0, 0, 0.25));
+}
+
+.pd-arrow__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 8px;
+    min-width: 46px;
+    background-color: var(--arrow-color, #666);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.28) 0%,
+        rgba(255, 255, 255, 0) 45%,
+        rgba(0, 0, 0, 0.22) 100%
+    );
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.55);
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.pd-arrow__value {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.pd-arrow__label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.95;
+    margin-top: 2px;
+}
+
+.pd-arrow__head {
+    width: 14px;
+    flex-shrink: 0;
+    background-color: var(--arrow-color, #666);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.28) 0%,
+        rgba(255, 255, 255, 0) 45%,
+        rgba(0, 0, 0, 0.22) 100%
+    );
+}
+
+.pd-arrow--left {
+    right: calc(100% + 24px);
+    flex-direction: row;
+}
+
+.pd-arrow--left .pd-arrow__body {
+    border-radius: 8px 0 0 8px;
+}
+
+.pd-arrow--left .pd-arrow__head {
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.pd-arrow--right {
+    left: calc(100% + 24px);
+    flex-direction: row;
+}
+
+.pd-arrow--right .pd-arrow__body {
+    border-radius: 0 8px 8px 0;
+}
+
+.pd-arrow--right .pd-arrow__head {
+    order: -1;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+/* ==================== ЛЕГЕНДА ==================== */
+.pd-legend {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 8px 4px 2px;
+    border-top: 1px solid #eee;
+    margin-top: 8px;
+}
+
+.pd-legend__item {
     display: flex;
     align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #333;
     font-weight: 500;
 }
 
-.pd-grid__item:hover {
-    background: #e8f0fe;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+.pd-legend__swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 
-.pd-grid__item.active {
-    background: #d4e6ff;
-    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.35);
+/* ==================== СТОЛБЕЦ 3: ПЛАН ==================== */
+.pd-col--planned {
+    overflow: hidden;
 }
 
-/* ==================== СТОЛБЕЦ 3: ДЕТАЛИ ==================== */
-.pd-details {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 4px;
-    min-height: 0;
+/* ==================== ПУСТОЕ СОСТОЯНИЕ ==================== */
+.pd-empty {
+    padding: 20px;
+    color: #999;
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
 }
 
-.pd-details__header {
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 10px 14px;
-    border-radius: 6px 6px 0 0;
-    letter-spacing: 0.3px;
-}
-
-.pd-details__category {
-    background: #f5f5f5;
-    color: #555;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 5px 14px;
-    border-left: 1px solid #e0e0e0;
-    border-right: 1px solid #e0e0e0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.pd-details__desc {
-    background: #fafafa;
-    color: #333;
-    font-size: 13px;
-    line-height: 1.55;
-    padding: 12px 14px;
-    border: 1px solid #e0e0e0;
-    border-top: none;
-    border-radius: 0 0 6px 6px;
-}
-
-.pd-details__section {
-    margin-top: 12px;
-}
-
-.pd-details__section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px dashed #d8d8d8;
-}
-
-.pd-details__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 5px 0;
-    font-size: 12.5px;
-    border-bottom: 1px dotted #ececec;
-}
-
-.pd-details__row-label {
-    color: #666;
-    font-weight: 600;
-    flex: 1;
-}
-
-.pd-details__row-value {
-    color: #1a1a1a;
-    font-weight: 700;
-    text-align: right;
-    flex: 0 0 45%;
-    word-break: break-word;
-}
-
-/* ==================== АДАПТИВНОСТЬ ==================== */
+/* ==================== АДАПТИВ ==================== */
 @media (max-width: 1100px) {
-    .pd-columns {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
+    .pd-container {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
     }
-    .pd-col--info {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 760px) {
     .pd-columns {
         grid-template-columns: 1fr;
+        min-height: auto;
     }
-    .pd-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .pd-col {
+        min-height: 320px;
     }
+    .pd-col--chart {
+        min-height: 460px;
+    }
+    .pd-chart-wrapper {
+        width: 100%;
+        max-width: 480px;
+    }
+    .pd-chart-labels {
+        grid-template-columns: 1fr min(180px, 100%) 1fr;
+    }
+    .pd-chart-inner {
+        height: clamp(200px, 42vh, 380px);
+    }
+    .pd-bar-positioner {
+        width: min(180px, 100%);
+    }
+    .pd-arrow--left  { right: calc(100% + 16px); }
+    .pd-arrow--right { left:  calc(100% + 16px); }
+    .pd-scale { right: calc(100% + 2px); width: 22px; }
 }
