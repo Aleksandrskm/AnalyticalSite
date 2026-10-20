@@ -12,51 +12,122 @@
 
 <main class="pd-container">
 
-    <!-- ============ ЧАСТЬ 1: ВЕРХНЯЯ ПАНЕЛЬ ============ -->
-    <section class="pd-top-panel">
-        <div class="pd-top-panel__inner">
-            <div class="pd-select-group">
-                <label for="pd-region">Регион:</label>
-                <select id="pd-region">
-                    <option value="">— Выберите регион —</option>
-                </select>
-            </div>
-
-            <div class="pd-select-group">
-                <label for="pd-settlement">Населённый пункт:</label>
-                <select id="pd-settlement">
-                    <option value="">— Выберите населённый пункт —</option>
-                </select>
-            </div>
-
-            <div class="pd-top-panel__hint">
-                Выберите регион и НП для планирования развития
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ ЧАСТИ 2–4: ТРИ СТОЛБЦА ============ -->
     <section class="pd-columns">
 
-        <!-- Столбец 1: Информация о НП -->
+        <!-- Столбец 1: Информация о НП + фактическая обеспеченность -->
         <div class="pd-col pd-col--info">
             <h3 class="pd-col__title">Информация о НП</h3>
-            <div id="pd-settlement-info" class="pd-settlement-info">
-                <div class="pd-empty">Выберите населённый пункт</div>
+
+            <div class="pd-info-scroll">
+                <div id="pd-settlement-info" class="pd-settlement-info">
+                    <div class="pd-empty">Загрузка...</div>
+                </div>
+            </div>
+
+            <div id="pd-actual-section" class="pd-provision-section" style="display: none;">
+                <label for="pd-actual-input" class="pd-provision-label">
+                    Фактическая обеспеченность телеком-инфраструктурой
+                </label>
+                <div class="pd-provision-input-wrap">
+                    <input type="range" id="pd-actual-range" min="0" max="100" step="1" value="0">
+                    <div class="pd-provision-number-wrap">
+                        <input type="number" id="pd-actual-input" min="0" max="100" step="1" value="0">
+                        <span class="pd-provision-suffix">%</span>
+                    </div>
+                </div>
+                <div class="pd-provision-hint">
+                    Значение влияет на левую стрелку диаграммы
+                </div>
             </div>
         </div>
 
-        <!-- Столбец 2: Сетка 5 цветов × 5 заголовков -->
-        <div class="pd-col pd-col--grid">
-            <h3 class="pd-col__title">Направления планирования</h3>
-            <div id="pd-grid" class="pd-grid"></div>
+        <!-- Столбец 2: Диаграмма со стрелками -->
+        <div class="pd-col pd-col--chart">
+            <h3 class="pd-col__title">Диаграмма обеспеченности</h3>
+
+            <div class="pd-chart-area">
+                <div class="pd-chart-wrapper">
+                    <div class="pd-chart-labels">
+                        <span class="pd-chart-label pd-chart-label--fact">Факт</span>
+                        <span class="pd-chart-label pd-chart-label--plan">План</span>
+                    </div>
+
+                    <div class="pd-chart-inner">
+                        <div class="pd-bar-positioner">
+
+                            <!-- Шкала -->
+                            <div class="pd-scale">
+                                <div class="pd-scale__tick" data-value="0">0</div>
+                                <div class="pd-scale__tick" data-value="20">20</div>
+                                <div class="pd-scale__tick" data-value="40">40</div>
+                                <div class="pd-scale__tick" data-value="60">60</div>
+                                <div class="pd-scale__tick" data-value="80">80</div>
+                                <div class="pd-scale__tick" data-value="100">100</div>
+                            </div>
+
+                            <!-- Столб -->
+                            <div class="pd-bar" aria-hidden="true">
+                                <div class="pd-zone pd-zone--excellent"></div>
+                                <div class="pd-zone pd-zone--good"></div>
+                                <div class="pd-zone pd-zone--medium"></div>
+                                <div class="pd-zone pd-zone--low"></div>
+                                <div class="pd-zone pd-zone--critical"></div>
+                            </div>
+
+                            <!-- Левая стрелка → факт -->
+                            <div class="pd-arrow pd-arrow--left" id="pd-arrow-actual" style="display: none;">
+                                <div class="pd-arrow__body">
+                                    <span class="pd-arrow__value">0%</span>
+                                    <span class="pd-arrow__label">Факт</span>
+                                </div>
+                                <div class="pd-arrow__head"></div>
+                            </div>
+
+                            <!-- Правая стрелка → план -->
+                            <div class="pd-arrow pd-arrow--right" id="pd-arrow-planned" style="display: none;">
+                                <div class="pd-arrow__body">
+                                    <span class="pd-arrow__value">0%</span>
+                                    <span class="pd-arrow__label">План</span>
+                                </div>
+                                <div class="pd-arrow__head"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pd-legend">
+                <div class="pd-legend__item"><span class="pd-legend__swatch" style="background:#2E7D32"></span>81–100 % — прекрасная</div>
+                <div class="pd-legend__item"><span class="pd-legend__swatch" style="background:#81C784"></span>61–80 % — хорошая</div>
+                <div class="pd-legend__item"><span class="pd-legend__swatch" style="background:#42A5F5"></span>41–60 % — средняя</div>
+                <div class="pd-legend__item"><span class="pd-legend__swatch" style="background:#81D4FA"></span>21–40 % — низкая</div>
+                <div class="pd-legend__item"><span class="pd-legend__swatch" style="background:#FB8C00"></span>0–20 % — критически низкая</div>
+            </div>
         </div>
 
-        <!-- Столбец 3: Детализация -->
-        <div class="pd-col pd-col--details">
-            <h3 class="pd-col__title">Детализация</h3>
-            <div id="pd-details" class="pd-details">
-                <div class="pd-empty">Наведите курсор на заголовок</div>
+        <!-- Столбец 3: Плановая обеспеченность -->
+        <div class="pd-col pd-col--planned">
+            <h3 class="pd-col__title">Плановое значение</h3>
+
+            <div id="pd-planned-empty" class="pd-empty">
+                Загрузка...
+            </div>
+
+            <div id="pd-planned-section" class="pd-provision-section" style="display: none;">
+                <label for="pd-planned-input" class="pd-provision-label">
+                    Плановая обеспеченность телеком-инфраструктурой
+                </label>
+                <div class="pd-provision-input-wrap">
+                    <input type="range" id="pd-planned-range" min="0" max="100" step="1" value="0">
+                    <div class="pd-provision-number-wrap">
+                        <input type="number" id="pd-planned-input" min="0" max="100" step="1" value="0">
+                        <span class="pd-provision-suffix">%</span>
+                    </div>
+                </div>
+                <div class="pd-provision-hint">
+                    Значение влияет на правую стрелку диаграммы
+                </div>
             </div>
         </div>
 
