@@ -2475,6 +2475,7 @@ button,
 
 .analytics-chart-block--min {
     min-width: 425px;
+    min-height: 425px;
     flex: 1 1 425px;
 }
 /* ============================================================ */
