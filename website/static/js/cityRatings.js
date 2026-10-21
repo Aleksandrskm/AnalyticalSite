@@ -4428,10 +4428,16 @@ function switchToAnalyticsMode() {
     const table = document.getElementById('settlements-table');
     if (table) table.style.display = 'none';
 
+    // Убираем кнопки
     hideSettlementButtons();
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 
+    // Убираем "Формат графика" (и другие возможные кнопки в панели)
+    const formatGroup = document.getElementById('format-controls-group');
+    if (formatGroup) formatGroup.remove();
+
+    // Чистим остатки
     const filterContainer = document.querySelector('.filter-container');
     if (filterContainer) filterContainer.remove();
 
