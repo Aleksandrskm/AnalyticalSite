@@ -63,6 +63,7 @@ function showRegionWarning() {
 const TABLE_SETTLEMENTS = 'A_NAS_P';
 const TABLE_RANKING = 'A_NAS_P_RANKING ';
 const EDIT_DB_NAME = 'IO';
+let currentChartFormat = 'full'; // 'full' | 'short'
 
 let settlementsColumnsCache = null;
 let rankingColumnsCache = null;
@@ -751,7 +752,7 @@ function handleSelectedHighlight() {
     if (!selectedSettlementId) return;
 
     if (!isChartMode || !ratingChart) {
-        renderPopup('Откройте «График обеспеченности НП», чтобы использовать подсветку');
+        renderPopup('Откройте «График обеспеченности НП региона», чтобы использовать подсветку');
         return;
     }
 
@@ -1747,7 +1748,81 @@ function applyZoom() {
 }
 
 // ==================== ПАНЕЛЬ УПРАВЛЕНИЯ ДИАГРАММОЙ ====================
+function renderFormatControls() {
+    const container = document.querySelector('.table_buttons');
+    if (!container) return;
 
+    // Удаляем старые, если есть
+    const oldGroup = document.getElementById('format-controls-group');
+    if (oldGroup) oldGroup.remove();
+
+    // Показываем только в режиме графика
+    if (!isChartMode) return;
+
+    const group = document.createElement('div');
+    group.id = 'format-controls-group';
+    group.style.display = 'flex';
+    group.style.alignItems = 'center';
+    group.style.gap = '12px';
+    group.style.marginRight = 'auto'; // Прижимает остальные кнопки вправо
+    group.style.paddingLeft = '4px';
+
+    const formatLabel = document.createElement('label');
+    formatLabel.textContent = 'Формат графика';
+    formatLabel.style.fontWeight = '600';
+    formatLabel.style.fontSize = '14px';
+    group.appendChild(formatLabel);
+
+    const makeRadio = (value, text) => {
+        const lbl = document.createElement('label');
+        lbl.style.display = 'flex';
+        lbl.style.alignItems = 'center';
+        lbl.style.gap = '4px';
+        lbl.style.fontSize = '14px';
+        lbl.style.cursor = 'pointer';
+        lbl.style.fontWeight = '600';
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'chart-format-bottom';
+        radio.value = value;
+        radio.checked = (currentChartFormat === value);
+
+        radio.addEventListener('change', function() {
+            if (!this.checked) return;
+            currentChartFormat = value;
+
+            // Сохраняем зум
+            const savedMin = ratingChart ? ratingChart.options.scales.x.min : undefined;
+            const savedMax = ratingChart ? ratingChart.options.scales.x.max : undefined;
+
+            // Перерисовываем
+            createRatingChart(chartAllData.length > 0 ? chartAllData : [], chartType);
+
+            // Восстанавливаем зум
+            if (ratingChart && savedMin !== undefined && savedMax !== undefined) {
+                ratingChart.options.scales.x.min = savedMin;
+                ratingChart.options.scales.x.max = savedMax;
+                ratingChart.update('none');
+            }
+
+            // Восстанавливаем выделение
+            if (selectedSearchItem) {
+                setTimeout(() => restoreSelectionAfterUpdate(), 100);
+            }
+        });
+
+        lbl.appendChild(radio);
+        lbl.appendChild(document.createTextNode(text));
+        return lbl;
+    };
+
+    group.appendChild(makeRadio('full', 'Полный'));
+    group.appendChild(makeRadio('short', 'Краткий'));
+
+    // Вставляем в начало контейнера с кнопками
+    container.insertBefore(group, container.firstChild);
+}
 function renderChartControls(currentSortField) {
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) return;
@@ -2283,7 +2358,11 @@ function createRatingChart(data, type) {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { top: 8, bottom: 90, right: 100 }
+                padding: {
+                    top: 8,
+                    bottom: currentChartFormat === 'full' ? 169 : 90,
+                    right: 100
+                }
             },
             interaction: {
                 mode: 'index',
@@ -2444,35 +2523,34 @@ function createRatingChart(data, type) {
                     ticks: { display: false },
                     border: { color: '#000000', width: 2 }
                 },
+                // ===== В createRatingChart, блок scales.y =====
                 y: {
                     stacked: true,
                     beginAtZero: true,
                     min: 0,
                     max: 100,
-                    grid: {
-                        display: false,
-                        drawBorder: true
-                    },
+                    grid: { display: false, drawBorder: true },
                     ticks: {
-                        stepSize: 5,
+                        stepSize: 20,                 // ← 0,20,40,60,80,100
                         font: { size: 14 },
                         color: '#000000',
                         callback: function(value) { return value + '%'; }
                     },
                     title: {
                         display: true,
-                        text: 'Обеспеченность,%',
+                        text: 'Обеспеченность',
                         color: '#000000',
                         font: { size: 16, weight: 'bold' }
                     },
                     border: { color: '#000000', width: 2 }
-                }
+                },
             },
             animation: { duration: 0 },
             hover: { mode: 'index', intersect: false, animationDuration: 200 },
             elements: { bar: { borderRadius: 0 } }
         },
         plugins: [
+            // ---- горизонтальные линии уровней ----
             {
                 id: 'referenceLines',
                 afterDatasetsDraw(chart) {
@@ -2487,7 +2565,6 @@ function createRatingChart(data, type) {
                     if (!meta || !meta.data || meta.data.length === 0) return;
 
                     const len = displayData.length;
-
                     const getXForIndex = (idx) => {
                         if (idx < 0) return chartArea.left;
                         if (idx >= len) {
@@ -2513,13 +2590,9 @@ function createRatingChart(data, type) {
                     steps.forEach(({ threshold, yLevel }) => {
                         let count = 0;
                         for (let i = 0; i < len; i++) {
-                            if (ratings[i] > threshold) {
-                                count++;
-                            } else {
-                                break;
-                            }
+                            if (ratings[i] > threshold) count++;
+                            else break;
                         }
-
                         if (count === 0) return;
 
                         const x = getXForIndex(count - 1);
@@ -2529,7 +2602,7 @@ function createRatingChart(data, type) {
                         if (yLevel > 0) {
                             ctx.beginPath();
                             ctx.moveTo(chartArea.left, yPixel);
-                            ctx.lineTo(x, yPixel);
+                            ctx.lineTo(chartArea.right, yPixel);   // до правого края
                             ctx.stroke();
                         }
 
@@ -2542,107 +2615,29 @@ function createRatingChart(data, type) {
                     ctx.restore();
                 }
             },
+
+            // ---- подписи снизу: краткий / полный ----
             {
                 id: 'lineLabels',
                 afterDatasetsDraw(chart) {
-                    const { ctx, chartArea } = chart;
-                    if (!chartArea) return;
-
-                    const meta = chart.getDatasetMeta(0);
-                    if (!meta || !meta.data || meta.data.length === 0) return;
-
-                    const len = displayData.length;
-
-                    const getXForIndex = (idx) => {
-                        if (idx < 0) return chartArea.left;
-                        if (idx >= len) {
-                            const lastBar = meta.data[len - 1];
-                            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
-                        }
-                        const bar = meta.data[idx];
-                        return bar.x + (bar.width || 0) / 2;
-                    };
-
-                    ctx.save();
-                    ctx.fillStyle = '#000000';
-                    ctx.textBaseline = 'top';
-                    ctx.textAlign = 'left';
-
-                    const fontSize = 12;
-                    const lineHeight = 14;
-                    const yBase = chartArea.bottom + 6;
-                    const gap = 10;
-
-                    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
-
-                    const items = [];
-
-                    const ratings = displayData.map(d => Number(d.rating) || 0);
-                    const steps = [
-                        { threshold: 80, yLevel: 80 },
-                        { threshold: 60, yLevel: 60 },
-                        { threshold: 40, yLevel: 40 },
-                        { threshold: 20, yLevel: 20 },
-                        { threshold: 0,  yLevel: 0  }
-                    ];
-
-                    steps.forEach(({ threshold, yLevel }) => {
-                        let count = 0;
-                        for (let i = 0; i < len; i++) {
-                            if (ratings[i] > threshold) {
-                                count++;
-                            } else {
-                                break;
-                            }
-                        }
-
-                        if (count === 0) return;
-
-                        const x = getXForIndex(count - 1);
-                        if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-
-                        const percentRounded = Math.round((count / len) * 100);
-
-                        const lines = [
-                            `${count} (${percentRounded}%) НП`,
-                            `Ур.обесп.>${yLevel}%`
-                        ];
-
-                        let maxWidth = 0;
-                        lines.forEach(line => {
-                            const w = ctx.measureText(line).width;
-                            if (w > maxWidth) maxWidth = w;
-                        });
-
-                        const exists = items.some(it => Math.abs(it.x - x) < 1);
-                        if (!exists) {
-                            items.push({ x, lines, width: maxWidth });
-                        }
-                    });
-
-                    items.sort((a, b) => a.x - b.x);
-
-                    for (let i = 1; i < items.length; i++) {
-                        const prev = items[i - 1];
-                        const cur = items[i];
-                        const prevRight = prev.x + prev.width;
-                        if (cur.x < prevRight + gap) cur.x = prevRight + gap;
+                    if (currentChartFormat === 'short') {
+                        drawShortLabels(chart, displayData);
+                    } else {
+                        drawFullLabels(chart, displayData);
                     }
-
-                    ctx.textAlign = 'left';
-                    items.forEach(item => {
-                        item.lines.forEach((line, i) => {
-                            ctx.fillText(line, item.x, yBase + i * lineHeight);
-                        });
-                    });
-
-                    ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`Всего ${len} НП`, chartArea.right + 6, yBase - 16);
-
-                    ctx.restore();
                 }
             },
+
+            // ---- стрелки и итоговые подписи для полного режима ----
+            {
+                id: 'bottomArrow',
+                afterDatasetsDraw(chart) {
+                    if (currentChartFormat !== 'full') return;
+                    drawFullBottomArrows(chart, displayData);
+                }
+            },
+
+            // ---- подсветка выбранного НП ----
             {
                 id: 'highlightMarker',
                 afterDatasetsDraw(chart) {
@@ -2674,14 +2669,8 @@ function createRatingChart(data, type) {
                     const x = bar.x - markerWidth / 2;
 
                     ctx.save();
-
                     ctx.fillStyle = 'rgba(255, 26, 26, 0.45)';
-                    ctx.fillRect(
-                        x,
-                        chartArea.top,
-                        markerWidth,
-                        chartArea.bottom - chartArea.top
-                    );
+                    ctx.fillRect(x, chartArea.top, markerWidth, chartArea.bottom - chartArea.top);
 
                     ctx.strokeStyle = '#ff0000';
                     ctx.lineWidth = 2;
@@ -2694,7 +2683,6 @@ function createRatingChart(data, type) {
                     ctx.beginPath();
                     ctx.arc(bar.x, chartArea.top + 6, 5, 0, Math.PI * 2);
                     ctx.fill();
-
                     ctx.restore();
                 }
             }
@@ -2715,7 +2703,7 @@ function createRatingChart(data, type) {
 
         const title = document.createElement('div');
         title.className = 'chart-title';
-        title.textContent = 'График обеспеченности НП';
+        title.textContent = 'График обеспеченности НП региона';
         chartHeader.appendChild(title);
     }
 
@@ -2758,6 +2746,260 @@ function createRatingChart(data, type) {
     }
 }
 
+
+
+// ---------- КРАТКИЙ режим: накопительные подписи ----------
+function drawShortLabels(chart, displayData) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || meta.data.length === 0) return;
+
+    const len = displayData.length;
+    const getXForIndex = (idx) => {
+        if (idx < 0) return chartArea.left;
+        if (idx >= len) {
+            const lastBar = meta.data[len - 1];
+            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+        }
+        const bar = meta.data[idx];
+        return bar.x + (bar.width || 0) / 2;
+    };
+
+    ctx.save();
+    ctx.fillStyle = '#000000';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+
+    const fontSize = 12;
+    const lineHeight = 14;
+    const yBase = chartArea.bottom + 6;
+    const gap = 10;
+
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+
+    const items = [];
+    const ratings = displayData.map(d => Number(d.rating) || 0);
+    const steps = [
+        { threshold: 80, yLevel: 80 },
+        { threshold: 60, yLevel: 60 },
+        { threshold: 40, yLevel: 40 },
+        { threshold: 20, yLevel: 20 },
+        { threshold: 0,  yLevel: 0  }
+    ];
+
+    steps.forEach(({ threshold, yLevel }) => {
+        let count = 0;
+        for (let i = 0; i < len; i++) {
+            if (ratings[i] > threshold) count++;
+            else break;
+        }
+        if (count === 0) return;
+
+        const x = getXForIndex(count - 1);
+        if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
+
+        const percentRounded = Math.round((count / len) * 100);
+        const lines = [
+            `${count} (${percentRounded}%) НП`,
+            `Ур.обесп.>${yLevel}%`
+        ];
+
+        let maxWidth = 0;
+        lines.forEach(line => {
+            const w = ctx.measureText(line).width;
+            if (w > maxWidth) maxWidth = w;
+        });
+
+        if (!items.some(it => Math.abs(it.x - x) < 1)) {
+            items.push({ x, lines, width: maxWidth });
+        }
+    });
+
+    items.sort((a, b) => a.x - b.x);
+    for (let i = 1; i < items.length; i++) {
+        const prev = items[i - 1];
+        const cur = items[i];
+        const prevRight = prev.x + prev.width;
+        if (cur.x < prevRight + gap) cur.x = prevRight + gap;
+    }
+
+    ctx.textAlign = 'left';
+    items.forEach(item => {
+        item.lines.forEach((line, i) => {
+            ctx.fillText(line, item.x, yBase + i * lineHeight);
+        });
+    });
+
+    ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`Всего ${len} НП`, chartArea.right + 6, yBase - 16);
+
+    ctx.restore();
+}
+
+// ---------- ПОЛНЫЙ режим: подписи по диапазонам + вертикальные линии лесенкой ----------
+function drawFullLabels(chart, displayData) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || meta.data.length === 0) return;
+
+    const len = displayData.length;
+    const ratings = displayData.map(d => Number(d.rating) || 0);
+    const thresholds = [100, 80, 60, 40, 20, 0];
+
+    const counts = thresholds.map(th => {
+        let c = 0;
+        for (let i = 0; i < len; i++) {
+            if (ratings[i] > th) c++;
+            else break;
+        }
+        return c;
+    });
+
+    const getX = (idx) => {
+        if (idx < 0) return chartArea.left;
+        if (idx >= len) {
+            const lastBar = meta.data[len - 1];
+            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+        }
+        return meta.data[idx].x + (meta.data[idx].width || 0) / 2;
+    };
+
+    ctx.save();
+    ctx.fillStyle = '#000000';
+    ctx.textBaseline = 'top';
+    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+
+    const baseY = chartArea.bottom + 6;
+    const stepY = 13; // Уменьшено с 14
+
+    for (let i = 1; i < counts.length; i++) {
+        const delta = Math.abs(counts[i - 1] - counts[i]);
+        if (delta === 0) continue;
+
+        const startIdx = counts[i];
+        const endIdx = counts[i - 1] - 1;
+
+        const xStart = getX(startIdx);
+        const xEnd = getX(endIdx);
+        const midX = (xStart + xEnd) / 2;
+
+        ctx.fillText(`${delta} НП`, midX, baseY + (i - 1) * stepY);
+    }
+
+    ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`Всего ${len} НП`, chartArea.right + 6, chartArea.bottom - 6);
+
+    ctx.restore();
+}
+
+// ---------- ПОЛНЫЙ режим: стрелки от начала координат ----------
+function drawFullBottomArrows(chart, displayData) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || meta.data.length === 0) return;
+
+    const len = displayData.length;
+    const ratings = displayData.map(d => Number(d.rating) || 0);
+
+    const thresholds = [80, 60, 40, 20, 0];
+    const cumulative = thresholds.map(th => {
+        let count = 0;
+        for (let i = 0; i < len; i++) {
+            if (ratings[i] > th) count++;
+            else break;
+        }
+        return { threshold: th, count };
+    });
+
+    const getX = (idx) => {
+        if (idx < 0) return chartArea.left;
+        if (idx >= len) {
+            const lastBar = meta.data[len - 1];
+            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+        }
+        return meta.data[idx].x + (meta.data[idx].width || 0) / 2;
+    };
+
+    ctx.save();
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = 'black';
+    ctx.lineWidth = 1.5;
+    ctx.font = `bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // Берем точку 0-го элемента для начала всех стрелок
+    const startX = getX(0);
+
+    const startY = chartArea.bottom + 75;
+    const stepY = 24; // Шаг, чтобы влезали 2 строки текста
+
+    cumulative.forEach((pt, i) => {
+        if (pt.count === 0) return;
+
+        const endX = getX(pt.count - 1);
+        const y = startY + i * stepY;
+
+        const percent = ((pt.count / len) * 100).toFixed(1).replace('.', ',');
+        const label = `${pt.count} (${percent}%) НП`;
+
+        // === ВЕРТИКАЛЬНАЯ ЛИНИЯ ОТ 0 (НАЧАЛО СТРЕЛКИ) ===
+        ctx.beginPath();
+        ctx.moveTo(startX, chartArea.bottom); // От графика
+        ctx.lineTo(startX, y);            // До низа стрелки
+        ctx.stroke();
+
+        // === ВЕРТИКАЛЬНАЯ ЛИНИЯ К КОНЦУ СТРЕЛКИ ===
+        ctx.beginPath();
+        ctx.moveTo(endX, chartArea.bottom);
+        ctx.lineTo(endX, y);
+        ctx.stroke();
+
+        // === ГОРИЗОНТАЛЬНАЯ ЛИНИЯ СТРЕЛКИ ===
+        // Начинается СТРОГО от startX (без отступов)
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX - 10, y);
+        ctx.stroke();
+
+        // Наконечник
+        ctx.beginPath();
+        ctx.moveTo(endX, y);
+        ctx.lineTo(endX - 8, y - 4);
+        ctx.lineTo(endX - 8, y + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // === ТЕКСТ С ПЕРЕНОСОМ НА 2 СТРОКИ ===
+        const maxTextWidth = (endX - startX) - 20;
+        const textWidth = ctx.measureText(label).width;
+        const midX = (startX + endX) / 2;
+
+        if (textWidth > maxTextWidth && label.includes(' (')) {
+            // Если не влезает — разбиваем на "192" и "(5.6%) НП"
+            const parts = label.split(' ');
+            const line1 = parts[0];
+            const line2 = parts.slice(1).join(' ');
+
+            ctx.fillText(line1, midX, y - 24);
+            ctx.fillText(line2, midX, y - 11);
+        } else {
+            // Если влезает — пишем в одну строку
+            ctx.fillText(label, midX, y - 14);
+        }
+    });
+
+    ctx.restore();
+}
 // ==================== МОДАЛКА: ИНФОРМАЦИЯ О НП ====================
 
 async function openSettlementInfoModal(item) {
@@ -3263,6 +3505,10 @@ async function handleWiredButton() {
 function showSettlementButtons() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
+
+    // Удаляем контролы формата, так как мы не в графике
+    const formatGroup = document.getElementById('format-controls-group');
+    if (formatGroup) formatGroup.remove();
 
     if (isChartMode || isAnalyticsMode) {
         hideSettlementButtons();
@@ -4224,7 +4470,7 @@ function renderAnalyticsDashboard() {
 
     const title = document.createElement('div');
     title.className = 'analytics-title';
-    title.textContent = 'Диаграмма обеспеченности НП';
+    title.textContent = 'Диаграмма обеспеченности НП региона';
 
     const regionsSubtitle = document.createElement('div');
     regionsSubtitle.className = 'analytics-subtitle';
@@ -4371,12 +4617,13 @@ function renderAnalyticsDashboard() {
     const canvas2 = bar2Block.canvas;
 
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
+    // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
-        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#FB8C00' },
-        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#29B6F6' },
-        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#0D47A1' },
-        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#43A047' },
-        { label: '81-100', min: 81,  max: 100, count: 0, color: '#1B5E20' }
+        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#f57c00' },
+        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#5FF1FF' },
+        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#005BFB' },
+        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#69F034' },
+        { label: '81-100', min: 81,  max: 100, count: 0, color: '#0F8A0B' },
     ];
 
     items.forEach(item => {
@@ -5364,7 +5611,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     const settlementsTitle = document.createElement('h3');
     settlementsTitle.className = 'settlements-title';
-    settlementsTitle.textContent = 'Таблица обеспеченности НП';
+    settlementsTitle.textContent = 'Таблица обеспеченности НП региона';
     table.parentNode.insertBefore(settlementsTitle, table);
 
     const thead = table.querySelector('thead');
@@ -6407,6 +6654,9 @@ function switchToChartMode() {
         hlBtn.disabled = false;
         hlBtn.title = 'Отобразить на графике';
     }
+
+    // Показываем контролы формата внизу
+    renderFormatControls();
 }
 
 async function handleSettlementsButton() {
