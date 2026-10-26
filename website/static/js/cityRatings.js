@@ -6764,6 +6764,11 @@ function handleClear() {
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 
+    // ===== ДОБАВИТЬ ЭТИ 3 СТРОКИ =====
+    const formatGroup = document.getElementById('format-controls-group');
+    if (formatGroup) formatGroup.remove();
+    // =================================
+
     // Сброс выбранного НП и скрытие блока
 
     resetAndHideSelectedSettlement();
