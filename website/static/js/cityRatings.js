@@ -424,7 +424,94 @@ const RANKING_COLUMN_LABELS = {
 
     'RAT_SUM_NP': 'Обеспеченность'
 };
+// ==================== LOCALSTORAGE: СОХРАНЕНИЕ ПАРАМЕТРОВ ====================
+const LS_KEYS = {
+    regions: 'rating:regions',
+    idNp:    'rating:id_np'
+};
 
+const DEFAULT_REGION = '29';
+const DEFAULT_ID_NP  = '11665729';
+
+function lsGet(key, fallback = null) {
+    try {
+        const v = localStorage.getItem(key);
+        return v !== null ? v : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function lsSet(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (e) { /* ignore */ }
+}
+
+function lsRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) {}
+}
+
+// Сохранить текущий выбор регионов в localStorage
+function persistSelectedRegions() {
+    const regions = getSelectedRegions();
+    if (regions && regions.length > 0) {
+        lsSet(LS_KEYS.regions, regions.join(','));
+    } else {
+        lsSet(LS_KEYS.regions, DEFAULT_REGION);
+    }
+}
+
+// Сохранить выбранный НП в localStorage
+function persistSelectedIdNp(id) {
+    if (id !== undefined && id !== null && String(id).trim() !== '') {
+        lsSet(LS_KEYS.idNp, String(id).trim());
+    } else {
+        lsSet(LS_KEYS.idNp, DEFAULT_ID_NP);
+    }
+}
+
+// Применить регионы из localStorage к <select id="region">
+function applyRegionsFromStorage() {
+    const regionSelect = document.getElementById('region');
+    if (!regionSelect) return false;
+
+    // Если в select ещё нет реальных регионов (только 'all') — выходим
+    const realOptions = Array.from(regionSelect.querySelectorAll('option'))
+        .filter(opt => opt.value !== 'all' && String(opt.value).trim() !== '');
+    if (realOptions.length === 0) return false;
+
+    const stored = lsGet(LS_KEYS.regions, DEFAULT_REGION);
+    if (!stored) return false;
+
+    const ids = String(stored).split(',').map(s => s.trim()).filter(Boolean);
+    if (ids.length === 0) ids.push(DEFAULT_REGION);
+
+    const options = regionSelect.querySelectorAll('option');
+    options.forEach(opt => { opt.selected = false; });
+
+    let found = 0;
+    options.forEach(opt => {
+        if (opt.value === 'all') return;
+        if (ids.includes(String(opt.value).trim())) {
+            opt.selected = true;
+            found++;
+        }
+    });
+
+    // Fallback на дефолтный регион 29
+    if (found === 0) {
+        options.forEach(opt => {
+            if (String(opt.value).trim() === DEFAULT_REGION) {
+                opt.selected = true;
+                found++;
+            }
+        });
+    }
+
+    // НЕ выбираем 'all' при неудаче — пусть будет пусто
+    return found > 0;
+}
 // ==================== ДАННЫЕ ====================
 
 let settlementsData = {
@@ -557,6 +644,35 @@ function hideResPageSize() {
 function showSelectedSettlementBlock() {
     const el = document.getElementById('selected-settlement-block');
     if (el) el.style.display = 'flex';
+
+    const hlBtn = document.getElementById('ss-btn-highlight');
+    if (!hlBtn) return;
+
+    const mode = isAnalyticsMode
+        ? 'analytics'
+        : (isChartMode ? 'chart' : 'table');
+
+    if (mode === 'analytics') {
+        hlBtn.disabled = true;
+        hlBtn.title = 'Недоступно в режиме диаграммы';
+        return;
+    }
+
+    if (!selectedSettlementId) {
+        hlBtn.disabled = true;
+        hlBtn.title = 'Выберите НП';
+        return;
+    }
+
+    if (mode === 'chart') {
+        hlBtn.disabled = false;
+        hlBtn.title = 'Отобразить на графике';
+        return;
+    }
+
+    // mode === 'table'
+    hlBtn.disabled = false;
+    hlBtn.title = 'Перейти к НП в таблице';
 }
 
 function hideSelectedSettlementBlock() {
@@ -570,17 +686,16 @@ function setSelectedSettlement(item, mode) {
         return;
     }
 
+    persistSelectedIdNp(item.id);
+
     const newIdStr = String(item.id);
 
-    // ===== Снимаем визуальное выделение со старого НП =====
-    // (в таблице — со всех, КРОМЕ строки с новым id)
     document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
         if (String(tr.dataset.id) !== newIdStr) {
             tr.classList.remove('selected');
         }
     });
 
-    // (на графике)
     if (ratingChart) {
         const displayData = getChartDisplayData();
         if (displayData && displayData.length > 0) {
@@ -598,21 +713,17 @@ function setSelectedSettlement(item, mode) {
         }
     }
 
-    // (старый тултип)
     const oldTooltip = document.getElementById('chart-item-tooltip');
     if (oldTooltip) oldTooltip.remove();
 
-    // (сбрасываем указатели на выбранный в поиске элемент)
     selectedSearchItem = null;
     selectedSearchIndex = -1;
 
-    // ===== Записываем данные нового НП =====
     selectedSettlementForInfo = item;
     selectedSettlementId = newIdStr;
     selectedSettlementName = item.name || item.NAME || `ID: ${item.id}`;
     selectedSettlementMode = mode;
 
-    // ВКЛЮЧАЕМ флаг (при выборе нового НП подсветка доступна)
     selectedSettlementHighlighted = true;
 
     const nameEl = document.getElementById('selected-settlement-name');
@@ -621,14 +732,7 @@ function setSelectedSettlement(item, mode) {
         nameEl.title = selectedSettlementName;
     }
 
-    const hlBtn = document.getElementById('ss-btn-highlight');
-    if (hlBtn) {
-        hlBtn.disabled = !isChartMode;
-        hlBtn.title = isChartMode
-            ? 'Отобразить на графике'
-            : 'Доступно только в режиме графика';
-    }
-
+    // Делегируем установку disabled/title по текущему режиму
     showSelectedSettlementBlock();
 }
 function resetAndHideSelectedSettlement() {
@@ -748,81 +852,80 @@ function onTableRowSelected(row) {
     setSelectedSettlement(item, mode);
 }
 
+
 function handleSelectedHighlight() {
     if (!selectedSettlementId) return;
 
-    if (!isChartMode || !ratingChart) {
-        renderPopup('Откройте «График обеспеченности НП региона», чтобы использовать подсветку');
+    // ===== РЕЖИМ ГРАФИКА — подсветка на графике =====
+    if (isChartMode && ratingChart) {
+        const displayData = getChartDisplayData();
+        if (!displayData || displayData.length === 0) return;
+
+        let foundIndex = -1;
+        let foundItem = null;
+        for (let i = 0; i < displayData.length; i++) {
+            const d = displayData[i];
+            if (String(d.id) === String(selectedSettlementId)) {
+                foundIndex = i;
+                foundItem = d;
+                break;
+            }
+        }
+
+        if (foundIndex === -1) {
+            renderPopup('НП не найден среди отображаемых на графике');
+            return;
+        }
+
+        const totalLen = currentDisplayDataLength || displayData.length;
+        const currentMin = ratingChart.options.scales.x.min || 0;
+        const currentMax = ratingChart.options.scales.x.max || totalLen;
+        const visibleCount = currentMax - currentMin;
+
+        if (foundIndex < currentMin || foundIndex >= currentMin + visibleCount) {
+            const newMin = Math.max(0, foundIndex - Math.floor(visibleCount / 2));
+            const newMax = Math.min(totalLen, newMin + visibleCount);
+            ratingChart.options.scales.x.min = newMin;
+            ratingChart.options.scales.x.max = newMax;
+        }
+
+        selectedSearchItem = foundItem;
+        selectedSearchIndex = foundIndex;
+        selectedSettlementHighlighted = true;
+
+        const ds0 = ratingChart.data.datasets[0];
+        const ds1 = ratingChart.data.datasets[1];
+
+        const isSel = (d) => String(d.id) === String(selectedSettlementId);
+
+        ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
+        ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
+        ds0.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
+
+        if (ds1) {
+            ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
+            ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
+            ds1.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
+        }
+
+        ratingChart.update();
+
+        requestAnimationFrame(() => {
+            const dd = getChartDisplayData();
+            let idx = -1;
+            for (let i = 0; i < dd.length; i++) {
+                if (String(dd[i].id) === String(selectedSettlementId)) { idx = i; break; }
+            }
+            if (idx !== -1) {
+                selectedSearchIndex = idx;
+                showItemTooltip(dd[idx], idx);
+            }
+        });
         return;
     }
 
-    const displayData = getChartDisplayData();
-    if (!displayData || displayData.length === 0) return;
-
-    let foundIndex = -1;
-    let foundItem = null;
-    for (let i = 0; i < displayData.length; i++) {
-        const d = displayData[i];
-        if (String(d.id) === String(selectedSettlementId)) {
-            foundIndex = i;
-            foundItem = d;
-            break;
-        }
-    }
-
-    if (foundIndex === -1) {
-        renderPopup('НП не найден среди отображаемых на графике');
-        return;
-    }
-
-    // Прокрутить к элементу, если зум ограничивает
-    const totalLen = currentDisplayDataLength || displayData.length;
-    const currentMin = ratingChart.options.scales.x.min || 0;
-    const currentMax = ratingChart.options.scales.x.max || totalLen;
-    const visibleCount = currentMax - currentMin;
-
-    if (foundIndex < currentMin || foundIndex >= currentMin + visibleCount) {
-        const newMin = Math.max(0, foundIndex - Math.floor(visibleCount / 2));
-        const newMax = Math.min(totalLen, newMin + visibleCount);
-        ratingChart.options.scales.x.min = newMin;
-        ratingChart.options.scales.x.max = newMax;
-    }
-
-    selectedSearchItem = foundItem;
-    selectedSearchIndex = foundIndex;
-
-    // ВКЛЮЧАЕМ флаг
-    selectedSettlementHighlighted = true;
-
-    const ds0 = ratingChart.data.datasets[0];
-    const ds1 = ratingChart.data.datasets[1];
-
-    const isSel = (d) => String(d.id) === String(selectedSettlementId);
-
-    ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
-    ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
-    ds0.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
-
-    if (ds1) {
-        ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
-        ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
-        ds1.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
-    }
-
-    ratingChart.update();
-
-    // Показать тултип ПОСЛЕ перерисовки canvas
-    requestAnimationFrame(() => {
-        const dd = getChartDisplayData();
-        let idx = -1;
-        for (let i = 0; i < dd.length; i++) {
-            if (String(dd[i].id) === String(selectedSettlementId)) { idx = i; break; }
-        }
-        if (idx !== -1) {
-            selectedSearchIndex = idx;
-            showItemTooltip(dd[idx], idx);
-        }
-    });
+    // ===== РЕЖИМ ТАБЛИЦЫ — переход к строке НП =====
+    jumpToSettlementInTable(String(selectedSettlementId));
 }
 
 function handleSelectedInfo() {
@@ -1288,13 +1391,11 @@ function showItemTooltip(item, chartIndex) {
         if (idx !== -1) placeText = idx + 1;
     }
 
-    // ---------- Заголовок ----------
     const titleEl = document.createElement('div');
     titleEl.className = 'chart-tooltip__title';
     titleEl.textContent = name;
     tooltip.appendChild(titleEl);
 
-    // ---------- Тело ----------
     const bodyEl = document.createElement('div');
     bodyEl.className = 'chart-tooltip__body';
 
@@ -1320,9 +1421,24 @@ function showItemTooltip(item, chartIndex) {
     tooltip.appendChild(bodyEl);
     document.body.appendChild(tooltip);
 
-    requestAnimationFrame(() => {
+    // Стартовая позиция вне экрана, чтобы не мигало
+    tooltip.style.left = '-9999px';
+    tooltip.style.top  = '-9999px';
+    tooltip.style.maxWidth = Math.min(400, window.innerWidth - 40) + 'px';
+
+    // Позиционируем с повторными попытками, пока chartArea не готов
+    let attempts = 0;
+    const tryPosition = () => {
+        if (!ratingChart || !ratingChart.chartArea) {
+            if (attempts < 20) {
+                attempts++;
+                requestAnimationFrame(tryPosition);
+            }
+            return;
+        }
         positionTooltipOverBar(tooltip, chartIndex);
-    });
+    };
+    requestAnimationFrame(tryPosition);
 }
 
 // ==================== ПОЗИЦИОНИРОВАНИЕ ПЛАШКИ ====================
@@ -1539,7 +1655,243 @@ function clearChartSelection() {
     const tooltip = document.getElementById('chart-item-tooltip');
     if (tooltip) tooltip.remove();
 }
+// Восстановить выделение по selectedSettlementId (устойчиво к пересозданию графика)
+function restoreSelectionById(attempt = 0) {
+    if (!ratingChart || !selectedSettlementId) return;
 
+    const displayData = getChartDisplayData();
+    if (!displayData || displayData.length === 0) return;
+
+    const chartArea = ratingChart.chartArea;
+    const meta = ratingChart.getDatasetMeta(0);
+    const metaReady = meta && meta.data && meta.data.length === displayData.length;
+
+    if ((!chartArea || !metaReady) && attempt < 20) {
+        requestAnimationFrame(() => restoreSelectionById(attempt + 1));
+        return;
+    }
+
+    let foundIndex = -1;
+    for (let i = 0; i < displayData.length; i++) {
+        if (String(displayData[i].id) === String(selectedSettlementId)) {
+            foundIndex = i;
+            break;
+        }
+    }
+
+    if (foundIndex !== -1) {
+        selectedSearchItem = displayData[foundIndex];
+        selectedSearchIndex = foundIndex;
+        selectedSettlementHighlighted = true;
+    } else {
+        selectedSearchItem = null;
+        selectedSearchIndex = -1;
+        selectedSettlementHighlighted = false;
+    }
+
+    const isSelectedAt = (i) => {
+        if (!selectedSettlementHighlighted) return false;
+        const d = displayData[i];
+        return d && String(d.id) === String(selectedSettlementId);
+    };
+
+    const ds0 = ratingChart.data.datasets[0];
+    const ds1 = ratingChart.data.datasets[1];
+
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
+
+    if (ds1) {
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
+    }
+
+    ratingChart.update('none');
+
+    if (foundIndex !== -1) {
+        requestAnimationFrame(() => {
+            const dd = getChartDisplayData();
+            let idx = -1;
+            for (let i = 0; i < dd.length; i++) {
+                if (String(dd[i].id) === String(selectedSettlementId)) {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx !== -1 && dd[idx]) {
+                selectedSearchIndex = idx;
+                showItemTooltip(dd[idx], idx);
+            }
+        });
+    }
+}
+
+function jumpToSettlementInTable(settlementId) {
+    if (!settlementId) return;
+
+    const targetId = String(settlementId).trim();
+
+    const fullData = currentSettlementsFiltered || [];
+    if (fullData.length === 0) {
+        renderPopup('Таблица пуста');
+        return;
+    }
+
+    let globalIndex = -1;
+    for (let i = 0; i < fullData.length; i++) {
+        if (String(fullData[i].id) === targetId) {
+            globalIndex = i;
+            break;
+        }
+    }
+
+    if (globalIndex === -1) {
+        renderPopup('НП не найден в текущей таблице');
+        return;
+    }
+
+    const pageSize = settlementsData.pageSize || 100;
+    const targetPage = Math.floor(globalIndex / pageSize);
+
+    // Если НП на другой странице — перерисовываем на нужную
+    if (targetPage !== currentDisplayPage) {
+        currentDisplayPage = targetPage;
+
+        if (showRatings) {
+            if (savedFilterField && savedFilterValue) {
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, targetPage, pageSize, true);
+            } else {
+                renderCombinedTable(originalDataForFilter, originalTotalForFilter, targetPage, pageSize, false);
+            }
+        } else {
+            if (savedFilterField && savedFilterValue) {
+                renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, targetPage, pageSize, true);
+            } else {
+                renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, targetPage, pageSize, false);
+            }
+        }
+
+        requestAnimationFrame(() => {
+            const tbody = document.querySelector('#settlements-table tbody');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            for (const tr of rows) {
+                if (String(tr.dataset.id) === targetId) {
+                    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break;
+                }
+            }
+        });
+        return;
+    }
+
+    // НП на текущей странице — кликаем и прокручиваем
+    const tbody = document.querySelector('#settlements-table tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    for (const tr of rows) {
+        if (String(tr.dataset.id) === targetId) {
+            tr.click();
+            tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+    }
+
+    renderPopup('НП не найден на текущей странице');
+}
+// Восстанавливает selectedSettlement* из localStorage (id_np → поиск в settlementsData.items)
+// Восстанавливает selectedSettlement* из localStorage (id_np → поиск в settlementsData.items)
+function restoreSelectedFromStorage() {
+    const storedId = lsGet(LS_KEYS.idNp, null);
+    if (!storedId) return false;
+
+    const targetId = String(storedId).trim();
+
+    const item = (settlementsData.items || []).find(
+        it => String(it.id) === targetId
+    );
+
+    if (item) {
+        selectedSettlementId = String(item.id);
+        selectedSettlementName = item.name || `ID: ${item.id}`;
+        selectedSettlementLat = item.lat;
+        selectedSettlementLon = item.lon;
+        selectedSettlementArea = item.area;
+        selectedSettlementForInfo = item;
+        return true;
+    }
+
+    // Если НП нет в текущей выборке — всё равно сохраняем ID
+    selectedSettlementId = targetId;
+    selectedSettlementName = `ID: ${targetId}`;
+    return false;
+}
+// Выбрать строку в таблице по id_np из localStorage.
+// Если НП на другой странице — автоматически переключить страницу и выбрать.
+function selectInitialRowInTable(tbody, options = {}) {
+    if (!tbody) return false;
+
+    const {
+        fallbackToFirst = true,
+        persistFallback = true,
+        goToPage = null,
+        currentPage = 0,
+        pageSize = 100,
+        sortedData = null
+    } = options;
+
+    const storedId = lsGet(LS_KEYS.idNp, null);
+    const targetId = storedId ? String(storedId).trim() : null;
+
+    // === 1. Ищем НП на текущей странице ===
+    if (targetId) {
+        const rows = tbody.querySelectorAll('tr');
+        for (const tr of rows) {
+            if (String(tr.dataset.id) === targetId) {
+                tr.click();
+                return true;
+            }
+        }
+    }
+
+    // === 2. НП нет на текущей — ищем в полном массиве и переключаем страницу ===
+    if (targetId && Array.isArray(sortedData) && sortedData.length > 0) {
+        let globalIndex = -1;
+        for (let i = 0; i < sortedData.length; i++) {
+            if (String(sortedData[i].id) === targetId) {
+                globalIndex = i;
+                break;
+            }
+        }
+
+        if (globalIndex !== -1) {
+            const targetPage = Math.floor(globalIndex / pageSize);
+            if (targetPage !== currentPage && typeof goToPage === 'function') {
+                goToPage(targetPage);
+                return true;
+            }
+        }
+    }
+
+    // === 3. Fallback — первая строка ===
+    if (!fallbackToFirst) return false;
+
+    const firstRow = tbody.querySelector('tr');
+    if (firstRow) {
+        if (!persistFallback && storedId) {
+            firstRow.click();
+            lsSet(LS_KEYS.idNp, storedId);
+        } else {
+            firstRow.click();
+        }
+        return false;
+    }
+
+    return false;
+}
 function restoreSelectionAfterUpdate() {
     if (!selectedSearchItem || !ratingChart) return;
 
@@ -1752,7 +2104,7 @@ function renderFormatControls() {
     const container = document.querySelector('.table_buttons');
     if (!container) return;
 
-    // Удаляем старые, если есть
+    // Безусловно удаляем старую группу (даже если isChartMode false)
     const oldGroup = document.getElementById('format-controls-group');
     if (oldGroup) oldGroup.remove();
 
@@ -1764,7 +2116,7 @@ function renderFormatControls() {
     group.style.display = 'flex';
     group.style.alignItems = 'center';
     group.style.gap = '12px';
-    group.style.marginRight = 'auto'; // Прижимает остальные кнопки вправо
+    group.style.marginRight = 'auto';
     group.style.paddingLeft = '4px';
 
     const formatLabel = document.createElement('label');
@@ -1792,21 +2144,17 @@ function renderFormatControls() {
             if (!this.checked) return;
             currentChartFormat = value;
 
-            // Сохраняем зум
             const savedMin = ratingChart ? ratingChart.options.scales.x.min : undefined;
             const savedMax = ratingChart ? ratingChart.options.scales.x.max : undefined;
 
-            // Перерисовываем
             createRatingChart(chartAllData.length > 0 ? chartAllData : [], chartType);
 
-            // Восстанавливаем зум
             if (ratingChart && savedMin !== undefined && savedMax !== undefined) {
                 ratingChart.options.scales.x.min = savedMin;
                 ratingChart.options.scales.x.max = savedMax;
                 ratingChart.update('none');
             }
 
-            // Восстанавливаем выделение
             if (selectedSearchItem) {
                 setTimeout(() => restoreSelectionAfterUpdate(), 100);
             }
@@ -1820,7 +2168,6 @@ function renderFormatControls() {
     group.appendChild(makeRadio('full', 'Полный'));
     group.appendChild(makeRadio('short', 'Краткий'));
 
-    // Вставляем в начало контейнера с кнопками
     container.insertBefore(group, container.firstChild);
 }
 function renderChartControls(currentSortField) {
@@ -2738,11 +3085,12 @@ function createRatingChart(data, type) {
 
     updateZoomInfo();
 
-    // Подгоняем размер под экран
     setTimeout(() => resizeRatingChart(), 0);
 
-    if (selectedSearchItem) {
-        setTimeout(() => restoreSelectionAfterUpdate(), 100);
+    // Восстанавливаем выделение по selectedSettlementId
+    if (selectedSettlementId) {
+        selectedSettlementHighlighted = true;
+        setTimeout(() => restoreSelectionById(), 0);
     }
 }
 
@@ -3574,7 +3922,7 @@ async function loadRegions() {
     try {
         const regions = await getRegions();
         const select = document.getElementById('region');
-        if (!select) return;
+        if (!select) return [];
 
         select.innerHTML = '';
 
@@ -3592,28 +3940,55 @@ async function loadRegions() {
 
         const urlParams = new URLSearchParams(window.location.search);
         const regionsParam = urlParams.get('regions');
+        const idNpParam = urlParams.get('id_np');
 
+        // Приоритет: URL → localStorage → дефолт (29)
+        let regionIds = null;
         if (regionsParam) {
-            const regionIds = regionsParam.split(',').map(id => id.trim());
+            regionIds = regionsParam.split(',').map(id => id.trim()).filter(Boolean);
+            lsSet(LS_KEYS.regions, regionsParam);
+        } else {
+            const stored = lsGet(LS_KEYS.regions, DEFAULT_REGION);
+            regionIds = stored
+                ? String(stored).split(',').map(id => id.trim()).filter(Boolean)
+                : [DEFAULT_REGION];
+        }
 
-            const allOptions = select.querySelectorAll('option');
-            allOptions.forEach(opt => opt.selected = false);
+        if (idNpParam) {
+            lsSet(LS_KEYS.idNp, idNpParam);
+        }
 
-            let foundCount = 0;
+        const allOptions = select.querySelectorAll('option');
+        allOptions.forEach(opt => opt.selected = false);
+
+        let foundCount = 0;
+        allOptions.forEach(opt => {
+            if (opt.value === 'all') return;
+            const optValue = String(opt.value).trim();
+            if (regionIds.includes(optValue)) {
+                opt.selected = true;
+                foundCount++;
+            }
+        });
+
+        // Fallback: дефолтный регион 29
+        if (foundCount === 0) {
             allOptions.forEach(opt => {
-                if (opt.value === 'all') return;
-                const optValue = String(opt.value).trim();
-                if (regionIds.includes(optValue)) {
+                if (String(opt.value).trim() === DEFAULT_REGION) {
                     opt.selected = true;
                     foundCount++;
                 }
             });
-
-            if (foundCount === 0) {
-                const allOpt = select.querySelector('option[value="all"]');
-                if (allOpt) allOpt.selected = true;
-            }
         }
+
+        // Если и 29 нет в списке — только тогда 'all'
+        if (foundCount === 0) {
+            const allOpt = select.querySelector('option[value="all"]');
+            if (allOpt) allOpt.selected = true;
+        }
+
+        // Синхронизируем localStorage с тем, что реально выбрано
+        persistSelectedRegions();
 
         loader.close();
         return regions;
@@ -3673,7 +4048,7 @@ function getSelectedRegions() {
     const values = [];
 
     for (let i = 0; i < selectedOptions.length; i++) {
-        let val = String(selectedOptions[i].value).trim();
+        const val = String(selectedOptions[i].value).trim();
         if (val === 'all') {
             const allOptions = regionSelect.querySelectorAll('option');
             const allIds = [];
@@ -3683,11 +4058,10 @@ function getSelectedRegions() {
                     allIds.push(optVal);
                 }
             });
+            // Если реальных регионов нет — вернётся [] (не 'all'!)
             return allIds;
         }
-        if (val) {
-            values.push(val);
-        }
+        if (val) values.push(val);
     }
 
     return values;
@@ -4357,13 +4731,22 @@ async function handleRatingChartButton() {
     const ok = await loadRatingsData();
     if (!ok) return;
 
+    // Восстанавливаем selectedSettlement* из LS (нужно до построения графика)
+    if (!selectedSettlementId) {
+        restoreSelectedFromStorage();
+    }
+
     switchToChartMode();
 
     const chartRadio = document.querySelector('input[name="view-mode"][value="chart"]');
     if (chartRadio) chartRadio.checked = true;
 
-    // Блок показываем пустым — заполнится после клика по столбцу
     showSelectedSettlementBlock();
+
+    // Восстановить выделение + тултип после пересоздания графика
+    if (selectedSettlementId) {
+        setTimeout(() => restoreSelectionById(), 200);
+    }
 }
 
 async function handleRatingTableButton() {
@@ -4379,6 +4762,29 @@ async function handleRatingTableButton() {
     if (tableRadio) tableRadio.checked = true;
 
     showSelectedSettlementBlock();
+
+    // Сбрасываем UI графика (формат + тултип)
+    resetChartUIState();
+
+    // Восстанавливаем selectedSettlement* из LS, если после диаграммы был сброшен
+    if (!selectedSettlementId) {
+        restoreSelectedFromStorage();
+    }
+
+    // Синхронизируем выделение строки с сохранённым НП
+    if (selectedSettlementId) {
+        const item = settlementsData.items.find(
+            it => String(it.id) === String(selectedSettlementId)
+        );
+        if (item) {
+            setSelectedSettlement(item, 'table');
+        } else {
+            const nameEl = document.getElementById('selected-settlement-name');
+            if (nameEl) {
+                nameEl.textContent = selectedSettlementName || `ID: ${selectedSettlementId}`;
+            }
+        }
+    }
 }
 
 // ==================== Диаграмма обеспеченности НП ====================
@@ -4387,12 +4793,13 @@ async function handleAnalyticsDashboardButton() {
     const ok = await loadRatingsData();
     if (!ok) return;
 
+    // Восстанавливаем selectedSettlement* из LS перед переключением
+    restoreSelectedFromStorage();
+
     switchToAnalyticsMode();
 
     const radio = document.querySelector('input[name="view-mode"][value="analytics"]');
     if (radio) radio.checked = true;
-
-    resetAndHideSelectedSettlement();
 }
 
 function destroyAnalyticsDashboard() {
@@ -4428,16 +4835,13 @@ function switchToAnalyticsMode() {
     const table = document.getElementById('settlements-table');
     if (table) table.style.display = 'none';
 
-    // Убираем кнопки
     hideSettlementButtons();
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 
-    // Убираем "Формат графика" (и другие возможные кнопки в панели)
     const formatGroup = document.getElementById('format-controls-group');
     if (formatGroup) formatGroup.remove();
 
-    // Чистим остатки
     const filterContainer = document.querySelector('.filter-container');
     if (filterContainer) filterContainer.remove();
 
@@ -4448,6 +4852,11 @@ function switchToAnalyticsMode() {
     if (paginationContainer) {
         paginationContainer.style.display = 'none';
         paginationContainer.innerHTML = '';
+    }
+
+    // Гарантируем, что id_np в LS актуален
+    if (selectedSettlementId) {
+        persistSelectedIdNp(selectedSettlementId);
     }
 
     resetAndHideSelectedSettlement();
@@ -5584,14 +5993,28 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
+    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ: сохранённый id_np (с автопереходом на нужную страницу),
+    // иначе — первая
     if (pageData && pageData.length > 0) {
-        const firstRow = tbody.querySelector('tr');
-        if (firstRow) {
-            firstRow.click();
-        }
+        selectInitialRowInTable(tbody, {
+            fallbackToFirst: true,
+            persistFallback: true,
+            sortedData: sortedData,
+            currentPage: page,
+            pageSize: pageSize,
+            goToPage: (newPage) => {
+                currentDisplayPage = newPage;
+                if (savedFilterField && savedFilterValue) {
+                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, true);
+                } else {
+                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, false);
+                }
+            }
+        });
     }
 
     showSettlementButtons();
+
 }
 
 // ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ ====================
@@ -5910,12 +6333,28 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
+    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ: сохранённый id_np (с автопереходом на нужную страницу),
+    // иначе — первая
     if (pageData && pageData.length > 0) {
-        const firstRow = tbody.querySelector('tr');
-        if (firstRow) firstRow.click();
+        selectInitialRowInTable(tbody, {
+            fallbackToFirst: true,
+            persistFallback: true,
+            sortedData: sortedData,
+            currentPage: page,
+            pageSize: pageSize,
+            goToPage: (newPage) => {
+                currentDisplayPage = newPage;
+                if (savedFilterField && savedFilterValue) {
+                    renderCombinedTable(allData, allTotal, newPage, pageSize, true);
+                } else {
+                    renderCombinedTable(allData, allTotal, newPage, pageSize, false);
+                }
+            }
+        });
     }
 
     showSettlementButtons();
+
 }
 
 // ==================== ПАГИНАЦИЯ ====================
@@ -6654,15 +7093,18 @@ function switchToChartMode() {
         paginationContainer.innerHTML = '';
     }
 
-    // Если НП уже выбран — активируем кнопку подсветки
     const hlBtn = document.getElementById('ss-btn-highlight');
     if (hlBtn && selectedSettlementId) {
         hlBtn.disabled = false;
         hlBtn.title = 'Отобразить на графике';
     }
 
-    // Показываем контролы формата внизу
     renderFormatControls();
+
+    if (selectedSettlementId) {
+        selectedSettlementHighlighted = true;
+        setTimeout(() => restoreSelectionById(), 150);
+    }
 }
 
 async function handleSettlementsButton() {
@@ -6718,7 +7160,22 @@ async function handleSettlementsButton() {
 
         showSettlementButtons();
 
+        resetChartUIState();
+
         showSelectedSettlementBlock();
+
+        if (!selectedSettlementId) {
+            restoreSelectedFromStorage();
+        }
+
+        if (selectedSettlementId) {
+            const item = settlementsData.items.find(
+                it => String(it.id) === String(selectedSettlementId)
+            );
+            if (item) {
+                setSelectedSettlement(item, 'table');
+            }
+        }
     }
 }
 
@@ -6730,7 +7187,18 @@ async function handleResButton() {
 }
 
 // ==================== ОЧИСТКА ====================
+// Восстанавливает selectedSettlement* из localStorage (id_np → поиск в settlementsData.items)
 
+function resetChartUIState() {
+    const formatGroup = document.getElementById('format-controls-group');
+    if (formatGroup) formatGroup.remove();
+
+    const tooltip = document.getElementById('chart-item-tooltip');
+    if (tooltip) tooltip.remove();
+
+    // Кнопку подсветки не трогаем — showSelectedSettlementBlock() выставит по режиму
+    showSelectedSettlementBlock();
+}
 function handleClear() {
     document.body.classList.remove('analytics-mode');
     const form = document.querySelector('.form__rating');
@@ -6742,9 +7210,7 @@ function handleClear() {
             options.forEach(opt => opt.selected = false);
         }
         const typeConnectSelect = document.getElementById('type-connect');
-        if (typeConnectSelect) {
-            typeConnectSelect.value = 'all';
-        }
+        if (typeConnectSelect) typeConnectSelect.value = 'all';
     }
 
     const radioRange = document.getElementById('number-settlement');
@@ -6764,12 +7230,8 @@ function handleClear() {
     hideCalculateAllButton();
     hideCalculateSelectedButton();
 
-    // ===== ДОБАВИТЬ ЭТИ 3 СТРОКИ =====
     const formatGroup = document.getElementById('format-controls-group');
     if (formatGroup) formatGroup.remove();
-    // =================================
-
-    // Сброс выбранного НП и скрытие блока
 
     resetAndHideSelectedSettlement();
 
@@ -6837,6 +7299,14 @@ function handleClear() {
     if (tooltip) tooltip.remove();
 
     showPlaceholder();
+
+    // Блок «Выбранный НП» скрыт; кнопка подсветки выключена
+    hideSelectedSettlementBlock();
+    const hlBtn = document.getElementById('ss-btn-highlight');
+    if (hlBtn) {
+        hlBtn.disabled = true;
+        hlBtn.title = 'Выберите НП';
+    }
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
@@ -6880,9 +7350,8 @@ function handleSelectedClear() {
 }
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     initLoader();
-    loadRegions();
     loadResKindsSelect();
 
     hideResPageSize();
@@ -6906,9 +7375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnNormConsumption) btnNormConsumption.remove();
 
     const clearBtn = document.getElementById('clear-btn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', handleClear);
-    }
+    if (clearBtn) clearBtn.addEventListener('click', handleClear);
 
     const closeBtn = document.getElementById('close-btn');
     if (closeBtn) {
@@ -6916,16 +7383,14 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             window.close();
             setTimeout(() => {
-                if (!window.closed) {
-                    window.location.href = '/';
-                }
+                if (!window.closed) window.location.href = '/';
             }, 100);
         });
     }
 
     setupDoubleClickHandler();
 
-    // ===== Обработчики кнопок блока «Выбранный НП» =====
+    // ===== Обработчики блока «Выбранный НП» =====
     const ssHighlight = document.getElementById('ss-btn-highlight');
     if (ssHighlight) ssHighlight.addEventListener('click', handleSelectedHighlight);
 
@@ -6937,45 +7402,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
     hideSelectedSettlementBlock();
 
-    // ===== ОБРАБОТКА URL ПАРАМЕТРОВ =====
+    // ===== Обработчик change для сохранения регионов =====
+    const regionSelectEl = document.getElementById('region');
+    if (regionSelectEl) {
+        regionSelectEl.addEventListener('change', persistSelectedRegions);
+    }
+
+    // ===== Читаем URL-параметры и LS СРАЗУ (до загрузки регионов) =====
     const urlParams = new URLSearchParams(window.location.search);
     const regionsParam = urlParams.get('regions');
     const typeParam = urlParams.get('type');
-    const idNpParam = urlParams.get('id_np'); // ← Читаем ID НП из URL
+    const idNpParam = urlParams.get('id_np');
 
-    if (regionsParam) {
-        setTimeout(async () => {
-            const selectedCount = document.getElementById('region').selectedOptions.length;
-            if (selectedCount > 0) {
-                if (typeParam === '2') {
-                    // type=2 → логика кнопки "График"
-                    await handleRatingChartButton();
+    // Если в URL пришли — перезаписываем ОБА в LS
+    if (regionsParam) lsSet(LS_KEYS.regions, regionsParam);
+    if (idNpParam)    lsSet(LS_KEYS.idNp, idNpParam);
 
-                    // Если передан id_np — выбираем и подсвечиваем этот НП
-                    if (idNpParam) {
-                        // Ждем немного, чтобы график успел отрисоваться
-                        setTimeout(() => {
-                            const targetId = String(idNpParam).trim();
+    const effectiveIdNp = idNpParam || lsGet(LS_KEYS.idNp, DEFAULT_ID_NP);
 
-                            // Ищем НП в загруженных данных
-                            const item = settlementsData.items.find(it => String(it.id) === targetId);
+    // ===== ДОЖИДАЕМСЯ загрузки регионов =====
+    let regionsLoaded = [];
+    try {
+        regionsLoaded = await loadRegions();
+    } catch (e) {
+        console.error('loadRegions error:', e);
+    }
 
-                            if (item) {
-                                // 1. Выбираем НП (заполняет блок «Выбранный НП» в левом меню)
-                                setSelectedSettlement(item, 'chart');
+    // После await <select> уже заполнен, и в нём применены LS/URL.
+    // Проверим, что реально выбран регион (не пусто).
+    const regionSelect = document.getElementById('region');
+    if (!regionSelect) return;
 
-                                // 2. Подсвечиваем его на графике (красная полоса + тултип)
-                                handleSelectedHighlight();
-                            } else {
-                                console.warn(`НП с ID ${targetId} не найден в загруженных данных.`);
-                            }
-                        }, 800); // Задержка, чтобы график успел отрисоваться
-                    }
+    const hasRealOptions = Array.from(regionSelect.querySelectorAll('option'))
+        .some(opt => opt.value !== 'all' && String(opt.value).trim() !== '');
+    if (!hasRealOptions) {
+        console.warn('Регионы не загрузились — автозапуск отменён');
+        return;
+    }
+
+    if (regionSelect.selectedOptions.length === 0) {
+        applyRegionsFromStorage();
+    }
+
+    const selectedRegionsNow = getSelectedRegions();
+    if (selectedRegionsNow.length === 0) {
+        console.warn('После загрузки регионов выбор пуст — автозапуск отменён');
+        return;
+    }
+
+    // ===== Автозапуск по type =====
+    if (typeParam === '2') {
+        await handleRatingChartButton();
+
+        if (effectiveIdNp) {
+            setTimeout(() => {
+                const targetId = String(effectiveIdNp).trim();
+                const item = settlementsData.items.find(
+                    it => String(it.id) === targetId
+                );
+                if (item) {
+                    setSelectedSettlement(item, 'chart');
+                    handleSelectedHighlight();
                 } else {
-                    // type=1 или отсутствует → логика кнопки "Диаграммы"
-                    await handleAnalyticsDashboardButton();
+                    console.warn(`НП с ID ${targetId} не найден в загруженных данных.`);
                 }
-            }
-        }, 500);
+            }, 800);
+        }
+    } else if (typeParam === '1') {
+        await handleAnalyticsDashboardButton();
     }
 });
