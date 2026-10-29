@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="loader-container loader-container--hidden">
+    <span class="loader"></span>
+    <span class="loader-container__title">Загрузка...</span>
+</div>
+<h2>Нормы потребления</h2>
+
+<div class="row_vi single-table">
+    <div class="column2_vi">
+        <div class="container_content"></div>
+
+        <div id="modal__sql" class="modal" style="display: none">
+            <div class="modal__dialog">
+                <div class="modal__content">
+                    <h4 class="modal__header">SQL структура</h4>
+                    <div class="modal_data"></div>
+                    <button class="modal__closes">Закрыть</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="myModal" class="modal">
+            <div class="modal__dialog">
+                <div class="modal-content">
+                    <div class="modal-actions-menu">
+                        <div id="timer-settings"></div>
+                        <div class="modal-buttons-container">
+                            <button class="modal-resize-btn" title="Закрыть">[x]</button>
+                        </div>
+                    </div>
+                    <h4 class="modal-header">Настройки</h4>
+                    <div class="modal_wrapper">
+                        <div class="wrapper-column">
+                            <h4>Параметры отображения</h4>
+                            <div>
+                                <div class="task-parameter">
+                                    <label for="color-ka-select-stand">Цвет рамки стандартного района  <span></span> :</label>
+                                    <select id="color-ka-select-stand" name="color-ka-select" class="parameter-select">
+                                        <option value="#0000ff">Синий</option>
+                                        <option value="#00bfff">Голубой</option>
+                                        <option value="#0400b0">Тёмно-синий</option>
+                                        <option value="#000000">Чёрный</option>
+                                        <option value="#ff0000">Красный</option>
+                                        <option value="#00FF00">Зеленый</option>
+                                        <option value="#7b6ac4">Фиолетовый</option>
+                                        <option value="#f4a900">Оранжевый</option>
+                                        <option value="#42f5ce">Бирюзовый</option>
+                                    </select>
+                                </div>
+                                <div class="task-parameter">
+                                    <label for="color-ka-select-big">Цвет рамки большого района  <span></span> :</label>
+                                    <select id="color-ka-select-big" name="color-ka-select" class="parameter-select">
+                                        <option value="#f4a900">Оранжевый</option>
+                                        <option value="#0000ff">Синий</option>
+                                        <option value="#00bfff">Голубой</option>
+                                        <option value="#0400b0">Тёмно-синий</option>
+                                        <option value="#000000">Чёрный</option>
+                                        <option value="#ff0000">Красный</option>
+                                        <option value="#00FF00">Зеленый</option>
+                                        <option value="#7b6ac4">Фиолетовый</option>
+                                        <option value="#42f5ce">Бирюзовый</option>
+                                    </select>
+                                </div>
+                                <div class="task-parameter">
+                                    <label for="color-ka-select-short">Цвет рамки малого района  <span></span> :</label>
+                                    <select id="color-ka-select-short" name="color-ka-select" class="parameter-select">
+                                        <option value="#00FF00">Зеленый</option>
+                                        <option value="#f4a900">Оранжевый</option>
+                                        <option value="#0000ff">Синий</option>
+                                        <option value="#00bfff">Голубой</option>
+                                        <option value="#0400b0">Тёмно-синий</option>
+                                        <option value="#000000">Чёрный</option>
+                                        <option value="#ff0000">Красный</option>
+                                        <option value="#7b6ac4">Фиолетовый</option>
+                                        <option value="#42f5ce">Бирюзовый</option>
+                                    </select>
+                                </div>
+                                <div class="task-parameter">
+                                    <label for="color-ka-select-zapr">Цвет рамки запрещенного района  <span></span> :</label>
+                                    <select id="color-ka-select-zapr" name="color-ka-select" class="parameter-select">
+                                        <option value="#ff0000">Красный</option>
+                                        <option value="#00FF00">Зеленый</option>
+                                        <option value="#f4a900">Оранжевый</option>
+                                        <option value="#0000ff">Синий</option>
+                                        <option value="#00bfff">Голубой</option>
+                                        <option value="#0400b0">Тёмно-синий</option>
+                                        <option value="#000000">Чёрный</option>
+                                        <option value="#7b6ac4">Фиолетовый</option>
+                                        <option value="#42f5ce">Бирюзовый</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wrapper-column">
+                            <h4>Настройки карты</h4>
+                            <div>
+                                <span>Проекция:</span>
+                                <select class="default-list" id="projectionSelect">
+                                    <option value="EPSG:3857">EPSG:3857</option>
+                                    <option value="EPSG:4326" selected="">EPSG:4326</option>
+                                </select>
+                            </div>
+                            <div class="task-parameter" style="display: flex; flex-direction: column; align-items: center; justify-items: end; gap: 10px; width: 100%; margin-top: 20px;">
+                                <button style="width: 100%;" class="default-button parameter-input btn-load-settings" disabled="">Загрузить сохраненные настройки</button>
+                                <button style="width: 100%;" class="default-button parameter-input btn-save-settings" disabled="">Сохранить текущие настройки</button>
+                                <button style="width: 100%;" class="default-button parameter-input btn-reset-settings" disabled>Загрузить настройки по умолчанию</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="closes">
+                        <button class="close">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<dialog class="mdl-dialog" id="dialog-res"></dialog>
+<script src="{{ url_for('static', filename='js/norms.js') }}" type="module"></script>
+{% endblock %}

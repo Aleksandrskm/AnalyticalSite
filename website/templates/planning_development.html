@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/planning_development.css') }}">
+
+<h2>Обеспеченность по видам и технологиям связи</h2>
+
+<div class="pd-header-block">
+    <div class="pd-header-text">деревня Беклемишевская</div>
+    <div class="pd-header-text">Архангельская область, Устьянский муниципальный район</div>
+</div>
+
+<div class="pd-dashboard-wrapper">
+    <main class="pd-dashboard-container" id="pd-dashboard-grid">
+        <!-- Сетка карточек будет сгенерирована через JS -->
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/planning_development.js') }}" type="module"></script>
+{% endblock %}

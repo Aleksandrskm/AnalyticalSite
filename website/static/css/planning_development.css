@@ -1,0 +1,189 @@
+/* ==================== ЗАГОЛОВКИ ==================== */
+h2 {
+    text-align: center;
+    font-size: 31px; /* Было 24px (+30%) */
+    margin: 20px 0;
+    font-weight: bold;
+}
+
+.pd-header-block {
+    padding-left: 26px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.pd-header-text {
+    font-family: inherit;
+    font-size: 31px; /* Было 24px (+30%) */
+    font-weight: bold;
+    font-style: italic;
+    color: #000;
+    line-height: 1.2;
+}
+
+/* ==================== ОБЩИЙ КОНТЕЙНЕР ==================== */
+.pd-dashboard-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 26px;
+}
+
+.pd-dashboard-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 26px; /* Было 20px (+30%) */
+    padding: 13px 26px;
+    align-items: flex-start;
+    width: max-content;
+}
+
+/* ==================== ГРУППА КАТЕГОРИИ ==================== */
+.pd-category-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px; /* Было 5px (+30%) */
+    flex-shrink: 0;
+}
+
+.pd-category-title {
+    font-size: 18px; /* Было 14px (+30%) */
+    font-weight: bold;
+    color: #333;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    border-bottom: 2px solid #ccc;
+    width: 100%;
+    text-align: center;
+}
+
+.pd-cards-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px; /* Было 8px (+30%) */
+    align-items: flex-start;
+}
+
+/* ==================== КАРТОЧКА ==================== */
+.pd-card {
+    border: 1px solid #999;
+    background: #fff;
+    padding: 8px; /* Было 6px (+30%) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 182px; /* Было 140px (+30%) */
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.pd-card__title {
+    font-size: 13px; /* Было 10px (+30%) */
+    font-weight: bold;
+    margin-bottom: 10px; /* Было 8px (+30%) */
+    text-align: center;
+    min-height: 31px; /* Было 24px (+30%) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+/* ==================== ГРАФИК И СТРЕЛКА ==================== */
+.pd-chart-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    margin-bottom: 13px; /* Было 10px (+30%) */
+    padding-left: 13px;
+}
+
+.pd-mini-chart {
+    width: 33px;  /* Было 25px (+30%) */
+    height: 91px; /* Было 70px (+30%) */
+    border: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.pd-mini-chart .zone-green { flex: 1; background: #4CAF50; }
+.pd-mini-chart .zone-yellow { flex: 1; background: #FFEB3B; }
+.pd-mini-chart .zone-red { flex: 1; background: #F44336; }
+
+.pd-arrow-group {
+    position: relative;
+    margin-left: 10px; /* Было 8px (+30%) */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.pd-arrow-text {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    font-size: 9px; /* Было 7px (+30%) */
+    line-height: 1.1;
+    text-align: left;
+    width: 91px; /* Было 70px (+30%) */
+    margin-bottom: 5px; /* Было 4px (+30%) */
+    color: #333;
+}
+
+.pd-mini-arrow {
+    font-size: 10px; /* Было 8px (+30%) */
+    border: 1px solid #000;
+    padding: 1px 5px; /* Было 1px 4px (+30%) */
+    background: #fff;
+    position: relative;
+    white-space: nowrap;
+    border-radius: 3px;
+}
+
+.pd-mini-arrow::before {
+    content: '';
+    position: absolute;
+    left: -6.5px; /* Было -5px (+30%) */
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;    /* Было 4px (+30%) */
+    border-bottom: 5px solid transparent; /* Было 4px (+30%) */
+    border-right: 6.5px solid #000;       /* Было 5px (+30%) */
+}
+
+/* ==================== ТАБЛИЦА ==================== */
+.pd-card-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px; /* Было 9px (+30%) */
+    margin-top: auto;
+    table-layout: fixed;
+}
+
+.pd-card-table td {
+    border: 1px solid #000;
+    padding: 3px; /* Было 2px (+30%) */
+    word-wrap: break-word;
+    vertical-align: middle;
+}
+
+.pd-card-table .td-label {
+    text-align: left;
+    width: 60%;
+}
+
+.pd-card-table .td-value {
+    text-align: right;
+    font-weight: bold;
+    width: 40%;
+}

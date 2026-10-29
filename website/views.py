@@ -26,3 +26,11 @@ def function_beams():
 @views.route('/editor-nas-p')
 def function_editor_nas():
     return render_template('editor-nas-p.html')
+
+@views.route('/norms')
+def function_norms():
+    return render_template('norms.html')
+
+@views.route('/planning_development')
+def function_planning_development():
+    return render_template('planning_development.html')

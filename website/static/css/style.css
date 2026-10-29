@@ -665,6 +665,10 @@ font-family: Arial, sans-serif;
     box-sizing: border-box;
 }
 
+.row_vi.single-table .column2_vi {
+    width: calc(100% - 20px);
+}
+
 .column2_vi {
     /* flex-shrink: 5;  */
     flex-direction: column;
