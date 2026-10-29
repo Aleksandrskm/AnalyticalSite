@@ -1802,7 +1802,59 @@ function jumpToSettlementInTable(settlementId) {
 
     renderPopup('НП не найден на текущей странице');
 }
-// Восстанавливает selectedSettlement* из localStorage (id_np → поиск в settlementsData.items)
+// Сброс выбранного НП при смене региона
+function resetSelectedOnRegionChange() {
+    // 1. Сбрасываем переменные
+    selectedSettlementId = null;
+    selectedSettlementName = null;
+    selectedSettlementLat = null;
+    selectedSettlementLon = null;
+    selectedSettlementArea = null;
+    selectedSettlementForInfo = null;
+    selectedSettlementHighlighted = false;
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    // 2. Сбрасываем localStorage (чтобы при перерисовке не искало старый НП)
+    lsSet(LS_KEYS.idNp, '');
+
+    // 3. Очищаем DOM-элемент (ставим прочерк)
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = '—';
+        nameEl.title = '';
+    }
+
+    // 4. Обновляем кнопку-стрелку (она станет неактивной)
+    showSelectedSettlementBlock();
+
+    // 5. Убираем тултип графика
+    const tooltip = document.getElementById('chart-item-tooltip');
+    if (tooltip) tooltip.remove();
+
+    // 6. Снимаем выделение со строк таблицы
+    document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
+        tr.classList.remove('selected');
+    });
+
+    // 7. Снимаем красную подсветку с графика
+    if (ratingChart) {
+        const displayData = getChartDisplayData();
+        if (displayData && displayData.length > 0) {
+            const ds0 = ratingChart.data.datasets[0];
+            const ds1 = ratingChart.data.datasets[1];
+            ds0.backgroundColor = displayData.map(() => '#1a73e8');
+            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.borderWidth     = displayData.map(() => 0);
+            if (ds1) {
+                ds1.backgroundColor = displayData.map(() => '#ff6a00');
+                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.borderWidth     = displayData.map(() => 0);
+            }
+            ratingChart.update('none');
+        }
+    }
+}
 // Восстанавливает selectedSettlement* из localStorage (id_np → поиск в settlementsData.items)
 function restoreSelectedFromStorage() {
     const storedId = lsGet(LS_KEYS.idNp, null);
@@ -1821,13 +1873,23 @@ function restoreSelectedFromStorage() {
         selectedSettlementLon = item.lon;
         selectedSettlementArea = item.area;
         selectedSettlementForInfo = item;
-        return true;
+    } else {
+        // Если НП нет в текущей выборке — всё равно сохраняем ID
+        selectedSettlementId = targetId;
+        selectedSettlementName = `ID: ${targetId}`;
     }
 
-    // Если НП нет в текущей выборке — всё равно сохраняем ID
-    selectedSettlementId = targetId;
-    selectedSettlementName = `ID: ${targetId}`;
-    return false;
+    // СИНХРОНИЗИРУЕМ DOM (это исправляет баг с «—»)
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = selectedSettlementName;
+        nameEl.title = selectedSettlementName;
+    }
+
+    // Обновляем состояние кнопки-стрелки
+    showSelectedSettlementBlock();
+
+    return !!item;
 }
 // Выбрать строку в таблице по id_np из localStorage.
 // Если НП на другой странице — автоматически переключить страницу и выбрать.
@@ -7402,10 +7464,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     hideSelectedSettlementBlock();
 
-    // ===== Обработчик change для сохранения регионов =====
+
+    // ===== Обработчик change: сохранение регионов + сброс НП =====
     const regionSelectEl = document.getElementById('region');
     if (regionSelectEl) {
-        regionSelectEl.addEventListener('change', persistSelectedRegions);
+        regionSelectEl.addEventListener('change', () => {
+            persistSelectedRegions();      // сохраняем новый регион
+            resetSelectedOnRegionChange(); // сбрасываем выбранный НП
+        });
     }
 
     // ===== Читаем URL-параметры и LS СРАЗУ (до загрузки регионов) =====
