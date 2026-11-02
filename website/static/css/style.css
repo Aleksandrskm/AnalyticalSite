@@ -820,6 +820,8 @@ img {
     border-radius: 10px;
     text-align: center;
     cursor: pointer; /* Изменение вида курсора */
+    min-height: 90px;
+    min-width: 330px;
 }
 .name-column-menu{
     text-align: center;
