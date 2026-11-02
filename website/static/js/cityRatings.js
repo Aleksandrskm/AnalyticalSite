@@ -2254,8 +2254,8 @@ function renderChartControls(currentSortField) {
     sortSelect.className = 'chart-controls__select';
 
     const options = [
-        { value: 'rating', label: 'По обеспеченности (убывание)' },
-        { value: 'name', label: 'По названию (А-Я)' }
+        { value: 'rating',     label: 'По убыванию обесп. ТИ' },
+        { value: 'rating_asc', label: 'По возрастанию обесп.ТИ' }
     ];
     options.forEach(opt => {
         const option = document.createElement('option');
@@ -2449,7 +2449,37 @@ function renderChartControls(currentSortField) {
 
     updateZoomInfo();
 }
+// Сколько НП имеют рейтинг строго больше threshold (по всему массиву, без break)
+function countRatingsAbove(ratings, threshold) {
+    let c = 0;
+    for (let i = 0; i < ratings.length; i++) {
+        if (ratings[i] > threshold) c++;
+    }
+    return c;
+}
 
+// Индекс «граничного» столбца для порога:
+// при убывании — правый край группы (count-1),
+// при возрастании — левый край группы (len-count).
+function boundaryIndexForThreshold(ratings, threshold, ascending) {
+    const len = ratings.length;
+    const count = countRatingsAbove(ratings, threshold);
+    if (count === 0) return -1;
+    return ascending ? (len - count) : (count - 1);
+}
+
+// Центр столбца по индексу (с учётом границ)
+function makeGetXForIndex(meta, chartArea, len) {
+    return function (idx) {
+        if (idx < 0) return chartArea.left;
+        if (idx >= len) {
+            const lastBar = meta.data[len - 1];
+            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+        }
+        const bar = meta.data[idx];
+        return bar.x + (bar.width || 0) / 2;
+    };
+}
 function renderChartStatsCards(container, stats, rowClass = 'chart-stats-row', insertAfterSelector = null) {
     const old = container.querySelector('.' + rowClass);
     if (old) old.remove();
@@ -2561,8 +2591,8 @@ function rebuildChartPreservingZoom() {
     let sortedData = [...chartAllData];
     if (sortField === 'rating') {
         sortedData.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (sortField === 'name') {
-        sortedData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortField === 'rating_asc') {
+        sortedData.sort((a, b) => (a.rating || 0) - (b.rating || 0));
     }
 
     let displayData = sortedData;
@@ -2660,8 +2690,8 @@ function createRatingChart(data, type) {
     let sortedData = [...chartAllData];
     if (sortField === 'rating') {
         sortedData.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (sortField === 'name') {
-        sortedData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortField === 'rating_asc') {
+        sortedData.sort((a, b) => (a.rating || 0) - (b.rating || 0));
     }
 
     const globalRatingOrder = [...chartAllData]
@@ -2959,89 +2989,143 @@ function createRatingChart(data, type) {
             elements: { bar: { borderRadius: 0 } }
         },
         plugins: [
-            // ---- горизонтальные линии уровней ----
+
+
+
+            // ---- горизонтальные и вертикальные линии уровней ----
             {
                 id: 'referenceLines',
                 afterDatasetsDraw(chart) {
                     const { ctx, chartArea } = chart;
                     if (!chartArea) return;
+
                     const yScale = chart.scales.y;
                     if (!yScale) return;
-
-                    ctx.save();
 
                     const meta = chart.getDatasetMeta(0);
                     if (!meta || !meta.data || meta.data.length === 0) return;
 
                     const len = displayData.length;
-                    const getXForIndex = (idx) => {
-                        if (idx < 0) return chartArea.left;
-                        if (idx >= len) {
-                            const lastBar = meta.data[len - 1];
-                            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
-                        }
-                        const bar = meta.data[idx];
-                        return bar.x + (bar.width || 0) / 2;
-                    };
+                    if (len === 0) return;
 
+                    const ascending = (document.getElementById('chart-sort-select') || {}).value === 'rating_asc';
                     const ratings = displayData.map(d => Number(d.rating) || 0);
-                    const steps = [
-                        { threshold: 80, yLevel: 80 },
-                        { threshold: 60, yLevel: 60 },
-                        { threshold: 40, yLevel: 40 },
-                        { threshold: 20, yLevel: 20 },
-                        { threshold: 0,  yLevel: 0  }
-                    ];
 
+                    ctx.save();
+
+                    // 1. Горизонтальные линии уровней
                     ctx.strokeStyle = 'rgb(70, 70, 70)';
                     ctx.lineWidth = 1;
-
-                    steps.forEach(({ threshold, yLevel }) => {
-                        let count = 0;
-                        for (let i = 0; i < len; i++) {
-                            if (ratings[i] > threshold) count++;
-                            else break;
-                        }
-                        if (count === 0) return;
-
-                        const x = getXForIndex(count - 1);
+                    [20, 40, 60, 80].forEach(yLevel => {
                         const yPixel = yScale.getPixelForValue(yLevel);
-                        const yBottom = yScale.getPixelForValue(0);
-
-                        if (yLevel > 0) {
-                            ctx.beginPath();
-                            ctx.moveTo(chartArea.left, yPixel);
-                            ctx.lineTo(chartArea.right, yPixel);   // до правого края
-                            ctx.stroke();
-                        }
-
                         ctx.beginPath();
-                        ctx.moveTo(x, yPixel);
-                        ctx.lineTo(x, yBottom);
+                        ctx.moveTo(chartArea.left, yPixel);
+                        ctx.lineTo(chartArea.right, yPixel);
                         ctx.stroke();
                     });
 
-                    ctx.restore();
-                }
-            },
+                    // 2. Считаем пороги и границы зон
+                    const thresholds = ascending
+                        ? [0, 20, 40, 60, 80]
+                        : [80, 60, 40, 20, 0];
 
-            // ---- подписи снизу: краткий / полный ----
-            {
-                id: 'lineLabels',
-                afterDatasetsDraw(chart) {
-                    if (currentChartFormat === 'short') {
-                        drawShortLabels(chart, displayData);
-                    } else {
-                        drawFullLabels(chart, displayData);
+                    const cumulative = thresholds.map(th => {
+                        let count = 0;
+                        for (let i = 0; i < len; i++) {
+                            if (ascending) {
+                                if (ratings[i] <= th) count++;
+                            } else {
+                                if (ratings[i] > th) count++;
+                            }
+                        }
+                        return count;
+                    });
+
+                    // Функция вычисления X-координаты на стыке зон
+                    const getBoundaryX = (leftCount) => {
+                        if (len === 1) {
+                            const bar = meta.data[0];
+                            if (!bar) return chartArea.left;
+                            const w = bar.width || 0;
+                            return ascending ? (bar.x - w / 2) : (bar.x + w / 2);
+                        }
+                        if (leftCount <= 0) return chartArea.left;
+                        if (leftCount >= len) {
+                            const last = meta.data[len - 1];
+                            return last ? last.x + (last.width || 0) / 2 : chartArea.right;
+                        }
+                        const leftBar = meta.data[leftCount - 1];
+                        const rightBar = meta.data[leftCount];
+                        return (leftBar.x + rightBar.x) / 2;
+                    };
+
+                    // 3. Рисуем вертикальные линии для каждой зоны
+                    cumulative.forEach((count, index) => {
+                        // Зона не пустая и это не самый конец графика (остаток)
+                        if (count > 0 && count < len) {
+                            const x = getBoundaryX(count);
+                            const yEndVal = thresholds[index]; // 80, 60, 40, 20, 0
+
+                            const yStart = yScale.getPixelForValue(0);
+                            const yEnd = yScale.getPixelForValue(yEndVal);
+
+                            if (Math.abs(yStart - yEnd) > 0.5) {
+                                ctx.beginPath();
+                                ctx.moveTo(x, yStart);
+                                ctx.lineTo(x, yEnd);
+                                ctx.stroke();
+                            }
+                        }
+                    });
+
+                    // 4. Отдельно рисуем линию для ПОСЛЕДНЕЙ зоны (остатка)
+                    // Для возрастания это остаток >80%, для убывания — остаток <=0%
+                    const lastCount = cumulative[cumulative.length - 1];
+                    if (lastCount > 0 && lastCount < len) {
+                        const x = getBoundaryX(lastCount);
+
+                        if (ascending) {
+                            // Последняя линия для возрастания (остаток >80%) — высота 80
+                            const yStart = yScale.getPixelForValue(0);
+                            const yEnd = yScale.getPixelForValue(80);
+                            ctx.beginPath();
+                            ctx.moveTo(x, yStart);
+                            ctx.lineTo(x, yEnd);
+                            ctx.stroke();
+                        } else {
+                            // Последняя линия для убывания (остаток <=0%) — высота 0 (не рисуем)
+                            // Если нужно на всю высоту, раскомментируйте:
+                            /*
+                            const yStart = yScale.getPixelForValue(0);
+                            const yEnd = yScale.getPixelForValue(0);
+                            */
+                        }
                     }
                 }
             },
 
-            // ---- стрелки и итоговые подписи для полного режима ----
+            // ---- 1. ПОДПИСИ ДЛЯ КРАТКОГО РЕЖИМА ----
             {
-                id: 'bottomArrow',
+                id: 'shortLabels',
+                afterDatasetsDraw(chart) {
+                    if (currentChartFormat !== 'short') return;
+                    drawShortLabels(chart, displayData);
+                }
+            },
+            // // ---- 2. СТРЕЛКИ ДЛЯ ПОЛНОГО РЕЖИМА ----
+            // {
+            //     id: 'fullBottomArrows',
+            //     afterDatasetsDraw(chart) {
+            //         if (currentChartFormat !== 'full') return;
+            //         drawFullBottomArrows(chart, displayData);
+            //     }
+            // },
+            // ---- 2. ПОДПИСИ И СТРЕЛКИ ДЛЯ ПОЛНОГО РЕЖИМА ----
+            {
+                id: 'fullLabelsAndArrows',
                 afterDatasetsDraw(chart) {
                     if (currentChartFormat !== 'full') return;
+                    drawFullLabels(chart, displayData);
                     drawFullBottomArrows(chart, displayData);
                 }
             },
@@ -3155,11 +3239,37 @@ function createRatingChart(data, type) {
         setTimeout(() => restoreSelectionById(), 0);
     }
 }
+// ==================== ВСПОМОГАТЕЛЬНАЯ: ГРАНИЦА МЕЖДУ ГРУППАМИ ====================
+function makeGetBoundaryX(meta, chartArea, len, ascending) {
+    return function (leftCount) {
+        // leftCount — сколько столбцов слева от границы (0..len)
+        // Для len === 1 граница зоны — это край единственного столбца:
+        //   убывание  → правый край (группа ">X" = один столбец)
+        //   возрастание → левый край (группа "<=X" = один столбец)
+        if (len === 1) {
+            const bar = meta.data[0];
+            if (!bar) return chartArea.left;
+            const w = bar.width || 0;
+            return ascending ? (bar.x - w / 2) : (bar.x + w / 2);
+        }
 
+        if (leftCount <= 0) return chartArea.left;
+        if (leftCount >= len) {
+            const last = meta.data[len - 1];
+            return last ? last.x + (last.width || 0) / 2 : chartArea.right;
+        }
 
-
-// ---------- КРАТКИЙ режим: накопительные подписи ----------
+        // Середина между последним столбцом левой группы и первым столбцом правой
+        const leftBar  = meta.data[leftCount - 1];
+        const rightBar = meta.data[leftCount];
+        if (!leftBar || !rightBar) return chartArea.left;
+        return (leftBar.x + rightBar.x) / 2;
+    };
+}
+// ==================== КРАТКИЙ РЕЖИМ: накопительные подписи ====================
 function drawShortLabels(chart, displayData) {
+    if (currentChartFormat !== 'short') return;
+
     const { ctx, chartArea } = chart;
     if (!chartArea) return;
 
@@ -3167,20 +3277,25 @@ function drawShortLabels(chart, displayData) {
     if (!meta || !meta.data || meta.data.length === 0) return;
 
     const len = displayData.length;
-    const getXForIndex = (idx) => {
+    if (len === 0) return;
+
+    const ascending = (document.getElementById('chart-sort-select') || {}).value === 'rating_asc';
+
+    const getX = (idx) => {
         if (idx < 0) return chartArea.left;
         if (idx >= len) {
             const lastBar = meta.data[len - 1];
-            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+            return lastBar ? lastBar.x : chartArea.right;
         }
-        const bar = meta.data[idx];
-        return bar.x + (bar.width || 0) / 2;
+        return meta.data[idx].x;
     };
 
     ctx.save();
     ctx.fillStyle = '#000000';
+    ctx.strokeStyle = '#000000';
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
+    ctx.lineWidth = 1;
 
     const fontSize = 12;
     const lineHeight = 14;
@@ -3191,50 +3306,114 @@ function drawShortLabels(chart, displayData) {
 
     const items = [];
     const ratings = displayData.map(d => Number(d.rating) || 0);
-    const steps = [
-        { threshold: 80, yLevel: 80 },
-        { threshold: 60, yLevel: 60 },
-        { threshold: 40, yLevel: 40 },
-        { threshold: 20, yLevel: 20 },
-        { threshold: 0,  yLevel: 0  }
-    ];
 
-    steps.forEach(({ threshold, yLevel }) => {
-        let count = 0;
-        for (let i = 0; i < len; i++) {
-            if (ratings[i] > threshold) count++;
-            else break;
-        }
-        if (count === 0) return;
-
-        const x = getXForIndex(count - 1);
-        if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
-
-        const percentRounded = Math.round((count / len) * 100);
-        const lines = [
-            `${count} (${percentRounded}%) НП`,
-            `Ур.обесп.>${yLevel}%`
+    if (ascending) {
+        // ==========================================
+        // ВОЗРАСТАНИЕ: Накопительные значения с текстом "< X"
+        // ==========================================
+        const steps = [
+            { threshold: 0,  yLevel: 0  },
+            { threshold: 20, yLevel: 20 },
+            { threshold: 40, yLevel: 40 },
+            { threshold: 60, yLevel: 60 },
+            { threshold: 80, yLevel: 80 }
         ];
 
-        let maxWidth = 0;
-        lines.forEach(line => {
-            const w = ctx.measureText(line).width;
-            if (w > maxWidth) maxWidth = w;
+        steps.forEach(({ threshold, yLevel }) => {
+            let count = 0;
+            // Считаем так же, как в полном режиме (<=)
+            for (let i = 0; i < len; i++) {
+                if (ratings[i] <= threshold) count++;
+            }
+            if (count === 0) return;
+
+            const boundaryIdx = count - 1;
+            const x = getX(boundaryIdx);
+
+            if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
+
+            const percentRounded = Math.round((count / len) * 100);
+            const lines = [
+                `${count} (${percentRounded}%) НП`,
+                `Обесп. <${yLevel}%` // Изменен текст на строгий знак
+            ];
+
+            let maxWidth = 0;
+            lines.forEach(line => {
+                const w = ctx.measureText(line).width;
+                if (w > maxWidth) maxWidth = w;
+            });
+
+            let targetX = x - maxWidth / 2;
+            if (items.length > 0) {
+                const prev = items[items.length - 1];
+                const prevRight = prev.x + prev.width;
+                if (targetX < prevRight + gap) {
+                    targetX = prevRight + gap;
+                }
+            }
+
+            items.push({ x: targetX, centerX: x, lines, width: maxWidth });
         });
 
-        if (!items.some(it => Math.abs(it.x - x) < 1)) {
-            items.push({ x, lines, width: maxWidth });
-        }
-    });
+    } else {
+        // ==========================================
+        // УБЫВАНИЕ: Старый вид (накопительные >80, >60...)
+        // ==========================================
+        const steps = [
+            { threshold: 80, yLevel: 80 },
+            { threshold: 60, yLevel: 60 },
+            { threshold: 40, yLevel: 40 },
+            { threshold: 20, yLevel: 20 },
+            { threshold: 0,  yLevel: 0  }
+        ];
 
-    items.sort((a, b) => a.x - b.x);
-    for (let i = 1; i < items.length; i++) {
-        const prev = items[i - 1];
-        const cur = items[i];
-        const prevRight = prev.x + prev.width;
-        if (cur.x < prevRight + gap) cur.x = prevRight + gap;
+        steps.forEach(({ threshold, yLevel }) => {
+            let count = 0;
+            for (let i = 0; i < len; i++) {
+                if (ratings[i] > threshold) count++;
+            }
+            if (count === 0) return;
+
+            const boundaryIdx = count - 1;
+            const x = getX(boundaryIdx);
+
+            if (x < chartArea.left - 1 || x > chartArea.right + 1) return;
+
+            const percentRounded = Math.round((count / len) * 100);
+            const lines = [
+                `${count} (${percentRounded}%) НП`,
+                `Ур.обесп.>${yLevel}%`
+            ];
+
+            let maxWidth = 0;
+            lines.forEach(line => {
+                const w = ctx.measureText(line).width;
+                if (w > maxWidth) maxWidth = w;
+            });
+
+            let targetX = x - maxWidth / 2;
+            if (items.length > 0) {
+                const prev = items[items.length - 1];
+                const prevRight = prev.x + prev.width;
+                if (targetX < prevRight + gap) {
+                    targetX = prevRight + gap;
+                }
+            }
+
+            items.push({ x: targetX, centerX: x, lines, width: maxWidth });
+        });
     }
 
+    // Рисуем вертикальные линии (выноски)
+    items.forEach(item => {
+        ctx.beginPath();
+        ctx.moveTo(item.centerX, chartArea.bottom);
+        ctx.lineTo(item.centerX, yBase - 4);
+        ctx.stroke();
+    });
+
+    // Рисуем текст
     ctx.textAlign = 'left';
     items.forEach(item => {
         item.lines.forEach((line, i) => {
@@ -3249,7 +3428,6 @@ function drawShortLabels(chart, displayData) {
     ctx.restore();
 }
 
-// ---------- ПОЛНЫЙ режим: подписи по диапазонам + вертикальные линии лесенкой ----------
 function drawFullLabels(chart, displayData) {
     const { ctx, chartArea } = chart;
     if (!chartArea) return;
@@ -3258,25 +3436,35 @@ function drawFullLabels(chart, displayData) {
     if (!meta || !meta.data || meta.data.length === 0) return;
 
     const len = displayData.length;
-    const ratings = displayData.map(d => Number(d.rating) || 0);
-    const thresholds = [100, 80, 60, 40, 20, 0];
+    if (len === 0) return;
 
-    const counts = thresholds.map(th => {
-        let c = 0;
+    const ascending = (document.getElementById('chart-sort-select') || {}).value === 'rating_asc';
+    const ratings = displayData.map(d => Number(d.rating) || 0);
+
+    const thresholds = ascending
+        ? [0, 20, 40, 60, 80]
+        : [80, 60, 40, 20, 0];
+
+    // Считаем количество НП в каждой категории
+    const cumulative = thresholds.map(th => {
+        let count = 0;
         for (let i = 0; i < len; i++) {
-            if (ratings[i] > th) c++;
-            else break;
+            if (ascending) {
+                if (ratings[i] <= th) count++;
+            } else {
+                if (ratings[i] > th) count++;
+            }
         }
-        return c;
+        return count;
     });
 
     const getX = (idx) => {
         if (idx < 0) return chartArea.left;
         if (idx >= len) {
             const lastBar = meta.data[len - 1];
-            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
+            return lastBar ? lastBar.x : chartArea.right;
         }
-        return meta.data[idx].x + (meta.data[idx].width || 0) / 2;
+        return meta.data[idx].x;
     };
 
     ctx.save();
@@ -3286,20 +3474,25 @@ function drawFullLabels(chart, displayData) {
     ctx.textAlign = 'center';
 
     const baseY = chartArea.bottom + 6;
-    const stepY = 13; // Уменьшено с 14
+    const stepY = 13;
 
-    for (let i = 1; i < counts.length; i++) {
-        const delta = Math.abs(counts[i - 1] - counts[i]);
-        if (delta === 0) continue;
+    let prevCount = 0;
 
-        const startIdx = counts[i];
-        const endIdx = counts[i - 1] - 1;
+    // Проходим по всем 5 категориям
+    for (let i = 0; i < thresholds.length; i++) {
+        // Берем количество из cumulative, а не принудительный len
+        const currentCount = cumulative[i];
+        const blockSize = currentCount - prevCount;
 
-        const xStart = getX(startIdx);
-        const xEnd = getX(endIdx);
-        const midX = (xStart + xEnd) / 2;
+        // Рисуем подпись, если в блоке есть НП
+        if (blockSize > 0) {
+            const startIdx = prevCount;
+            const endIdx = currentCount - 1;
+            const midX = (getX(startIdx) + getX(endIdx)) / 2;
 
-        ctx.fillText(`${delta} НП`, midX, baseY + (i - 1) * stepY);
+            ctx.fillText(`${blockSize} НП`, midX, baseY + i * stepY);
+        }
+        prevCount = currentCount;
     }
 
     ctx.font = `bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
@@ -3309,8 +3502,10 @@ function drawFullLabels(chart, displayData) {
     ctx.restore();
 }
 
-// ---------- ПОЛНЫЙ режим: стрелки от начала координат ----------
+// ---------- ПОЛНЫЙ режим: стрелки ----------
 function drawFullBottomArrows(chart, displayData) {
+    if (currentChartFormat !== 'full') return;
+
     const { ctx, chartArea } = chart;
     if (!chartArea) return;
 
@@ -3318,24 +3513,30 @@ function drawFullBottomArrows(chart, displayData) {
     if (!meta || !meta.data || meta.data.length === 0) return;
 
     const len = displayData.length;
-    const ratings = displayData.map(d => Number(d.rating) || 0);
+    if (len === 0) return;
 
-    const thresholds = [80, 60, 40, 20, 0];
+    const ascending = (document.getElementById('chart-sort-select') || {}).value === 'rating_asc';
+
+    const thresholds = ascending
+        ? [0, 20, 40, 60, 80]
+        : [80, 60, 40, 20, 0];
+
     const cumulative = thresholds.map(th => {
         let count = 0;
         for (let i = 0; i < len; i++) {
-            if (ratings[i] > th) count++;
-            else break;
+            const val = Number(displayData[i].rating) || 0;
+            if (ascending) {
+                if (val <= th) count++;
+            } else {
+                if (val > th) count++;
+            }
         }
         return { threshold: th, count };
     });
 
     const getX = (idx) => {
         if (idx < 0) return chartArea.left;
-        if (idx >= len) {
-            const lastBar = meta.data[len - 1];
-            return lastBar ? lastBar.x + (lastBar.width || 0) / 2 : chartArea.right;
-        }
+        if (idx >= len) return chartArea.right;
         return meta.data[idx].x + (meta.data[idx].width || 0) / 2;
     };
 
@@ -3347,63 +3548,58 @@ function drawFullBottomArrows(chart, displayData) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    // Берем точку 0-го элемента для начала всех стрелок
-    const startX = getX(0);
-
     const startY = chartArea.bottom + 75;
-    const stepY = 24; // Шаг, чтобы влезали 2 строки текста
+    const stepY = 24;
 
     cumulative.forEach((pt, i) => {
         if (pt.count === 0) return;
 
-        const endX = getX(pt.count - 1);
+        let xStartArrow = getX(0);
+        let xEndArrow = getX(pt.count - 1);
+
         const y = startY + i * stepY;
-
         const percent = ((pt.count / len) * 100).toFixed(1).replace('.', ',');
-        const label = `${pt.count} (${percent}%) НП`;
 
-        // === ВЕРТИКАЛЬНАЯ ЛИНИЯ ОТ 0 (НАЧАЛО СТРЕЛКИ) ===
+        let label = `${pt.count} (${percent}%) НП`;
+        if (ascending && pt.threshold === 0) {
+            label = `${pt.count} (${percent}%) НП`;
+        }
+
+        // Вертикальные линии
         ctx.beginPath();
-        ctx.moveTo(startX, chartArea.bottom); // От графика
-        ctx.lineTo(startX, y);            // До низа стрелки
+        ctx.moveTo(xStartArrow, chartArea.bottom);
+        ctx.lineTo(xStartArrow, y);
         ctx.stroke();
 
-        // === ВЕРТИКАЛЬНАЯ ЛИНИЯ К КОНЦУ СТРЕЛКИ ===
         ctx.beginPath();
-        ctx.moveTo(endX, chartArea.bottom);
-        ctx.lineTo(endX, y);
+        ctx.moveTo(xEndArrow, chartArea.bottom);
+        ctx.lineTo(xEndArrow, y);
         ctx.stroke();
 
-        // === ГОРИЗОНТАЛЬНАЯ ЛИНИЯ СТРЕЛКИ ===
-        // Начинается СТРОГО от startX (без отступов)
+        // Горизонтальная линия
         ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(endX - 10, y);
+        ctx.moveTo(xStartArrow, y);
+        ctx.lineTo(xEndArrow - 10, y);
         ctx.stroke();
 
         // Наконечник
         ctx.beginPath();
-        ctx.moveTo(endX, y);
-        ctx.lineTo(endX - 8, y - 4);
-        ctx.lineTo(endX - 8, y + 4);
+        ctx.moveTo(xEndArrow, y);
+        ctx.lineTo(xEndArrow - 8, y - 4);
+        ctx.lineTo(xEndArrow - 8, y + 4);
         ctx.closePath();
         ctx.fill();
 
-        // === ТЕКСТ С ПЕРЕНОСОМ НА 2 СТРОКИ ===
-        const maxTextWidth = (endX - startX) - 20;
+        // Текст
+        const maxTextWidth = (xEndArrow - xStartArrow) - 20;
         const textWidth = ctx.measureText(label).width;
-        const midX = (startX + endX) / 2;
+        const midX = (xStartArrow + xEndArrow) / 2;
 
         if (textWidth > maxTextWidth && label.includes(' (')) {
-            // Если не влезает — разбиваем на "192" и "(5.6%) НП"
             const parts = label.split(' ');
-            const line1 = parts[0];
-            const line2 = parts.slice(1).join(' ');
-
-            ctx.fillText(line1, midX, y - 24);
-            ctx.fillText(line2, midX, y - 11);
+            ctx.fillText(parts[0], midX, y - 24);
+            ctx.fillText(parts.slice(1).join(' '), midX, y - 11);
         } else {
-            // Если влезает — пишем в одну строку
             ctx.fillText(label, midX, y - 14);
         }
     });
