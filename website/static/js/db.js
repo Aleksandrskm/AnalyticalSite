@@ -71,7 +71,7 @@ async function getDbNames() {
  */
 async function getSatelliteGroups(dbName = 'KA') {
   try {
-    const response = await fetch(`http://${URL}/satellites/groups?db_name=${dbName}`, {
+    const response = await fetch(`http://${URL}/satellites/groups`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -776,6 +776,59 @@ async function getSettlements(body) {
   console.warn('getSettlements() is deprecated, use getSettlementsStream() instead');
   return getSettlementsStream(body);
 }
+// ==================== НОВЫЕ ФУНКЦИИ ДЛЯ ДОСТУПНОСТИ ГРУППИРОВОК ====================
+
+/**
+ * Получение данных о доступности группировки на указанную дату
+ * @param {string} groupName - название группировки (например, 'Kuiper')
+ * @param {string} date - дата в формате YYYY-MM-DD
+ * @returns {Promise<Array>} - массив объектов с данными о доступности
+ */
+async function getAvailability(groupName, date) {
+  try {
+    const response = await fetch(`http://${URL}/satellites/${encodeURIComponent(groupName)}/availability?at=${date}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    console.log('Availability data:', result);
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching availability:', error);
+    throw error;
+  }
+}
+
+/**
+ * Запуск перерасчета данных о доступности группировки
+ * @param {string} groupName - название группировки (например, 'Kuiper')
+ * @param {string} date - дата в формате YYYY-MM-DD
+ * @returns {Promise<Object>} - результат перерасчета
+ */
+async function postRecalculateAvailability(groupName, date) {
+  try {
+    const response = await fetch(`http://${URL}/satellites/${encodeURIComponent(groupName)}/availability?at=${date}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json();
+    console.log('Recalculate availability result:', result);
+    if (response.ok) {
+      return result;
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error recalculating availability:', error);
+    throw error;
+  }
+}
 
 export {
   editRow, deleteRow, insertRow, postJSON, getRowsTable, changeQuery,
@@ -783,5 +836,5 @@ export {
   updateOrInsert, getActiveSessions, getAllUsers, postUsersActivity,
   getSatelliteGroups, getSatellitesByGroup, getSatelliteBeams,
   getDbNames, getTableNames, getRegions, getRes, getResKinds,
-  getSettlements, getResStream, getSettlementsStream, parseStreamResponse,getSettlementsPage,getResPage,getRatingSett,postRatingSett,getRatingsPage
+  getSettlements, getResStream, getSettlementsStream, parseStreamResponse,getSettlementsPage,getResPage,getRatingSett,postRatingSett,getRatingsPage,postRecalculateAvailability,getAvailability
 };

@@ -1,0 +1,520 @@
+/* ============================================================
+   availability.css — стиль в духе rating.css
+   Серая тема, чёрные рамки, фиксированные шрифты, без адаптива
+   ============================================================ */
+
+/* ===== БАЗА ===== */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.35;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    min-height: 0;
+}
+
+header {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+}
+
+header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* ===== СКРОЛЛБАРЫ ===== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* ===== ГЛАВНЫЙ КОНТЕЙНЕР ===== */
+main.container__forms {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 16px;
+    padding: 12px 16px 16px 16px;
+    background: #d4d4d4;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* ===== ЛЕВАЯ КОЛОНКА ===== */
+.column__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    min-height: 0;
+    min-width: 0;
+    height: 100%;
+    max-height: 100%;
+    box-sizing: border-box;
+}
+
+.form__rating {
+    background: #ececec;
+    border: 2px solid #1a1a1a;
+    padding: 12px 14px 14px 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.form__rating label {
+    display: block;
+    font-weight: 600;
+    font-size: 15px;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+}
+
+.form__rating select {
+    width: 100%;
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1.5px solid #000000;
+    background: #fff;
+    font-size: 15px;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.form__rating select {
+    width: 100%;
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1.5px solid #000000;
+    background: #fff;
+    font-size: 15px;
+    border-radius: 3px;
+    box-sizing: border-box;
+    cursor: pointer;
+    height: 34px; /* стандартная высота, как у других input */
+}
+
+.form__rating select:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 1px #000;
+}
+
+.form__rating select:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 1px #000;
+}
+
+/* ===== СЕКЦИИ ФОРМЫ ===== */
+.form__rating .form-section {
+    background: #e0e0e0;
+    border: 1.5px solid #2a2a2a;
+    border-radius: 4px;
+    padding: 10px 12px 12px 12px;
+    margin-bottom: 10px;
+}
+
+.form__rating .form-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.form__rating .form-section__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+    padding: 0 0 6px 0;
+    line-height: 1.25;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid black;
+}
+
+.form__rating .form-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ===== КНОПКИ ===== */
+.grid-btn {
+    width: 100%;
+    background: #d9d9d9;
+    color: #1a1a1a;
+    border: 1.5px solid #8a8a8a;
+    padding: 7px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s, border-color 0.2s;
+    border-radius: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.grid-btn:hover:not(:disabled) {
+    background: #c4c4c4;
+    border-color: #6a6a6a;
+}
+
+.grid-btn:active:not(:disabled) {
+    background: #b5b5b5;
+}
+
+.grid-btn:disabled {
+    background: #cfcfcf;
+    border-color: #a0a0a0;
+    color: #7a7a7a;
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.grid-btn:disabled:hover {
+    background: #cfcfcf;
+    border-color: #a0a0a0;
+}
+
+/* ===== ПРАВАЯ КОЛОНКА ===== */
+.table__rating {
+    background: #ececec;
+    border: 2px solid #1a1a1a;
+    padding: 10px 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 4px;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+/* ===== ЗАГОЛОВОК ТАБЛИЦЫ ===== */
+.table-title {
+    text-align: center;
+    font-size: 19px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 2px 0 8px 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+/* ===== WRAPPER ТАБЛИЦЫ ===== */
+.table__rating__wrapper {
+    width: 100%;
+    max-height: 60vh;
+    overflow: auto;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: #fff;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* ===== ТАБЛИЦА ===== */
+.table__rating__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: #fff;
+}
+
+.table__rating__table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #e8e8e8;
+}
+
+.table__rating__table th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 700;
+    color: #1a1a1a;
+    border: 1px solid #1a1a1a;
+    font-size: 14px;
+    user-select: none;
+    background: #e8e8e8;
+    position: sticky;
+    top: 0;
+}
+
+.table__rating__table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid #1a1a1a;
+    font-size: 14px;
+    color: #2a2a2a;
+    word-break: break-word;
+}
+
+.table__rating__table tbody tr:hover {
+    background: #e0e0e0;
+}
+
+.table__rating__table .text-center {
+    text-align: center;
+    color: #555;
+    font-style: italic;
+    padding: 30px !important;
+}
+
+/* ===== КНОПКИ ВНИЗУ ===== */
+.table_buttons {
+    display: flex;
+    justify-content: right;
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #1a1a1a;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    min-height: 32px;
+    overflow: auto;
+}
+
+.table_buttons .grid-btn {
+    width: auto !important;
+    min-width: 100px;
+    max-width: 240px;
+    margin-top: 0;
+    padding: 7px 14px;
+    font-size: 14px;
+    text-align: center;
+    flex-shrink: 0;
+    white-space: break-spaces;
+}
+
+/* ===== ПЛЕЙСХОЛДЕР ===== */
+.placeholder-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    background: linear-gradient(145deg, #f8f8f8, #e8e8e8);
+    border: 2px dashed #1a1a1a;
+    border-radius: 8px;
+    margin: 8px 0;
+    min-height: 60vh;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: auto;
+    flex: 1 1 auto;
+}
+
+.placeholder-message p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 12px 0;
+}
+
+.placeholder-message ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    max-width: 520px;
+    width: 100%;
+}
+
+.placeholder-message ul li {
+    font-size: 15px;
+    color: #333;
+    padding: 8px 10px 8px 28px;
+    line-height: 1.4;
+    position: relative;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.placeholder-message ul li:last-child {
+    border-bottom: none;
+}
+
+.placeholder-message ul li:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.placeholder-message ul li::before {
+    content: "▸";
+    position: absolute;
+    left: 8px;
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.placeholder-message ul li strong {
+    color: #1a1a1a;
+    font-weight: 700;
+    background: #e0e0e0;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО (в стиле проекта) ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: auto;
+}
+
+.modal__dialog {
+    background: #f8f8f8;
+    border: 2px solid #1a1a1a;
+    border-radius: 8px;
+    width: 420px;
+    max-width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal__content {
+    padding: 20px 22px 22px 22px;
+}
+
+.modal__title {
+    text-align: center;
+    margin: 0 0 18px 0;
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 700;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid #1a1a1a;
+}
+
+.report-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.report-format-btn {
+    padding: 12px;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 4px;
+    background: #d9d9d9;
+    color: #1a1a1a;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.report-format-btn:hover {
+    background: #c4c4c4;
+    border-color: #000;
+}
+
+.modal__closes {
+    padding: 8px 22px;
+    border: 1.5px solid #8a8a8a;
+    border-radius: 4px;
+    background: #d9d9d9;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.modal__closes:hover {
+    background: #c4c4c4;
+    border-color: #6a6a6a;
+}
+
+/* ===== LOADER ===== */
+.loader-container--hidden {
+    display: none !important;
+}
+
+/* Если .loader-container / .loader / .loader-container__title не описаны
+   в вашем основном style.css — оставляем базовый вид */
+.loader-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.75);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    gap: 12px;
+}
+
+.loader-container__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #d0d0d0;
+    border-top-color: #1a1a1a;
+    border-radius: 50%;
+    animation: availability-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes availability-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
