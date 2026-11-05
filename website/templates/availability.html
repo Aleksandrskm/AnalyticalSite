@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/availability.css') }}">
+
+<div class="loader-container loader-container--hidden">
+  <span class="loader"></span>
+  <span class="loader-container__title">Загрузка...</span>
+</div>
+
+<h2>Доступность группировок КА на земной поверхности</h2>
+
+<main class="container__forms">
+  <div class="column__form">
+    <form class="form__rating" id="availabilityForm">
+      <div class="form-section">
+        <div class="form-section__title">Выберите группировку КА</div>
+        <div class="form-section__body">
+          <select name="group" id="groupSelect">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="table__rating">
+    <div id="placeholder-message" class="placeholder-message">
+      <p>Выберите группировку КА, чтобы:</p>
+      <ul>
+        <li>отобразить таблицу <strong>доступности широт</strong> группировки;</li>
+        <li>сформировать <strong>отчет</strong> в формате CSV или DOCX;</li>
+        <li>запустить <strong>перерасчет</strong> данных на текущую дату.</li>
+      </ul>
+    </div>
+
+    <div class="table-title" id="tableTitle" style="display: none;"></div>
+
+    <div class="table__rating__wrapper" id="tableWrapper" style="display: none;">
+      <table class="table__rating__table" id="availabilityTable">
+        <thead>
+        <tr>
+          <th>Название группировки</th>
+          <th>Широта, гр.</th>
+          <th>Время доступности, сек.</th>
+          <th>Процент доступности</th>
+          <th>Среднее кол-во доступных КА</th>
+          <th>Дата</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table_buttons" id="actionButtons" style="display: none;">
+      <button type="button" id="btnReport" class="grid-btn" disabled>Отчет</button>
+      <button type="button" id="btnRecalculate" class="grid-btn" disabled>Перерасчет</button>
+      <button type="button" id="btnEdit" class="grid-btn" disabled>Редактор</button>
+      <button type="button" id="close-btn" class="grid-btn">Выход</button>
+    </div>
+  </div>
+</main>
+
+<!-- Модальное окно выбора формата отчета -->
+<div id="reportFormatModal" class="modal" style="display: none;">
+  <div class="modal__dialog">
+    <div class="modal__content report-modal-content">
+      <h4 class="modal__title">Выберите формат отчета</h4>
+      <div class="report-modal-buttons">
+        <button class="report-format-btn" data-format="csv">CSV (Excel)</button>
+        <button class="report-format-btn" data-format="docx">DOCX (Word)</button>
+      </div>
+      <div class="confirmation-modal__buttons" style="text-align: center; padding-top: 10px;">
+        <button class="modal__closes report-modal-close">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/availability.js') }}" type="module"></script>
+
+{% endblock %}

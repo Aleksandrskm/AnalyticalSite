@@ -34,3 +34,7 @@ def function_norms():
 @views.route('/planning_development')
 def function_planning_development():
     return render_template('planning_development.html')
+
+@views.route('/availability')
+def availability():
+    return render_template('availability.html')
