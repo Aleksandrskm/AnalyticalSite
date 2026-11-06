@@ -16,6 +16,12 @@ const btnRecalculate = document.getElementById('btnRecalculate');
 const btnEdit = document.getElementById('btnEdit');
 const closeBtn = document.getElementById('close-btn');
 
+// Модалка подтверждения перерасчета
+const recalcModal = document.getElementById('recalcConfirmModal');
+const recalcText = document.getElementById('recalcConfirmText');
+const recalcYes = document.getElementById('recalcConfirmYes');
+const recalcNo = document.getElementById('recalcConfirmNo');
+
 const loader = new Loader('.loader-container');
 
 let currentGroup = '';
@@ -75,16 +81,42 @@ function renderTable(data) {
     });
 }
 
-/**
- * Обновление состояния кнопок:
- *  - btnReport       — активна, если есть данные;
- *  - btnRecalculate  — активна всегда, если выбрана группировка;
- *  - btnEdit         — всегда выключена.
- */
 function updateButtonsState(hasData, hasGroup) {
     btnReport.disabled = !hasData;
     btnRecalculate.disabled = !hasGroup;
     btnEdit.disabled = true;
+}
+
+// ==================== МОДАЛКА ПОДТВЕРЖДЕНИЯ ====================
+
+/**
+ * Показывает модалку подтверждения перерасчета.
+ * Возвращает Promise<boolean> — true если пользователь подтвердил.
+ */
+function confirmRecalculate() {
+    return new Promise((resolve) => {
+        recalcText.textContent =
+            `Запустить перерасчет для группировки «${currentGroup}» на дату ${currentDate}?`;
+
+        recalcModal.style.display = 'flex';
+
+        const handleYes = () => {
+            cleanup();
+            resolve(true);
+        };
+        const handleNo = () => {
+            cleanup();
+            resolve(false);
+        };
+        const cleanup = () => {
+            recalcModal.style.display = 'none';
+            recalcYes.removeEventListener('click', handleYes);
+            recalcNo.removeEventListener('click', handleNo);
+        };
+
+        recalcYes.addEventListener('click', handleYes);
+        recalcNo.addEventListener('click', handleNo);
+    });
 }
 
 // ==================== ОСНОВНАЯ ЛОГИКА ====================
@@ -109,7 +141,6 @@ async function loadGroups() {
     } catch (error) {
         console.error('Ошибка загрузки групп:', error);
         groupSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
-        alert('Не удалось загрузить список группировок.');
     } finally {
         loader.close();
     }
@@ -121,7 +152,6 @@ groupSelect.addEventListener('change', async (e) => {
     currentGroup = selectedGroup;
     currentData = [];
 
-    // Если группа выбрана — «Перерасчет» сразу активна, даже без данных
     updateButtonsState(false, !!selectedGroup);
 
     if (!selectedGroup) {
@@ -152,7 +182,6 @@ groupSelect.addEventListener('change', async (e) => {
         console.error('Ошибка получения данных:', error);
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки данных</td></tr>';
         updateButtonsState(false, !!selectedGroup);
-        alert('Не удалось загрузить данные о доступности.');
     } finally {
         loader.close();
     }
@@ -160,7 +189,7 @@ groupSelect.addEventListener('change', async (e) => {
 
 btnReport.addEventListener('click', () => {
     if (!currentData || currentData.length === 0) {
-        alert('Нет данных для формирования отчета.');
+        console.warn('Нет данных для формирования отчета.');
         return;
     }
 
@@ -191,8 +220,9 @@ btnReport.addEventListener('click', () => {
 btnRecalculate.addEventListener('click', async () => {
     if (!currentGroup) return;
 
-    const confirmMsg = `Запустить перерасчет для группировки «${currentGroup}» на дату ${currentDate}?`;
-    if (!confirm(confirmMsg)) return;
+    // Модалка подтверждения вместо confirm()
+    const confirmed = await confirmRecalculate();
+    if (!confirmed) return;
 
     try {
         loader.show(`Перерасчет данных для «${currentGroup}»...`);
@@ -202,13 +232,12 @@ btnRecalculate.addEventListener('click', async () => {
         const updatedData = await getAvailability(currentGroup, currentDate);
         currentData = Array.isArray(updatedData) ? updatedData : [];
         renderTable(currentData);
-
         updateButtonsState(currentData.length > 0, !!currentGroup);
 
-        alert('Перерасчет успешно выполнен! Данные обновлены.');
+        // Вместо alert — console.log
+        console.log(`Перерасчет для группировки «${currentGroup}» на ${currentDate} успешно выполнен.`);
     } catch (error) {
         console.error('Ошибка при перерасчете:', error);
-        alert(`Ошибка при перерасчете: ${error.message}`);
     } finally {
         loader.close();
     }
