@@ -60,7 +60,19 @@
     </div>
   </div>
 </main>
-
+<!-- Модальное окно подтверждения перерасчета -->
+<div id="recalcConfirmModal" class="modal" style="display: none;">
+  <div class="modal__dialog">
+    <div class="modal__content report-modal-content">
+      <h4 class="modal__title">Подтверждение перерасчета</h4>
+      <p class="modal__text" id="recalcConfirmText">Запустить перерасчет?</p>
+      <div class="confirmation-modal__buttons" style="display:flex; gap:10px; padding-top: 10px;">
+        <button type="button" class="modal-action-btn" id="recalcConfirmYes">Перерасчет</button>
+        <button type="button" class="modal-action-btn" id="recalcConfirmNo">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Модальное окно выбора формата отчета -->
 <div id="reportFormatModal" class="modal" style="display: none;">
   <div class="modal__dialog">
