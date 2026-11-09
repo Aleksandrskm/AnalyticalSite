@@ -1,76 +1,42 @@
 'use strict';
 
-const dashboardData = [
-    {
-        category: "ШПД wifi",
-        items: [{ title: "Точки доступа", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }]
-    },
-    {
-        category: "Мобильная связь",
-        items: [
-            { title: "5G", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-            { title: "LTE (4G)", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-            { title: "GSM (2G)", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-            { title: "TETRA", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }
-        ]
-    },
-    {
-        category: "ТВ",
-        items: [{ title: "Вышки ТВ", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }]
-    },
-    {
-        category: "РВ",
-        items: [{ title: "Вышки РВ", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }]
-    },
-    {
-        category: "Спутниковая связь",
-        items: [{ title: "Спутниковые терминалы и телефоны", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }]
-    },
-    {
-        category: "Проводная связь",
-        items: [
-            { title: "Узлы связи", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-            { title: "Таксофоны", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }
-        ]
-    },
-    {
-        category: "Почтовая связь",
-        items: [{ title: "Почтовые отделения", percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }]
-    }
+// Демонстрационные значения, оставленные из исходной локальной версии.
+// Порядок карточек повторяет схему на предоставленном скриншоте.
+const technologyCards = [
+    { title: '5G', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'LTE (4G)', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Вышки ТВ', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Вышки РВ', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Точки доступа WiFi', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Спутниковые терминалы и телефоны', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Земные станции спутниковой связи', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Узлы связи', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Таксофоны', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'Почтовые отделения', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'GSM (2G)', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { title: 'TETRA', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderDashboard();
-});
+document.addEventListener('DOMContentLoaded', renderTechnologyCards);
 
-function renderDashboard() {
+function renderTechnologyCards() {
     const container = document.getElementById('pd-dashboard-grid');
     if (!container) return;
 
-    container.innerHTML = '';
+    container.replaceChildren();
+    technologyCards.forEach(item => container.appendChild(createCard(item)));
 
-    dashboardData.forEach(group => {
-        const groupEl = document.createElement('div');
-        groupEl.className = 'pd-category-group';
-
-        // Заголовок группы
-        const titleEl = document.createElement('div');
-        titleEl.className = 'pd-category-title';
-        titleEl.textContent = group.category;
-        groupEl.appendChild(titleEl);
-
-        // Контейнер для карточек (горизонтальный ряд)
-        const cardsRow = document.createElement('div');
-        cardsRow.className = 'pd-cards-row';
-
-        group.items.forEach(item => {
-            const card = createCard(item);
-            cardsRow.appendChild(card);
-        });
-
-        groupEl.appendChild(cardsRow);
-        container.appendChild(groupEl);
-    });
+    // Доступность КА оформлена так же, как остальные карточки.
+    // Пока фактических данных нет, используются те же демонстрационные
+    // значения, что и в остальных карточках, чтобы сохранить единый вид.
+    container.appendChild(createCard({
+        title: 'Доступность КА',
+        percent: 80,
+        qty: 50,
+        area: 1,
+        capacity: 50,
+        operators: 1
+    }));
 }
 
 function createCard(data) {
@@ -108,7 +74,6 @@ function createCard(data) {
     arrowGroup.appendChild(arrowText);
     arrowGroup.appendChild(arrow);
     chartWrapper.appendChild(arrowGroup);
-
     card.appendChild(chartWrapper);
 
     const table = document.createElement('table');
@@ -118,7 +83,7 @@ function createCard(data) {
         ['Обеспеч., %', data.percent],
         ['Кол-во', data.qty],
         ['Пл. кв. км', data.area],
-        ['Емкость, аб.', data.capacity],
+        ['Ёмкость, аб.', data.capacity],
         ['Кол-во операт.', data.operators]
     ];
 
@@ -133,8 +98,7 @@ function createCard(data) {
         tdValue.className = 'td-value';
         tdValue.textContent = value;
 
-        tr.appendChild(tdLabel);
-        tr.appendChild(tdValue);
+        tr.append(tdLabel, tdValue);
         table.appendChild(tr);
     });
 

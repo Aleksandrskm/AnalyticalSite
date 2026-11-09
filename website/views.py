@@ -38,3 +38,7 @@ def function_planning_development():
 @views.route('/availability')
 def availability():
     return render_template('availability.html')
+
+@views.route('/development')
+def function_development():
+    return render_template('development.html')

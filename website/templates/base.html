@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,7 @@
         <div class="ref">
             <a class="home-ref" href="/" title="Главная страница">
                 <img class="home" src="{{ url_for('static', filename='img/home.svg') }}" alt="Стартовая страница">
-               
+
             </a>
             <div id="timer-start"></div>
         </div>
@@ -24,7 +24,7 @@
         </button>
     </header>
 
-    {% block content %}
+{% block content %}
     <main class="butt">
         <div id="container-menu">
             <div class="colum_menu">
@@ -43,6 +43,10 @@
                 <a href="/viewing_tables" target="_blank"><button class="btn">Общий редактор данных</button></a>
                 <a href="/beams" target="_blank"><button class="btn">Калибровка лучей КА</button></a>
                 <a href="/editor-nas-p" target="_blank"><button class="btn">Редактор населенных пунктов</button></a>
+            </div>
+            <div class="colum_menu">
+                <div class="name-column-menu">Развитие ТИ</div>
+                <a href="/development" target="_blank"><button class="btn">Развитие ТИ населенного пункта</button></a>
             </div>
 <!--            <div class="colum_menu" style="display: none">-->
 <!--                <div class="name-column-menu">Анализ телеком инфраструктуры</div>-->
@@ -176,7 +180,7 @@
         </div>
         
     </div>
-    {% endblock %}
+{% endblock %}
     <script src="{{ url_for('static', filename='js/Modal.js') }}" type="module"></script>
     <script src="{{ url_for('static', filename='js/db.js') }}" type="module"></script>
     <script src="{{ url_for('static', filename='js/table.js') }}" type="module"></script>
