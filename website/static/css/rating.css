@@ -2629,3 +2629,890 @@ button,
     margin: 0;
 }.form__rating .form-section__title
 
+     /* ===== Сравнение НП ===== */
+ .compare-checkbox-wrap {
+     user-select: none;
+ }
+
+.compare-table thead th {
+    font-size: 13px;
+}
+
+.compare-table tbody tr:hover td {
+    background: #f7fbff !important;
+}
+
+.compare-table tbody tr:hover th {
+    background: #e3eefa !important;
+}
+/* ==================== ЭКРАН СРАВНЕНИЯ (В СТИЛЕ СИТИЛИНКА) ==================== */
+
+.compare-view {
+    width: 100%;
+    padding: 10px 0 30px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+/* --- Шапка --- */
+.compare-view__header {
+    margin-bottom: 24px;
+}
+
+.compare-view__title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    color: #111;
+}
+
+.compare-view__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+/* Кнопка "Очистить" */
+.compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.compare-btn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.compare-btn:active {
+    background: #f3f4f6;
+}
+
+/* Чекбокс "Только отличия" */
+.compare-view__diff-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #4b5563;
+    user-select: none;
+}
+
+.compare-view__diff-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+/* --- Карточки НП --- */
+.compare-cards-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    overflow-x: auto;
+    padding-bottom: 10px; /* для скролла */
+}
+
+/* Левая колонка-распорка для выравнивания с таблицей */
+.compare-cards-spacer {
+    flex: 0 0 230px; /* Такая же ширина, как у .compare-table__field-th */
+    min-width: 230px;
+    max-width: 320px;
+}
+
+.compare-card {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 170px;
+    max-width: 240px;
+    padding: 20px 16px 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-right: 16px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.compare-card:last-child {
+    margin-right: 0;
+}
+
+.compare-card__remove {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+}
+
+.compare-card__remove:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+.compare-card__img-placeholder {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.compare-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb; /* Синий акцент */
+    line-height: 1.3;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.compare-card__region {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.compare-card__rating {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: #eff6ff;
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+
+.compare-card__rating-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1d4ed8;
+}
+
+.compare-card__rating-label {
+    font-size: 11px;
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Сгруппированные таблицы --- */
+.compare-group {
+    margin-bottom: 24px;
+}
+
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 2px solid #bfdbfe; /* Светло-синяя линия */
+    cursor: pointer;
+    user-select: none;
+}
+
+.compare-group__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a; /* Темно-синий */
+    margin: 0;
+}
+
+.compare-group__toggle {
+    font-size: 12px;
+    color: #60a5fa;
+    transition: transform 0.2s;
+}
+
+.compare-group__body {
+    padding-top: 10px;
+}
+
+/* --- Таблица внутри группы --- */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Фиксированная ширина колонок */
+}
+
+.compare-table th,
+.compare-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: left;
+    font-size: 14px;
+}
+
+/* Левая колонка с названиями характеристик */
+.compare-table__field-th {
+    width: 230px; /* Фиксированная ширина */
+    min-width: 230px;
+    max-width: 320px;
+    font-weight: 500;
+    color: #4b5563;
+    vertical-align: middle;
+}
+
+/* Ячейки со значениями */
+.compare-table__cell {
+    font-weight: 600;
+    color: #111827;
+    border-left: 1px solid #f3f4f6;
+    word-break: break-word;
+}
+
+/* Подсветка лучшего значения (синяя гамма) */
+.compare-table__cell--best {
+    background-color: #dbeafe; /* Светло-голубой */
+    color: #1e40af; /* Темно-синий */
+    font-weight: 800;
+}
+
+/* Подсветка "лучше, чем у других" */
+.compare-table__cell--better {
+    background-color: #eff6ff; /* Очень светло-голубой */
+    color: #2563eb;
+}
+
+/* Пустые значения */
+.compare-table__cell--empty {
+    color: #d1d5db;
+    font-weight: 400;
+}
+
+/* Убираем лишние бордеры у последней колонки */
+.compare-table th:last-child,
+.compare-table td:last-child {
+    border-right: none;
+}
+
+/* ==================== ЭКРАН СРАВНЕНИЯ ==================== */
+
+.compare-view {
+    width: 100%;
+    padding: 10px 0 30px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #1a1a1a;
+    /* Ограничиваем ширину для экранов 1920 */
+    max-width: 1840px;
+    margin: 0 auto;
+}
+
+/* --- Шапка --- */
+.compare-view__header {
+    margin-bottom: 24px;
+}
+
+.compare-view__title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    color: #111;
+}
+
+.compare-view__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.compare-btn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.compare-btn:active {
+    background: #f3f4f6;
+}
+
+.compare-view__diff-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #4b5563;
+    user-select: none;
+}
+
+.compare-view__diff-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+/* --- Карточки НП --- */
+.compare-cards-row {
+    display: flex;
+    align-items: stretch; /* Растягиваем по высоте */
+    margin-bottom: 30px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    width: 100%;
+}
+
+/* Левая колонка-распорка, чтобы карточки встали ровно над значениями (230px как в таблице) */
+.compare-cards-spacer {
+    flex: 0 0 230px;
+    min-width: 230px;
+}
+
+/* Карточка */
+.compare-card {
+    position: relative;
+    flex: 1 1 0; /* Равномерно распределяем ширину */
+    min-width: 0; /* Позволяем сжиматься */
+    height: 250px; /* Одинаковая высота для всех */
+    padding: 20px 16px 16px;
+    background: #fff;
+    border: 1px solid #000; /* Черная граница */
+    border-right: none; /* Убираем правую границу для стыковки */
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Центрируем контент по вертикали */
+}
+
+.compare-card:last-child {
+    border-right: 1px solid #000; /* Возвращаем правую границу последней карточке */
+}
+
+.compare-card__remove {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+    z-index: 2;
+}
+
+.compare-card__remove:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+.compare-card__img-placeholder {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.compare-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+}
+
+.compare-card__region {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-card__rating {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: #eff6ff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-top: auto; /* Прижимаем к низу */
+}
+
+.compare-card__rating-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1d4ed8;
+}
+
+.compare-card__rating-label {
+    font-size: 11px;
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Сгруппированные таблицы --- */
+.compare-group {
+    margin-bottom: 24px;
+}
+
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #eff6ff; /* Светло-синий фон шапки группы */
+    border: 1px solid #000; /* Черная граница */
+    cursor: pointer;
+    user-select: none;
+}
+
+.compare-group__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+}
+
+.compare-group__toggle {
+    font-size: 12px;
+    color: #3b82f6;
+}
+
+.compare-group__body {
+    padding-top: 0;
+}
+
+/* --- Таблица внутри группы --- */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border: 1px solid #000; /* Черная внешняя граница */
+}
+
+.compare-table th,
+.compare-table td {
+    padding: 12px 16px;
+    border: 1px solid #000; /* Черные сплошные границы */
+    text-align: center;
+    font-size: 14px;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+/* Левая колонка с названиями характеристик */
+.compare-table__field-th {
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
+    font-weight: 600;
+    color: #374151;
+    background-color: #f9fafb; /* Легкий серый фон для читаемости */
+    text-align: left;
+}
+
+/* Ячейки со значениями */
+.compare-table__cell {
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word;
+    background-color: #ffffff;
+}
+
+/* Подсветка лучшего значения (синяя гамма) */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af;
+    font-weight: 800;
+}
+
+/* Подсветка "лучше, чем у других" */
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb;
+}
+
+/* Пустые значения */
+.compare-table__cell--empty {
+    color: #d1d5db;
+    font-weight: 400;
+}
+/* ==================== МОДАЛКА ПОДТВЕРЖДЕНИЯ ==================== */
+
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 40, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    padding: 20px;
+    animation: confirmFadeIn 0.18s ease-out;
+}
+
+.confirm-modal-overlay--closing {
+    animation: confirmFadeOut 0.16s ease-in forwards;
+}
+
+.confirm-modal {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.25),
+            0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    animation: confirmPopIn 0.2s ease-out;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.confirm-modal__title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1e3a8a; /* Темно-синий, как заголовки групп */
+    margin-bottom: 12px;
+}
+
+.confirm-modal__message {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.45;
+    margin-bottom: 24px;
+    white-space: pre-line;
+}
+
+.confirm-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.confirm-modal__btn {
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.confirm-modal__btn:active {
+    transform: translateY(1px);
+}
+
+/* Кнопка "Отмена" */
+.confirm-modal__btn--no {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.confirm-modal__btn--no:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+/* Кнопка "Да, очистить" / "Убрать" */
+.confirm-modal__btn--yes {
+    background: #2563eb; /* Синий акцент */
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.confirm-modal__btn--yes:hover {
+    background: #1d4ed8;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+}
+
+/* Анимации */
+@keyframes confirmFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes confirmFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes confirmPopIn {
+    from { opacity: 0; transform: scale(0.95) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+/* --- Карточки НП --- */
+.compare-cards-row {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 16px; /* Уменьшили отступ, так как под ним теперь тулбар */
+    overflow-x: auto;
+    padding-bottom: 0;
+    width: 100%;
+}
+
+/* Левая колонка-распорка (230px как в таблице) */
+.compare-cards-spacer {
+    flex: 0 0 230px;
+    min-width: 230px;
+}
+
+/* Карточка */
+.compare-card {
+    position: relative;
+    flex: 1 1 0;
+    /* ЗАДАЕМ МИНИМАЛЬНЫЕ РАЗМЕРЫ */
+    min-width: 150px;
+    height: 215px;
+
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-right: none;
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Контент прижат к верху */
+}
+
+.compare-card:last-child {
+    border-right: 1px solid #000;
+}
+
+.compare-card__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+    z-index: 2;
+}
+
+.compare-card__remove:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+.compare-card__img-placeholder {
+    height: 46px; /* Уменьшили, чтобы влезло в 215px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    margin-top: 4px;
+}
+
+.compare-card__title {
+    font-size: 13px; /* Чуть уменьшили шрифт для компактности */
+    font-weight: 700;
+    color: #2563eb;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+    word-break: break-word;
+}
+
+.compare-card__region {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: auto; /* Прижимает рейтинг к низу */
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-card__rating {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: #eff6ff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+}
+
+.compare-card__rating-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1d4ed8;
+    line-height: 1.1;
+}
+
+.compare-card__rating-label {
+    font-size: 9px;
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Панель управления (теперь под карточками) --- */
+.compare-view__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px; /* Отступ до первой таблицы */
+    padding: 0 4px;
+}
+.compare-card__rating {
+    display: inline-flex;
+    flex-direction: row; /* <-- МЕНЯЕМ НА ROW (в строку) */
+    align-items: center; /* Выравниваем по центру вертикали */
+    justify-content: center;
+    gap: 4px; /* Отступ между числом и текстом */
+    background: #eff6ff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+}
+
+.compare-card__rating-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1d4ed8;
+    line-height: 1; /* Убираем лишние отступы, чтобы не разъезжалось */
+}
+
+.compare-card__rating-label {
+    font-size: 10px; /* Чуть уменьшили, чтобы точно влезло в одну строку */
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    white-space: nowrap; /* Запрещаем перенос текста */
+}
+/* Контейнер для обеих плашек (друг под другом) */
+.compare-card__stats {
+    display: flex;
+    flex-direction: column; /* ВАЖНО: ставит блоки друг под друга */
+    align-items: center;
+    gap: 4px; /* Отступ между строкой обеспеченности и строкой дефицита */
+    margin-top: auto; /* Прижимаем к низу карточки */
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+/* Плашка (каждая строка) */
+.compare-card__stat {
+    display: inline-flex;
+    flex-direction: row; /* Число и текст в одну строку */
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    white-space: nowrap; /* ВАЖНО: запрещает перенос на новую строку внутри плашки */
+}
+
+.compare-card__stat-val {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.compare-card__stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+/* Синий стиль для обеспеченности */
+.compare-card__stat--provided {
+    background: #eff6ff;
+}
+.compare-card__stat--provided .compare-card__stat-val {
+    color: #1d4ed8;
+}
+.compare-card__stat--provided .compare-card__stat-label {
+    color: #3b82f6;
+}
+
+/* Красный стиль для дефицита */
+.compare-card__stat--deficit {
+    background: #fef2f2;
+}
+.compare-card__stat--deficit .compare-card__stat-val {
+    color: #dc2626;
+}
+.compare-card__stat--deficit .compare-card__stat-label {
+    color: #ef4444;
+}
+/* Остальные стили для compare-btn, таблиц и модалки остаются без изменений */

@@ -430,6 +430,106 @@ const LS_KEYS = {
     idNp:    'rating:id_np'
 };
 
+// ==================== СРАВНЕНИЕ НП ====================
+const LS_KEY_COMPARE = 'rating:compare_items';
+
+// Поля, которые НЕ надо сравнивать (текстовые/служебные)
+const COMPARE_SKIP_FIELDS = new Set([
+    'id', 'name', 'region_name', 'district_name', 'fias_id', 'region_code',
+    'lat', 'lon'
+]);
+
+// Поля, где «больше — лучше». Остальные числовые считаем «больше — лучше» по умолчанию,
+// кроме явно перечисленных «чем меньше, тем лучше».
+const COMPARE_LESS_IS_BETTER = new Set([
+    'area',              // площадь — меньше лучше? нет, но не критично; оставим как есть
+    'traffic_percent_tv', 'traffic_percent_rv', 'traffic_percent_lte',
+    'traffic_percent_gsm', 'traffic_percent_5g', 'traffic_percent_wifi',
+    'traffic_percent_tetra', 'traffic_percent_comm_hubs', 'traffic_percent_posts',
+    'traffic_percent_focl', 'traffic_percent_payphones', 'traffic_percent_satellites',
+    'traffic_percent_mobile'
+]);
+
+function lsGetCompareItems() {
+    try {
+        const raw = localStorage.getItem(LS_KEY_COMPARE);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function lsSetCompareItems(items) {
+    try {
+        localStorage.setItem(LS_KEY_COMPARE, JSON.stringify(items));
+    } catch (e) { /* ignore */ }
+}
+
+function isInCompare(id) {
+    if (id === undefined || id === null) return false;
+    const target = String(id).trim();
+    return lsGetCompareItems().some(it => String(it.id).trim() === target);
+}
+
+/**
+ * Добавляет НП в сравнение: сохраняет ПОЛНЫЕ данные (НП + рейтинг),
+ * чтобы экран сравнения не зависел от текущей загрузки.
+ */
+function addToCompare(settlementId) {
+    const idStr = String(settlementId);
+    const items = lsGetCompareItems();
+
+    if (items.some(it => String(it.id) === idStr)) {
+        return { ok: false, reason: 'already' };
+    }
+
+    const settlement = (settlementsData.items || []).find(
+        it => String(it.id) === idStr
+    ) || { id: settlementId };
+
+    const rating = allRatings[idStr] || {};
+
+    // Полная «плоская» запись: базовые поля + все поля рейтинга
+    const record = {
+        id: settlementId,
+        name: settlement.name || settlement.NAME || `ID: ${settlementId}`,
+        region_name: settlement.region_name || null,
+        district_name: settlement.district_name || null,
+        region_code: settlement.region_code || null,
+        population: settlement.population || 0,
+        area: settlement.area || null,
+        lat: settlement.lat || null,
+        lon: settlement.lon || null,
+        fias_id: settlement.fias_id || null,
+        // рейтинговые поля
+        ...rating,
+        // фиксируем «итоговую» обеспеченность (на случай, если rating.rating undefined)
+        rating: rating.rating !== undefined && rating.rating !== null
+            ? Number(rating.rating)
+            : null,
+        // служебное
+        _addedAt: Date.now()
+    };
+
+    items.push(record);
+    lsSetCompareItems(items);
+    return { ok: true };
+}
+
+function removeFromCompare(settlementId) {
+    const idStr = String(settlementId);
+    const items = lsGetCompareItems().filter(it => String(it.id) !== idStr);
+    lsSetCompareItems(items);
+    return items;
+}
+
+function clearCompare() {
+    lsSetCompareItems([]);
+}
+
+
 const DEFAULT_REGION = '29';
 const DEFAULT_ID_NP  = '';
 
@@ -3590,7 +3690,77 @@ function drawFullBottomArrows(chart, displayData) {
     ctx.restore();
 }
 // ==================== МОДАЛКА: ИНФОРМАЦИЯ О НП ====================
+/**
+ * Создаёт строку с чекбоксом «Добавить в сравнение».
+ * Возвращает DOM-элемент (div).
+ */
+function createCompareCheckboxRow(settlementId) {
+    const idStr = String(settlementId).trim();
+    const already = isInCompare(idStr); // Проверяем наличие в LocalStorage
 
+    const wrap = document.createElement('div');
+    wrap.className = 'compare-checkbox-wrap';
+    wrap.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        margin: 10px 0;
+        background: #eef4ff;
+        border: 1.5px solid #4a90e2;
+        border-radius: 8px;
+    `;
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = `compare-cb-${idStr}`;
+    cb.checked = already; // Устанавливаем галочку, если НП уже в сравнении
+    cb.style.cssText = 'width: 18px; height: 18px; cursor: pointer;';
+
+    const label = document.createElement('label');
+    label.htmlFor = cb.id;
+
+    // Начальный текст
+    const setLabelText = (isChecked) => {
+        label.textContent = isChecked
+            ? 'Добавлено в сравнение (снять галочку, чтобы убрать)'
+            : 'Добавить в сравнение';
+    };
+
+    setLabelText(already); // Устанавливаем текст в зависимости от галочки
+    label.style.cssText = 'cursor: pointer; font-weight: 600; font-size: 14px; color: #1a1a1a;';
+
+    cb.addEventListener('change', function () {
+        if (this.checked) {
+            const res = addToCompare(settlementId);
+            if (res.ok) {
+                setLabelText(true);
+                renderPopup('НП добавлен в сравнение', false);
+            } else if (res.reason === 'already') {
+                setLabelText(true);
+            } else {
+                this.checked = false;
+                renderPopup('Не удалось добавить НП в сравнение', true);
+            }
+        } else {
+            removeFromCompare(settlementId);
+            setLabelText(false);
+            renderPopup('НП убран из сравнения', false);
+        }
+        updateCompareButtonCounter();
+    });
+
+    wrap.appendChild(cb);
+    wrap.appendChild(label);
+    return wrap;
+}
+
+function updateCompareButtonCounter() {
+    const btn = document.getElementById('btn-compare');
+    if (!btn) return;
+    const count = lsGetCompareItems().length;
+    btn.textContent = count > 0 ? `Сравнение НП (${count})` : 'Сравнение НП';
+}
 async function openSettlementInfoModal(item) {
     if (!item || item.id === undefined) return;
 
@@ -3737,12 +3907,23 @@ async function openSettlementInfoModal(item) {
         });
     });
 
+    // ====== БЛОК СНИЗУ: чекбокс + кнопки ======
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    `;
+
+    // >>> ЧЕКБОКС «Добавить в сравнение» — ВСЕГДА СНИЗУ, ПЕРЕД КНОПКАМИ <<<
+    footer.appendChild(createCompareCheckboxRow(item.id));
+
     const buttonsBar = document.createElement('div');
     buttonsBar.style.cssText = `
         display: flex;
         justify-content: flex-end;
         gap: 10px;
-        margin-top: 15px;
         flex-wrap: wrap;
     `;
 
@@ -3766,18 +3947,450 @@ async function openSettlementInfoModal(item) {
 
     buttonsBar.appendChild(detailBtn);
     buttonsBar.appendChild(closeBtn);
+    footer.appendChild(buttonsBar);
 
     content.appendChild(title);
     content.appendChild(ratingBadge);
     content.appendChild(tableWrapper);
     tableWrapper.appendChild(table);
-    content.appendChild(buttonsBar);
+    content.appendChild(footer);
+
     modal.appendChild(content);
     document.body.appendChild(modal);
 
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
     });
+}
+// ==================== ЭКРАН СРАВНЕНИЯ ====================
+
+function switchToCompareMode() {
+    destroyAnalyticsDashboard();
+    hideChartContainer();
+    if (ratingChart) { ratingChart.destroy(); ratingChart = null; }
+    isChartMode = false;
+    isAnalyticsMode = false;
+
+    document.body.classList.remove('analytics-mode');
+
+    hideSettlementButtons();
+    hideCalculateAllButton();
+    hideCalculateSelectedButton();
+
+    const formatGroup = document.getElementById('format-controls-group');
+    if (formatGroup) formatGroup.remove();
+
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterContainer) filterContainer.remove();
+
+    const settlementsTitle = document.querySelector('.settlements-title');
+    if (settlementsTitle) settlementsTitle.remove();
+
+    const paginationContainer = document.getElementById('settlements-pagination');
+    if (paginationContainer) {
+        paginationContainer.style.display = 'none';
+        paginationContainer.innerHTML = '';
+    }
+
+    const table = document.getElementById('settlements-table');
+    if (table) table.style.display = 'none';
+
+    const placeholder = document.getElementById('placeholder-message');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // >>> СКРЫВАЕМ БЛОК "ВЫБРАННЫЙ НП" <<<
+    resetAndHideSelectedSettlement();
+
+    const old = document.getElementById('compare-view');
+    if (old) old.remove();
+
+    renderCompareView();
+}
+/**
+ * Красивая модалка подтверждения с кнопками «Да» / «Нет».
+ * Возвращает Promise<boolean>.
+ */
+function showConfirmModal(options = {}) {
+    const {
+        title = 'Подтверждение',
+        message = 'Вы уверены?',
+        yesText = 'Да',
+        noText = 'Нет'
+    } = options;
+
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-modal-overlay';
+
+        const modal = document.createElement('div');
+        modal.className = 'confirm-modal';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'confirm-modal__title';
+        titleEl.textContent = title;
+
+        const msgEl = document.createElement('div');
+        msgEl.className = 'confirm-modal__message';
+        msgEl.textContent = message;
+
+        const actions = document.createElement('div');
+        actions.className = 'confirm-modal__actions';
+
+        const yesBtn = document.createElement('button');
+        yesBtn.type = 'button';
+        yesBtn.className = 'confirm-modal__btn confirm-modal__btn--yes';
+        yesBtn.textContent = yesText;
+
+        const noBtn = document.createElement('button');
+        noBtn.type = 'button';
+        noBtn.className = 'confirm-modal__btn confirm-modal__btn--no';
+        noBtn.textContent = noText;
+
+        const close = (result) => {
+            overlay.classList.add('confirm-modal-overlay--closing');
+            setTimeout(() => {
+                overlay.remove();
+                resolve(result);
+            }, 160);
+        };
+
+        noBtn.addEventListener('click', () => close(false));
+        yesBtn.addEventListener('click', () => close(true));
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close(false);
+        });
+        document.addEventListener('keydown', function onKey(e) {
+            if (!document.body.contains(overlay)) {
+                document.removeEventListener('keydown', onKey);
+                return;
+            }
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', onKey);
+                close(false);
+            }
+        });
+
+        // МЕНЯЕМ МЕСТАМИ: сначала "Да", потом "Отмена"
+        actions.appendChild(yesBtn);
+        actions.appendChild(noBtn);
+
+        modal.appendChild(titleEl);
+        modal.appendChild(msgEl);
+        modal.appendChild(actions);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+    });
+}
+function renderCompareView() {
+    const old = document.getElementById('compare-view');
+    if (old) old.remove();
+
+    const items = lsGetCompareItems();
+
+    const container = document.createElement('div');
+    container.id = 'compare-view';
+    container.className = 'compare-view';
+
+    // ---------- Заголовок ----------
+    const header = document.createElement('div');
+    header.className = 'compare-view__header';
+
+    const title = document.createElement('h3');
+    title.className = 'compare-view__title';
+    title.textContent = 'Сравнение НП';
+    header.appendChild(title);
+    container.appendChild(header);
+
+    if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'compare-view__empty';
+        empty.textContent = 'Пока не добавлено ни одного НП для сравнения.';
+        container.appendChild(empty);
+
+        const tableContainer = document.querySelector('.table__rating');
+        if (tableContainer) {
+            const buttonsBlock = tableContainer.querySelector('.table_buttons');
+            if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
+            else tableContainer.appendChild(container);
+        }
+        return;
+    }
+
+    // ---------- Карточки НП ----------
+    const cardsRow = document.createElement('div');
+    cardsRow.className = 'compare-cards-row';
+
+    // Левая колонка-распорка для выравнивания с таблицей (230px)
+    const leftSpacer = document.createElement('div');
+    leftSpacer.className = 'compare-cards-spacer';
+    cardsRow.appendChild(leftSpacer);
+
+    items.forEach(it => {
+        const card = document.createElement('div');
+        card.className = 'compare-card';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'compare-card__remove';
+        closeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`;
+        closeBtn.title = 'Убрать из сравнения';
+        closeBtn.addEventListener('click', async () => {
+            const ok = await showConfirmModal({
+                title: 'Убрать НП',
+                message: `Убрать «${it.name || 'ID: ' + it.id}» из сравнения?`,
+                yesText: 'Убрать',
+                noText: 'Отмена'
+            });
+            if (!ok) return;
+            removeFromCompare(it.id);
+            updateCompareButtonCounter();
+            renderCompareView();
+        });
+
+        const imgPlaceholder = document.createElement('div');
+        imgPlaceholder.className = 'compare-card__img-placeholder';
+        imgPlaceholder.innerHTML = `<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#b0c4de" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'compare-card__title';
+        titleEl.textContent = it.name || `ID: ${it.id}`;
+
+        const regionEl = document.createElement('div');
+        regionEl.className = 'compare-card__region';
+        regionEl.textContent = it.region_name || 'Регион не указан';
+
+        // ---------- Обеспеченность и Дефицит (в 2 строки) ----------
+        const statsEl = document.createElement('div');
+        statsEl.className = 'compare-card__stats';
+
+        // Обеспеченность (синяя)
+        const ratingVal = it.rating !== null ? Number(it.rating) : 0;
+        const providedEl = document.createElement('div');
+        providedEl.className = 'compare-card__stat compare-card__stat--provided';
+        providedEl.innerHTML = `
+            <span class="compare-card__stat-val">${ratingVal.toFixed(1)}</span>
+            <span class="compare-card__stat-label">% обесп.</span>
+        `;
+
+        // Дефицит (красный)
+        const deficitVal = 100 - ratingVal;
+        const deficitEl = document.createElement('div');
+        deficitEl.className = 'compare-card__stat compare-card__stat--deficit';
+        deficitEl.innerHTML = `
+            <span class="compare-card__stat-val">${deficitVal.toFixed(1)}</span>
+            <span class="compare-card__stat-label">% дефицит</span>
+        `;
+
+        statsEl.appendChild(providedEl);
+        statsEl.appendChild(deficitEl);
+
+
+        // Добавляем в карточку
+        card.appendChild(closeBtn);
+        card.appendChild(imgPlaceholder);
+        card.appendChild(titleEl);
+        card.appendChild(regionEl);
+        card.appendChild(statsEl); // <-- Вставляем сюда
+        cardsRow.appendChild(card);
+    });
+    container.appendChild(cardsRow);
+
+    // ---------- Панель управления (ПОД КАРТОЧКАМИ) ----------
+    const toolbar = document.createElement('div');
+    toolbar.className = 'compare-view__toolbar';
+
+    // Кнопка очистки
+    const clearAllBtn = document.createElement('button');
+    clearAllBtn.type = 'button';
+    clearAllBtn.className = 'compare-btn compare-btn--outline';
+    clearAllBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Очистить список
+    `;
+    clearAllBtn.addEventListener('click', async () => {
+        if (items.length === 0) return;
+        const ok = await showConfirmModal({
+            title: 'Очистить список',
+            message: 'Удалить все НП из сравнения? Это действие нельзя отменить.',
+            yesText: 'Да, очистить',
+            noText: 'Отмена'
+        });
+        if (!ok) return;
+        clearCompare();
+        updateCompareButtonCounter();
+        renderCompareView();
+    });
+    toolbar.appendChild(clearAllBtn);
+
+    // Чекбокс "Показывать только отличия"
+    const diffLabel = document.createElement('label');
+    diffLabel.className = 'compare-view__diff-toggle';
+    const diffCheckbox = document.createElement('input');
+    diffCheckbox.type = 'checkbox';
+    diffCheckbox.id = 'compare-diff-only';
+
+    const diffText = document.createElement('span');
+    diffText.textContent = 'Показывать только отличия';
+
+    diffLabel.appendChild(diffCheckbox);
+    diffLabel.appendChild(diffText);
+    toolbar.appendChild(diffLabel);
+
+    container.appendChild(toolbar);
+
+    // ---------- Данные для таблиц ----------
+    const groups = buildRatingGroups();
+
+    // Добавляем группу "Населенный пункт" в начало (без ID)
+    groups.unshift({
+        title: 'Населённый пункт',
+        fields: [
+            { key: 'population', label: 'Население' },
+            { key: 'area', label: 'Площадь (км²)' },
+            { key: 'district_name', label: 'Муниципальное образование' },
+            { key: 'region_name', label: 'Регион' }
+        ]
+    });
+
+    // Функция проверки, отличается ли значение от других
+    const isDifferent = (key, itemsArr) => {
+        const vals = itemsArr.map(it => it[key]).filter(v => v !== undefined && v !== null && v !== '');
+        if (vals.length <= 1) return false;
+        const first = String(vals[0]);
+        return vals.some(v => String(v) !== first);
+    };
+
+    // ---------- Отрисовка сгруппированных таблиц ----------
+    const renderTables = () => {
+        const oldTables = container.querySelectorAll('.compare-group');
+        oldTables.forEach(t => t.remove());
+
+        const diffOnly = diffCheckbox.checked;
+
+        groups.forEach(group => {
+            // Фильтруем поля, если включен режим "только отличия"
+            const displayFields = group.fields.filter(f => {
+                if (!diffOnly) return true;
+                return isDifferent(f.key, items);
+            });
+
+            if (displayFields.length === 0) return;
+
+            const groupBlock = document.createElement('div');
+            groupBlock.className = 'compare-group';
+
+            const groupHeader = document.createElement('div');
+            groupHeader.className = 'compare-group__header';
+
+            const groupTitle = document.createElement('span');
+            groupTitle.className = 'compare-group__title';
+            groupTitle.textContent = group.title;
+
+            const toggleIcon = document.createElement('span');
+            toggleIcon.className = 'compare-group__toggle';
+            toggleIcon.innerHTML = '▲';
+
+            groupHeader.appendChild(groupTitle);
+            groupHeader.appendChild(toggleIcon);
+
+            const groupBody = document.createElement('div');
+            groupBody.className = 'compare-group__body';
+
+            groupHeader.addEventListener('click', () => {
+                const isCollapsed = groupBody.style.display === 'none';
+                groupBody.style.display = isCollapsed ? 'block' : 'none';
+                toggleIcon.innerHTML = isCollapsed ? '▲' : '▼';
+            });
+
+            const tbl = document.createElement('table');
+            tbl.className = 'compare-table';
+
+            const tbody = document.createElement('tbody');
+
+            const bestValues = {};
+            displayFields.forEach(f => {
+                const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
+                let best = null;
+                items.forEach(it => {
+                    const v = it[f.key];
+                    if (v === undefined || v === null || v === '' || isNaN(Number(v))) return;
+                    const num = Number(v);
+                    if (best === null) { best = num; return; }
+                    if (lessBetter) { if (num < best) best = num; }
+                    else { if (num > best) best = num; }
+                });
+                bestValues[f.key] = best;
+            });
+
+            displayFields.forEach(f => {
+                const tr = document.createElement('tr');
+
+                const th = document.createElement('th');
+                th.className = 'compare-table__field-th';
+                th.textContent = f.label;
+                tr.appendChild(th);
+
+                const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
+                const best = bestValues[f.key];
+
+                items.forEach(it => {
+                    const td = document.createElement('td');
+                    td.className = 'compare-table__cell';
+
+                    const raw = it[f.key];
+                    const isEmpty = raw === undefined || raw === null || raw === '';
+                    const isNum = !isEmpty && !isNaN(Number(raw));
+
+                    if (isEmpty) {
+                        td.textContent = '—';
+                        td.classList.add('compare-table__cell--empty');
+                    } else {
+                        td.textContent = isNum ? String(raw) : raw;
+                    }
+
+                    if (!isEmpty && isNum && best !== null) {
+                        const num = Number(raw);
+                        if (num === best) {
+                            td.classList.add('compare-table__cell--best');
+                        } else if (lessBetter ? (num < best) : (num > best)) {
+                            td.classList.add('compare-table__cell--better');
+                        }
+                    }
+
+                    td.title = `${f.label}: ${td.textContent}`;
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            tbl.appendChild(tbody);
+            groupBody.appendChild(tbl);
+            groupBlock.appendChild(groupHeader);
+            groupBlock.appendChild(groupBody);
+            container.appendChild(groupBlock);
+        });
+    };
+
+    renderTables();
+    diffCheckbox.addEventListener('change', renderTables);
+
+    // ---------- Вставка в DOM ----------
+    const tableContainer = document.querySelector('.table__rating');
+    if (tableContainer) {
+        const buttonsBlock = tableContainer.querySelector('.table_buttons');
+        if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
+        else tableContainer.appendChild(container);
+    }
+}
+/**
+ * Полностью убирает экран сравнения из DOM.
+ * Вызывается при переходе в любой другой режим.
+ */
+function clearCompareView() {
+    const view = document.getElementById('compare-view');
+    if (view) view.remove();
 }
 
 function buildRatingGroups() {
@@ -4969,10 +5582,11 @@ async function loadRatingsData() {
 }
 
 async function handleRatingChartButton() {
+    clearCompareView();
+
     const ok = await loadRatingsData();
     if (!ok) return;
 
-    // Восстанавливаем selectedSettlement* из LS (нужно до построения графика)
     if (!selectedSettlementId) {
         restoreSelectedFromStorage();
     }
@@ -4984,13 +5598,14 @@ async function handleRatingChartButton() {
 
     showSelectedSettlementBlock();
 
-    // Восстановить выделение + тултип после пересоздания графика
     if (selectedSettlementId) {
         setTimeout(() => restoreSelectionById(), 200);
     }
 }
 
 async function handleRatingTableButton() {
+    clearCompareView();
+
     const ok = await loadRatingsData();
     if (!ok) return;
 
@@ -5004,15 +5619,12 @@ async function handleRatingTableButton() {
 
     showSelectedSettlementBlock();
 
-    // Сбрасываем UI графика (формат + тултип)
     resetChartUIState();
 
-    // Восстанавливаем selectedSettlement* из LS, если после диаграммы был сброшен
     if (!selectedSettlementId) {
         restoreSelectedFromStorage();
     }
 
-    // Синхронизируем выделение строки с сохранённым НП
     if (selectedSettlementId) {
         const item = settlementsData.items.find(
             it => String(it.id) === String(selectedSettlementId)
@@ -5031,10 +5643,11 @@ async function handleRatingTableButton() {
 // ==================== Диаграмма обеспеченности НП ====================
 
 async function handleAnalyticsDashboardButton() {
+    clearCompareView();
+
     const ok = await loadRatingsData();
     if (!ok) return;
 
-    // Восстанавливаем selectedSettlement* из LS перед переключением
     restoreSelectedFromStorage();
 
     switchToAnalyticsMode();
@@ -5600,18 +6213,14 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
     const settlement = settlementsData.items.find(it => String(it.id) === String(settlementId)) || {};
     const ranking = allRatings[String(settlementId)] || {};
 
-    // Определяем, какие поля показывать
-    // 'settlements' — только базовые поля НП
-    // 'rating' — базовые поля НП + поля рейтинга из шапки таблицы (БЕЗ buildRatingGroups)
-    // 'auto' — старое поведение (всё)
     let allowedTables = [];
     let allowExtraRatingFields = false;
 
     if (tableMode === 'settlements') {
         allowedTables = ['settlements'];
     } else if (tableMode === 'rating') {
-        allowedTables = ['settlements', 'ranking']; // Разрешаем и НП, и рейтинг
-        allowExtraRatingFields = false;             // Но НЕ докидываем всё из buildRatingGroups
+        allowedTables = ['settlements', 'ranking'];
+        allowExtraRatingFields = false;
     } else {
         allowedTables = ['settlements', 'ranking'];
         allowExtraRatingFields = true;
@@ -5652,7 +6261,6 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
     const orderedFields = [];
     const seen = new Set();
 
-    // 1. Берем поля из шапки таблицы
     tableHeaderOrder.forEach(key => {
         if (seen.has(key)) return;
         seen.add(key);
@@ -5660,7 +6268,7 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
         if (rankingKeyToDb[key]) {
             if (!allowedTables.includes('ranking')) return;
             const dbColumn = rankingKeyToDb[key];
-            if (dbColumn === 'ID') return; // ID не дублируем
+            if (dbColumn === 'ID') return;
             orderedFields.push({
                 table: 'ranking', dbColumn, objectKey: key,
                 label: rankingLabelByKey[key] || dbColumn,
@@ -5690,7 +6298,6 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
         }
     });
 
-    // 2. Добор полей из buildRatingGroups (только для 'auto')
     if (allowExtraRatingFields) {
         const allGroups = buildRatingGroups();
         allGroups.forEach(group => {
@@ -5776,6 +6383,18 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
         tbody.appendChild(tr);
     });
 
+    // ====== БЛОК СНИЗУ: чекбокс + кнопки ======
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    `;
+
+    // >>> ЧЕКБОКС «Добавить в сравнение» — ВСЕГДА СНИЗУ, ПЕРЕД КНОПКАМИ <<<
+    footer.appendChild(createCompareCheckboxRow(settlementId));
+
     const buttonsBar = document.createElement('div');
     buttonsBar.className = 'edit-modal-buttons';
 
@@ -5806,11 +6425,13 @@ async function openEditModal(settlementId, type, tableMode = 'auto') {
     buttonsBar.appendChild(detailBtn);
     buttonsBar.appendChild(editBtn);
     buttonsBar.appendChild(closeBtn);
+    footer.appendChild(buttonsBar);
 
     content.appendChild(title);
     content.appendChild(tableWrapper);
     tableWrapper.appendChild(table);
-    content.appendChild(buttonsBar);
+    content.appendChild(footer);
+
     modal.appendChild(content);
     document.body.appendChild(modal);
 }
@@ -7347,6 +7968,8 @@ function switchToChartMode() {
 }
 
 async function handleSettlementsButton() {
+    clearCompareView();
+
     destroyAnalyticsDashboard();
 
     isCalculateMode = false;
@@ -7536,7 +8159,13 @@ function handleClear() {
 
     const tooltip = document.getElementById('chart-item-tooltip');
     if (tooltip) tooltip.remove();
+// в handleClear, перед showPlaceholder():
+    const compareView = document.getElementById('compare-view');
+    if (compareView) compareView.remove();
 
+// (опционально) полностью очистить сравнение:
+// clearCompare();
+// updateCompareButtonCounter();
     showPlaceholder();
 
     // Блок «Выбранный НП» скрыт; кнопка подсветки выключена
@@ -7647,7 +8276,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btn-rating-chart').addEventListener('click', handleRatingChartButton);
     document.getElementById('btn-rating-table').addEventListener('click', handleRatingTableButton);
     document.getElementById('btn-settlements').addEventListener('click', handleSettlementsButton);
+    const btnCompare = document.getElementById('btn-compare');
+    if (btnCompare) {
+        btnCompare.addEventListener('click', () => {
+            updateCompareButtonCounter();
+            switchToCompareMode();
+        });
+    }
 
+// Обновить счётчик при загрузке
+    updateCompareButtonCounter();
     const btnAnalytics = document.getElementById('btn-analytics-dashboard');
     if (btnAnalytics) {
         btnAnalytics.addEventListener('click', handleAnalyticsDashboardButton);
