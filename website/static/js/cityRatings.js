@@ -439,15 +439,11 @@ const COMPARE_SKIP_FIELDS = new Set([
     'lat', 'lon'
 ]);
 
-// Поля, где «больше — лучше». Остальные числовые считаем «больше — лучше» по умолчанию,
-// кроме явно перечисленных «чем меньше, тем лучше».
+
+// трафиком, поэтому для них «больше — лучше» (100% = полная обеспеченность).
+// В набор «меньше — лучше» они НЕ входят.
 const COMPARE_LESS_IS_BETTER = new Set([
-    'area',              // площадь — меньше лучше? нет, но не критично; оставим как есть
-    'traffic_percent_tv', 'traffic_percent_rv', 'traffic_percent_lte',
-    'traffic_percent_gsm', 'traffic_percent_5g', 'traffic_percent_wifi',
-    'traffic_percent_tetra', 'traffic_percent_comm_hubs', 'traffic_percent_posts',
-    'traffic_percent_focl', 'traffic_percent_payphones', 'traffic_percent_satellites',
-    'traffic_percent_mobile'
+
 ]);
 
 function lsGetCompareItems() {
