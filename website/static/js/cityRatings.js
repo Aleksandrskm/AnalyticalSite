@@ -1992,6 +1992,10 @@ function restoreSelectedFromStorage() {
 }
 // Выбрать строку в таблице по id_np из localStorage.
 // Если НП на другой странице — автоматически переключить страницу и выбрать.
+// Выбрать строку в таблице по id_np из localStorage.
+// Если НП на другой странице — автоматически переключить страницу и выбрать
+// ТОЛЬКО если allowAutoPageJump === true (первичная загрузка).
+// При пользовательской навигации (пагинация, сортировка, фильтр) автопереход запрещён.
 function selectInitialRowInTable(tbody, options = {}) {
     if (!tbody) return false;
 
@@ -1999,7 +2003,8 @@ function selectInitialRowInTable(tbody, options = {}) {
         goToPage = null,
         currentPage = 0,
         pageSize = 100,
-        sortedData = null
+        sortedData = null,
+        allowAutoPageJump = true   // <<< ИЗМЕНЕНО: новый параметр
     } = options;
 
     const storedId = lsGet(LS_KEYS.idNp, null);
@@ -2016,7 +2021,10 @@ function selectInitialRowInTable(tbody, options = {}) {
         }
     }
 
-    // === 2. НП нет на текущей — ищем в полном массиве и переключаем страницу ===
+    // === 2. Автопереход на другую страницу — только если разрешено ===
+    // <<< ИЗМЕНЕНО: при пользовательской навигации не возвращаем на страницу с НП
+    if (!allowAutoPageJump) return false;
+
     if (Array.isArray(sortedData) && sortedData.length > 0) {
         let globalIndex = -1;
         for (let i = 0; i < sortedData.length; i++) {
@@ -4524,7 +4532,7 @@ function buildRatingGroups() {
             ]
         },
         {
-            title: 'Универсальные услуги (УС)',
+            title: 'Узлы Связи (УС)',
             fields: [
                 { key: 'count_comm_hubs', label: 'Количество узлов связи' },
                 { key: 'count_abonents_comm_hubs', label: 'Количество абонентов узлов связи' },
@@ -5610,7 +5618,8 @@ async function handleRatingTableButton() {
     if (!ok) return;
 
     const pageSize = getPageSize('settlements');
-    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
+    // <<< ИЗМЕНЕНО: последний аргумент allowAutoPageJump = true (первичная загрузка)
+    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false, true);
 
     showSettlementButtons();
 
@@ -6508,7 +6517,7 @@ async function handleEditRow(fieldRefs, settlementId, modal) {
 
 // ==================== ОТОБРАЖЕНИЕ ТАБЛИЦЫ (только НП) ====================
 
-function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false) {
+function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = false, allowAutoPageJump = false) {
     destroyAnalyticsDashboard();
 
     const table = document.getElementById('settlements-table');
@@ -6855,31 +6864,33 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
 
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
-    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ: сохранённый id_np (с автопереходом на нужную страницу),
-    // иначе — первая
+    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ:
+    // автопереход к сохранённому id_np разрешён только при первичной загрузке
+    // (allowAutoPageJump === true). При пагинации/сортировке/фильтре — запрещён,
+    // иначе пользователя будет «возвращать» на страницу с выбранным НП.
     if (pageData && pageData.length > 0) {
         selectInitialRowInTable(tbody, {
             sortedData: sortedData,
             currentPage: page,
             pageSize: pageSize,
+            allowAutoPageJump: allowAutoPageJump,   // <<< ИЗМЕНЕНО
             goToPage: (newPage) => {
                 currentDisplayPage = newPage;
                 if (savedFilterField && savedFilterValue) {
-                    renderCombinedTable(allData, allTotal, newPage, pageSize, true);
+                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, true);
                 } else {
-                    renderCombinedTable(allData, allTotal, newPage, pageSize, false);
+                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, false);
                 }
             }
         });
     }
 
     showSettlementButtons();
-
 }
 
 // ==================== ОТОБРАЖЕНИЕ ОБЪЕДИНЁННОЙ ТАБЛИЦЫ ====================
 
-function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
+function renderCombinedTable(data, total, page, pageSize, keepFilter = false, allowAutoPageJump = false) {
     destroyAnalyticsDashboard();
 
     const table = document.getElementById('settlements-table');
@@ -7193,8 +7204,9 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
 
     renderSettlementsPagination(sortedData.length, page, totalPages, pageSize);
 
-    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ: сохранённый id_np (с автопереходом на нужную страницу),
-    // иначе — первая
+    // ВЫБОР НАЧАЛЬНОЙ СТРОКИ:
+    // автопереход к сохранённому id_np разрешён только при первичной загрузке
+    // (allowAutoPageJump === true). При пагинации/сортировке/фильтре — запрещён.
     if (pageData && pageData.length > 0) {
         selectInitialRowInTable(tbody, {
             fallbackToFirst: true,
@@ -7202,6 +7214,7 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
             sortedData: sortedData,
             currentPage: page,
             pageSize: pageSize,
+            allowAutoPageJump: allowAutoPageJump,   // <<< ИЗМЕНЕНО
             goToPage: (newPage) => {
                 currentDisplayPage = newPage;
                 if (savedFilterField && savedFilterValue) {
@@ -7214,7 +7227,6 @@ function renderCombinedTable(data, total, page, pageSize, keepFilter = false) {
     }
 
     showSettlementButtons();
-
 }
 
 // ==================== ПАГИНАЦИЯ ====================
@@ -7910,7 +7922,8 @@ async function handleRatingButton() {
 
     await loadRatingsForSettlements(settlementsData.items, false);
 
-    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
+    // <<< ИЗМЕНЕНО: allowAutoPageJump = true
+    renderCombinedTable(originalDataForFilter, originalTotalForFilter, 0, pageSize, false, true);
 
     showSettlementButtons();
 }
@@ -8018,7 +8031,8 @@ async function handleSettlementsButton() {
         showRatings = false;
         allRatings = {};
 
-        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false);
+        // <<< ИЗМЕНЕНО: allowAutoPageJump = true
+        renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, 0, pageSize, false, true);
 
         showSettlementButtons();
 
