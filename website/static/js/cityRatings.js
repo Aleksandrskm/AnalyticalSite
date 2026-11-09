@@ -431,7 +431,7 @@ const LS_KEYS = {
 };
 
 const DEFAULT_REGION = '29';
-const DEFAULT_ID_NP  = '11665729';
+const DEFAULT_ID_NP  = '';
 
 function lsGet(key, fallback = null) {
     try {
@@ -467,7 +467,9 @@ function persistSelectedIdNp(id) {
     if (id !== undefined && id !== null && String(id).trim() !== '') {
         lsSet(LS_KEYS.idNp, String(id).trim());
     } else {
-        lsSet(LS_KEYS.idNp, DEFAULT_ID_NP);
+        // Раньше здесь писался DEFAULT_ID_NP — теперь просто очищаем
+        lsRemove(LS_KEYS.idNp);
+        lsSet(LS_KEYS.idNp, '');
     }
 }
 
@@ -1861,6 +1863,7 @@ function restoreSelectedFromStorage() {
     if (!storedId) return false;
 
     const targetId = String(storedId).trim();
+    if (!targetId) return false;   // пустая строка — НП не выбран
 
     const item = (settlementsData.items || []).find(
         it => String(it.id) === targetId
@@ -1874,21 +1877,17 @@ function restoreSelectedFromStorage() {
         selectedSettlementArea = item.area;
         selectedSettlementForInfo = item;
     } else {
-        // Если НП нет в текущей выборке — всё равно сохраняем ID
         selectedSettlementId = targetId;
         selectedSettlementName = `ID: ${targetId}`;
     }
 
-    // СИНХРОНИЗИРУЕМ DOM (это исправляет баг с «—»)
     const nameEl = document.getElementById('selected-settlement-name');
     if (nameEl) {
         nameEl.textContent = selectedSettlementName;
         nameEl.title = selectedSettlementName;
     }
 
-    // Обновляем состояние кнопки-стрелки
     showSelectedSettlementBlock();
-
     return !!item;
 }
 // Выбрать строку в таблице по id_np из localStorage.
@@ -1897,8 +1896,6 @@ function selectInitialRowInTable(tbody, options = {}) {
     if (!tbody) return false;
 
     const {
-        fallbackToFirst = true,
-        persistFallback = true,
         goToPage = null,
         currentPage = 0,
         pageSize = 100,
@@ -1908,19 +1905,19 @@ function selectInitialRowInTable(tbody, options = {}) {
     const storedId = lsGet(LS_KEYS.idNp, null);
     const targetId = storedId ? String(storedId).trim() : null;
 
-    // === 1. Ищем НП на текущей странице ===
-    if (targetId) {
-        const rows = tbody.querySelectorAll('tr');
-        for (const tr of rows) {
-            if (String(tr.dataset.id) === targetId) {
-                tr.click();
-                return true;
-            }
+    if (!targetId) return false;
+
+    // === 1. Ищем сохранённый НП на текущей странице ===
+    const rows = tbody.querySelectorAll('tr');
+    for (const tr of rows) {
+        if (String(tr.dataset.id) === targetId) {
+            tr.click();
+            return true;
         }
     }
 
     // === 2. НП нет на текущей — ищем в полном массиве и переключаем страницу ===
-    if (targetId && Array.isArray(sortedData) && sortedData.length > 0) {
+    if (Array.isArray(sortedData) && sortedData.length > 0) {
         let globalIndex = -1;
         for (let i = 0; i < sortedData.length; i++) {
             if (String(sortedData[i].id) === targetId) {
@@ -1936,20 +1933,6 @@ function selectInitialRowInTable(tbody, options = {}) {
                 return true;
             }
         }
-    }
-
-    // === 3. Fallback — первая строка ===
-    if (!fallbackToFirst) return false;
-
-    const firstRow = tbody.querySelector('tr');
-    if (firstRow) {
-        if (!persistFallback && storedId) {
-            firstRow.click();
-            lsSet(LS_KEYS.idNp, storedId);
-        } else {
-            firstRow.click();
-        }
-        return false;
     }
 
     return false;
@@ -6255,17 +6238,15 @@ function renderSettlementsTableOnly(data, total, page, pageSize, keepFilter = fa
     // иначе — первая
     if (pageData && pageData.length > 0) {
         selectInitialRowInTable(tbody, {
-            fallbackToFirst: true,
-            persistFallback: true,
             sortedData: sortedData,
             currentPage: page,
             pageSize: pageSize,
             goToPage: (newPage) => {
                 currentDisplayPage = newPage;
                 if (savedFilterField && savedFilterValue) {
-                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, true);
+                    renderCombinedTable(allData, allTotal, newPage, pageSize, true);
                 } else {
-                    renderSettlementsTableOnly(allData, allTotal, newPage, pageSize, false);
+                    renderCombinedTable(allData, allTotal, newPage, pageSize, false);
                 }
             }
         });
@@ -7569,16 +7550,21 @@ function handleClear() {
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 function handleSelectedClear() {
-    // Убираем тултип
+    // 1. Убираем тултип
     const tooltip = document.getElementById('chart-item-tooltip');
     if (tooltip) tooltip.remove();
 
-    // Убираем выделение в таблицах (если вдруг таблица тоже открыта)
+    // 2. Сначала гасим флаги — чтобы onHover/плагины не вернули подсветку
+    selectedSettlementHighlighted = false;
+    selectedSearchItem = null;
+    selectedSearchIndex = -1;
+
+    // 3. Убираем выделение в таблицах
     document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
         tr.classList.remove('selected');
     });
 
-    // Убираем красную подсветку на графике (возвращаем базовые цвета)
+    // 4. Убираем красную подсветку на графике (возвращаем базовые цвета)
     if (ratingChart) {
         const displayData = getChartDisplayData();
         if (displayData && displayData.length > 0) {
@@ -7594,17 +7580,55 @@ function handleSelectedClear() {
                 ds1.borderColor     = displayData.map(() => '#ff6a00');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
-            ratingChart.update('none');
         }
+        // update() (не 'none') — чтобы плагин highlightMarker перерисовался
+        // уже с selectedSettlementHighlighted === false
+        ratingChart.update();
     }
 
-    // Сбрасываем указатели на выбранный элемент в поиске,
-    // чтобы onHover не подсвечивал столбец заново
-    selectedSearchItem = null;
-    selectedSearchIndex = -1;
+    // 5. Сбрасываем выбранный НП в памяти
+    selectedSettlementId = null;
+    selectedSettlementName = null;
+    selectedSettlementLat = null;
+    selectedSettlementLon = null;
+    selectedSettlementArea = null;
+    selectedSettlementForInfo = null;
+    selectedSettlementMode = null;
 
-    // ГЛАВНОЕ: говорим onHover и плагинам, что подсветка выключена
-    selectedSettlementHighlighted = false;
+    // 6. Чистим localStorage по выбранному НП (и таблица, и график)
+    lsRemove(LS_KEYS.idNp);
+    lsSet(LS_KEYS.idNp, ''); // на случай, если где-то читается пустая строка
+
+    // 7. Обновляем UI блока «Выбранный НП»
+    const nameEl = document.getElementById('selected-settlement-name');
+    if (nameEl) {
+        nameEl.textContent = '—';
+        nameEl.title = '';
+    }
+
+    showSelectedSettlementBlock(); // выставит disabled/title по текущему режиму
+
+    // 8. Обновляем кнопки расчёта (в табличном режиме они зависят от selectedSettlementId)
+    if (!isChartMode && !isAnalyticsMode) {
+        hideCalculateSelectedButton();
+    }
+
+    // 9. Перерисовываем таблицу, чтобы снять класс .selected и не подсвечивать строку
+    if (!isChartMode && !isAnalyticsMode && showRatings) {
+        const pageSize = getPageSize('settlements');
+        if (savedFilterField && savedFilterValue) {
+            renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+        } else {
+            renderCombinedTable(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+        }
+    } else if (!isChartMode && !isAnalyticsMode && !showRatings) {
+        const pageSize = getPageSize('settlements');
+        if (savedFilterField && savedFilterValue) {
+            renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, true);
+        } else {
+            renderSettlementsTableOnly(originalDataForFilter, originalTotalForFilter, currentDisplayPage, pageSize, false);
+        }
+    }
 }
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
