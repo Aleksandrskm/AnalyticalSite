@@ -2645,18 +2645,28 @@ button,
 .compare-table tbody tr:hover th {
     background: #e3eefa !important;
 }
-/* ==================== ЭКРАН СРАВНЕНИЯ (В СТИЛЕ СИТИЛИНКА) ==================== */
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ БЛОК: СРАВНЕНИЕ НП (ИДЕАЛЬНАЯ СЕТКА) ===== */
+/* ============================================================ */
 
-.compare-view {
-    width: 100%;
-    padding: 10px 0 30px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    color: #1a1a1a;
+#compare-view {
+    --col-title-w: 230px; /* Ширина колонки с названиями */
+    --gap: 5px;           /* Отступ между карточками и колонками */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
 }
 
-/* --- Шапка --- */
+/* --- Шапка и Панель управления --- */
 .compare-view__header {
-    margin-bottom: 24px;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
 }
 
 .compare-view__title {
@@ -2671,670 +2681,548 @@ button,
     align-items: center;
     gap: 24px;
     flex-wrap: wrap;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
+    padding: 0 4px;
 }
 
-/* Кнопка "Очистить" */
-.compare-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    color: #374151;
-}
-
-.compare-btn:hover {
-    border-color: #9ca3af;
-    background: #f9fafb;
-}
-
-.compare-btn:active {
-    background: #f3f4f6;
-}
-
-/* Чекбокс "Только отличия" */
-.compare-view__diff-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    color: #4b5563;
-    user-select: none;
-}
-
-.compare-view__diff-toggle input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: #2563eb;
-}
-
-/* --- Карточки НП --- */
-.compare-cards-row {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 30px;
-    overflow-x: auto;
-    padding-bottom: 10px; /* для скролла */
-}
-
-/* Левая колонка-распорка для выравнивания с таблицей */
-.compare-cards-spacer {
-    flex: 0 0 230px; /* Такая же ширина, как у .compare-table__field-th */
-    min-width: 230px;
-    max-width: 320px;
-}
-
-.compare-card {
+/* --- Обертка карусели и скролла --- */
+.compare-carousel-wrapper {
     position: relative;
-    flex: 1 1 0;
-    min-width: 170px;
-    max-width: 240px;
-    padding: 20px 16px 16px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    margin-right: 16px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.compare-card:last-child {
-    margin-right: 0;
-}
-
-.compare-card__remove {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.15s ease;
-}
-
-.compare-card__remove:hover {
-    background: #f3f4f6;
-    color: #ef4444;
-}
-
-.compare-card__img-placeholder {
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-}
-
-.compare-card__title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #2563eb; /* Синий акцент */
-    line-height: 1.3;
-    margin-bottom: 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.compare-card__region {
-    font-size: 13px;
-    color: #6b7280;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     margin-bottom: 12px;
 }
 
-.compare-card__rating {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    background: #eff6ff;
-    border-radius: 6px;
-    padding: 6px 12px;
-}
-
-.compare-card__rating-val {
-    font-size: 20px;
-    font-weight: 800;
-    color: #1d4ed8;
-}
-
-.compare-card__rating-label {
-    font-size: 11px;
-    color: #3b82f6;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* --- Сгруппированные таблицы --- */
-.compare-group {
-    margin-bottom: 24px;
-}
-
-.compare-group__header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 0;
-    border-bottom: 2px solid #bfdbfe; /* Светло-синяя линия */
-    cursor: pointer;
-    user-select: none;
-}
-
-.compare-group__title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1e3a8a; /* Темно-синий */
-    margin: 0;
-}
-
-.compare-group__toggle {
-    font-size: 12px;
-    color: #60a5fa;
-    transition: transform 0.2s;
-}
-
-.compare-group__body {
-    padding-top: 10px;
-}
-
-/* --- Таблица внутри группы --- */
-.compare-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed; /* Фиксированная ширина колонок */
-}
-
-.compare-table th,
-.compare-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    text-align: left;
-    font-size: 14px;
-}
-
-/* Левая колонка с названиями характеристик */
-.compare-table__field-th {
-    width: 230px; /* Фиксированная ширина */
-    min-width: 230px;
-    max-width: 320px;
-    font-weight: 500;
-    color: #4b5563;
-    vertical-align: middle;
-}
-
-/* Ячейки со значениями */
-.compare-table__cell {
-    font-weight: 600;
-    color: #111827;
-    border-left: 1px solid #f3f4f6;
-    word-break: break-word;
-}
-
-/* Подсветка лучшего значения (синяя гамма) */
-.compare-table__cell--best {
-    background-color: #dbeafe; /* Светло-голубой */
-    color: #1e40af; /* Темно-синий */
-    font-weight: 800;
-}
-
-/* Подсветка "лучше, чем у других" */
-.compare-table__cell--better {
-    background-color: #eff6ff; /* Очень светло-голубой */
-    color: #2563eb;
-}
-
-/* Пустые значения */
-.compare-table__cell--empty {
-    color: #d1d5db;
-    font-weight: 400;
-}
-
-/* Убираем лишние бордеры у последней колонки */
-.compare-table th:last-child,
-.compare-table td:last-child {
-    border-right: none;
-}
-
-/* ==================== ЭКРАН СРАВНЕНИЯ ==================== */
-
-.compare-view {
-    width: 100%;
-    padding: 10px 0 30px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    color: #1a1a1a;
-    /* Ограничиваем ширину для экранов 1920 */
-    max-width: 1840px;
-    margin: 0 auto;
-}
-
-/* --- Шапка --- */
-.compare-view__header {
-    margin-bottom: 24px;
-}
-
-.compare-view__title {
-    font-size: 26px;
-    font-weight: 800;
-    margin: 0 0 16px 0;
-    color: #111;
-}
-
-.compare-view__toolbar {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.compare-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    color: #374151;
-}
-
-.compare-btn:hover {
-    border-color: #9ca3af;
-    background: #f9fafb;
-}
-
-.compare-btn:active {
-    background: #f3f4f6;
-}
-
-.compare-view__diff-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    color: #4b5563;
-    user-select: none;
-}
-
-.compare-view__diff-toggle input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: #2563eb;
-}
-
-/* --- Карточки НП --- */
-.compare-cards-row {
-    display: flex;
-    align-items: stretch; /* Растягиваем по высоте */
-    margin-bottom: 30px;
-    overflow-x: auto;
-    padding-bottom: 10px;
-    width: 100%;
-}
-
-/* Левая колонка-распорка, чтобы карточки встали ровно над значениями (230px как в таблице) */
-.compare-cards-spacer {
-    flex: 0 0 230px;
-    min-width: 230px;
-}
-
-/* Карточка */
-.compare-card {
-    position: relative;
-    flex: 1 1 0; /* Равномерно распределяем ширину */
-    min-width: 0; /* Позволяем сжиматься */
-    height: 250px; /* Одинаковая высота для всех */
-    padding: 20px 16px 16px;
-    background: #fff;
-    border: 1px solid #000; /* Черная граница */
-    border-right: none; /* Убираем правую границу для стыковки */
-    text-align: center;
-    box-sizing: border-box;
+/* Скролл ТОЛЬКО вертикальный */
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: hidden !important; /* Убираем горизонтальный скролл */
+    overflow-y: auto !important;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center; /* Центрируем контент по вертикали */
+    padding: 0 10px;
 }
 
-.compare-card:last-child {
-    border-right: 1px solid #000; /* Возвращаем правую границу последней карточке */
-}
+/* ============================================================ */
+/* ===== НЕЗАМЕТНЫЕ СТРЕЛКИ СЛАЙДЕРА ===== */
+/* ============================================================ */
 
-.compare-card__remove {
+.carousel-btn {
+    /* Убираем обводку и делаем фон почти прозрачным */
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+
+    /* Делаем иконку бледно-серой */
+    color: rgba(0, 0, 0, 0.25) !important;
+    font-size: 22px !important;
+    font-weight: 300 !important; /* Более тонкий шрифт для стрелок ❮ ❯ */
+
+    /* Сохраняем позиционирование */
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
+    top: 107px;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    transition: all 0.15s ease;
-    z-index: 2;
-}
-
-.compare-card__remove:hover {
-    background: #f3f4f6;
-    color: #ef4444;
-}
-
-.compare-card__img-placeholder {
-    height: 60px;
-    display: flex;
+    display: none; /* JS покажет */
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease-in-out;
 }
 
-.compare-card__title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #2563eb;
-    line-height: 1.3;
-    margin-bottom: 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-align: center;
-    width: 100%;
+/* При наведении мыши стрелка становится чуть заметнее */
+.carousel-btn:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
-.compare-card__region {
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 12px;
-    text-align: center;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Отключаем стрелку, если она неактивна (в начале или конце) */
+.carousel-btn:disabled {
+    opacity: 0 !important;
+    cursor: default;
+    pointer-events: none;
 }
 
-.compare-card__rating {
-    display: inline-flex;
+/* Оставляем привязку к краям */
+.carousel-btn--prev { left: calc(var(--col-title-w) - 22px); }
+.carousel-btn--next { right: 10px; }
+
+/* ============================================================ */
+/* ===== СЕТКА КАРТОЧЕК (Flex) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: 100% !important;
+    gap: var(--gap) !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+}
+
+.compare-card {
+    flex: 1 1 0 !important; /* Равномерно делят пространство */
+    min-width: 0 !important; /* Разрешаем сжиматься, чтобы влезло */
+    height: 215px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    border: 1px solid #000 !important;
+    background: #fff;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid вместо Table) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
     flex-direction: column;
-    align-items: center;
-    background: #eff6ff;
-    border-radius: 6px;
-    padding: 6px 12px;
-    margin-top: auto; /* Прижимаем к низу */
+    gap: 12px;
+    width: 100% !important;
+    flex: 0 0 auto !important;
 }
 
-.compare-card__rating-val {
-    font-size: 20px;
-    font-weight: 800;
-    color: #1d4ed8;
-}
-
-.compare-card__rating-label {
-    font-size: 11px;
-    color: #3b82f6;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* --- Сгруппированные таблицы --- */
+/* Шапка группы */
 .compare-group {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
 }
-
 .compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
-    background: #eff6ff; /* Светло-синий фон шапки группы */
-    border: 1px solid #000; /* Черная граница */
     cursor: pointer;
     user-select: none;
 }
-
 .compare-group__title {
     font-size: 18px;
     font-weight: 700;
     color: #1e3a8a;
     margin: 0;
 }
-
 .compare-group__toggle {
     font-size: 12px;
     color: #3b82f6;
 }
 
-.compare-group__body {
-    padding-top: 0;
+/* Сетка строк таблицы */
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
 }
 
-/* --- Таблица внутри группы --- */
-.compare-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    border: 1px solid #000; /* Черная внешняя граница */
+.compare-row {
+    display: grid !important;
+    /* ИДЕАЛЬНОЕ СОВПАДЕНИЕ С КАРТОЧКАМИ */
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(0, 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    margin-bottom: var(--gap) !important;
 }
 
-.compare-table th,
-.compare-table td {
-    padding: 12px 16px;
-    border: 1px solid #000; /* Черные сплошные границы */
-    text-align: center;
-    font-size: 14px;
-    vertical-align: middle;
-    box-sizing: border-box;
-}
-
-/* Левая колонка с названиями характеристик */
+/* Ячейка с названием */
 .compare-table__field-th {
-    width: 230px;
-    min-width: 230px;
-    max-width: 230px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #000 !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
     font-weight: 600;
-    color: #374151;
-    background-color: #f9fafb; /* Легкий серый фон для читаемости */
-    text-align: left;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #111;
 }
 
-/* Ячейки со значениями */
+/* Ячейки с данными */
 .compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #000 !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
     font-weight: 600;
-    color: #111827;
-    word-break: break-word;
-    background-color: #ffffff;
+    font-size: 14px;
+    background: #fff;
 }
 
-/* Подсветка лучшего значения (синяя гамма) */
 .compare-table__cell--best {
     background-color: #bfdbfe !important;
     color: #1e40af;
     font-weight: 800;
 }
 
-/* Подсветка "лучше, чем у других" */
 .compare-table__cell--better {
     background-color: #eff6ff !important;
     color: #2563eb;
 }
 
-/* Пустые значения */
 .compare-table__cell--empty {
     color: #d1d5db;
     font-weight: 400;
 }
-/* ==================== МОДАЛКА ПОДТВЕРЖДЕНИЯ ==================== */
 
-.confirm-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 20, 40, 0.45);
-    backdrop-filter: blur(2px);
+/* Кнопки Очистить и Отличия */
+.compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+.compare-btn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+.compare-view__diff-toggle {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 100000;
-    padding: 20px;
-    animation: confirmFadeIn 0.18s ease-out;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #4b5563;
+    user-select: none;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (ФИНАЛЬНЫЙ ВАРИАНТ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 150px;       /* Жесткая ширина карточки */
+    --gap: 5px;            /* Отступ между колонками */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
 }
 
-.confirm-modal-overlay--closing {
-    animation: confirmFadeOut 0.16s ease-in forwards;
-}
-
-.confirm-modal {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow:
-            0 20px 50px rgba(0, 0, 0, 0.25),
-            0 0 0 1px rgba(0, 0, 0, 0.05);
-    padding: 24px;
-    max-width: 400px;
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
     width: 100%;
-    animation: confirmPopIn 0.2s ease-out;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-.confirm-modal__title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #1e3a8a; /* Темно-синий, как заголовки групп */
+    flex: 1 1 auto;
+    min-height: 0;
     margin-bottom: 12px;
 }
 
-.confirm-modal__message {
-    font-size: 14px;
-    color: #4b5563;
-    line-height: 1.45;
-    margin-bottom: 24px;
-    white-space: pre-line;
-}
-
-.confirm-modal__actions {
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow: auto !important; /* Скролл и по X, и по Y */
+    min-height: 0;
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    padding: 0 10px;
 }
 
-.confirm-modal__btn {
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
     cursor: pointer;
-    border: 1.5px solid transparent;
-    transition: all 0.15s ease;
-    font-family: inherit;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
 }
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
 
-.confirm-modal__btn:active {
-    transform: translateY(1px);
-}
-
-/* Кнопка "Отмена" */
-.confirm-modal__btn--no {
-    background: #ffffff;
-    border-color: #d1d5db;
-    color: #374151;
-}
-
-.confirm-modal__btn--no:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
-}
-
-/* Кнопка "Да, очистить" / "Убрать" */
-.confirm-modal__btn--yes {
-    background: #2563eb; /* Синий акцент */
-    border-color: #1d4ed8;
-    color: #ffffff;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-}
-
-.confirm-modal__btn--yes:hover {
-    background: #1d4ed8;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
-}
-
-/* Анимации */
-@keyframes confirmFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes confirmFadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0; }
-}
-
-@keyframes confirmPopIn {
-    from { opacity: 0; transform: scale(0.95) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-/* --- Карточки НП --- */
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Красивые, 150x215) ===== */
+/* ============================================================ */
 .compare-cards-row {
-    display: flex;
-    align-items: stretch;
-    margin-bottom: 16px; /* Уменьшили отступ, так как под ним теперь тулбар */
-    overflow-x: auto;
-    padding-bottom: 0;
-    width: 100%;
+    display: flex !important;
+    gap: var(--gap) !important;
+    width: max-content !important; /* Обязательно, чтобы не сжимались */
+    min-width: 100% !important;
+    margin-bottom: 12px !important;
 }
 
-/* Левая колонка-распорка (230px как в таблице) */
 .compare-cards-spacer {
-    flex: 0 0 230px;
-    min-width: 230px;
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
 }
 
-/* Карточка */
 .compare-card {
-    position: relative;
-    flex: 1 1 0;
-    /* ЗАДАЕМ МИНИМАЛЬНЫЕ РАЗМЕРЫ */
-    min-width: 150px;
-    height: 215px;
+    flex: 0 0 var(--card-w) !important; /* Жестко 150px */
+    min-width: var(--card-w) !important;
+    max-width: var(--card-w) !important;
+    height: 215px !important;           /* Жестко 215px */
 
+    /* Красивое оформление */
+    position: relative;
     padding: 12px 10px 10px;
     background: #fff;
     border: 1px solid #000;
-    border-right: none;
-    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Контент прижат к верху */
+    justify-content: flex-start;
 }
 
-.compare-card:last-child {
-    border-right: 1px solid #000;
+/* Внутренности карточки (если нужно подправить) */
+.compare-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb;
+    text-align: center;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.compare-card__region {
+    font-size: 13px;
+    color: black;
+    text-align: center;
+    margin-bottom: auto;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Border Collapse + 150px) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.compare-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important; /* Убирает двойные рамки */
+    margin: 0 !important;
+}
+
+/* Первая колонка таблицы */
+.compare-table__field-th {
+    width: var(--col-title-w) !important;
+    min-width: var(--col-title-w) !important;
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Ячейки с данными */
+.compare-table__cell {
+    width: var(--card-w) !important;
+    min-width: var(--card-w) !important;
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important; /* Единая сетка */
+    text-align: center !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+}
+
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+
+/* ============================================================ */
+/* ===== МОДАЛКА И ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
+/* ============================================================ */
+.compare-view__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
+}
+
+.compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    border: 1px solid #000;
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.compare-btn:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+}
+
+.compare-view__diff-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #4b5563;
+    user-select: none;
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ БЛОК: СРАВНЕНИЕ НП ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 150px;       /* Минимальная ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: auto !important; /* Если карточек много, появится скролл */
+    overflow-y: auto !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+}
+
+.compare-card {
+    flex: 1 1 var(--card-w) !important; /* Растягиваются, но не меньше 150px */
+    min-width: var(--card-w) !important;
+    height: 215px !important;
+
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .compare-card__remove {
@@ -3348,144 +3236,1928 @@ button,
     justify-content: center;
     background: transparent;
     border: none;
-    color: #9ca3af;
+    color: #ef4444;
     cursor: pointer;
     border-radius: 50%;
     transition: all 0.15s ease;
     z-index: 2;
 }
-
 .compare-card__remove:hover {
-    background: #f3f4f6;
-    color: #ef4444;
-}
-
-.compare-card__img-placeholder {
-    height: 46px; /* Уменьшили, чтобы влезло в 215px */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    margin-top: 4px;
+    background: #fef2f2;
+    color: #dc2626;
 }
 
 .compare-card__title {
-    font-size: 13px; /* Чуть уменьшили шрифт для компактности */
+    font-size: 15px;
     font-weight: 700;
     color: #2563eb;
-    line-height: 1.25;
+    text-align: center;
     margin-bottom: 4px;
+    line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-align: center;
     width: 100%;
-    word-break: break-word;
 }
 
 .compare-card__region {
-    font-size: 11px;
-    color: #6b7280;
-    margin-bottom: auto; /* Прижимает рейтинг к низу */
+    font-size: 13px;
+    color: black;
     text-align: center;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-bottom: auto;
 }
 
-.compare-card__rating {
-    display: inline-flex;
+/* ============================================================ */
+/* ===== ТАБЛИЦА ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
     flex-direction: column;
+    gap: 12px;
+    width: 100% !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
     align-items: center;
-    background: #eff6ff;
-    border-radius: 4px;
-    padding: 4px 8px;
-    margin-bottom: 4px;
+    gap: 10px;
+    cursor: pointer;
 }
 
-.compare-card__rating-val {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1d4ed8;
-    line-height: 1.1;
+.compare-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important; /* Убирает двойные рамки */
+    margin: 0 !important;
 }
 
-.compare-card__rating-label {
-    font-size: 9px;
-    color: #3b82f6;
+.compare-table__field-th {
+    width: var(--col-title-w) !important;
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    text-align: left !important;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    color: #374151;
 }
 
-/* --- Панель управления (теперь под карточками) --- */
+.compare-table__cell {
+    width: auto !important;
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important;
+    text-align: center !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+}
+
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+
+/* --- КНОПКИ --- */
 .compare-view__toolbar {
     display: flex;
     align-items: center;
     gap: 24px;
     flex-wrap: wrap;
-    margin-bottom: 24px; /* Отступ до первой таблицы */
-    padding: 0 4px;
+    margin-bottom: 12px !important;
 }
-.compare-card__rating {
+.compare-btn {
     display: inline-flex;
-    flex-direction: row; /* <-- МЕНЯЕМ НА ROW (в строку) */
-    align-items: center; /* Выравниваем по центру вертикали */
-    justify-content: center;
-    gap: 4px; /* Отступ между числом и текстом */
-    background: #eff6ff;
-    border-radius: 4px;
-    padding: 4px 8px;
-    margin-bottom: 4px;
-}
-
-.compare-card__rating-val {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1d4ed8;
-    line-height: 1; /* Убираем лишние отступы, чтобы не разъезжалось */
-}
-
-.compare-card__rating-label {
-    font-size: 10px; /* Чуть уменьшили, чтобы точно влезло в одну строку */
-    color: #3b82f6;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1;
-    white-space: nowrap; /* Запрещаем перенос текста */
-}
-/* Контейнер для обеих плашек (друг под другом) */
-.compare-card__stats {
-    display: flex;
-    flex-direction: column; /* ВАЖНО: ставит блоки друг под друга */
     align-items: center;
-    gap: 4px; /* Отступ между строкой обеспеченности и строкой дефицита */
-    margin-top: auto; /* Прижимаем к низу карточки */
-    margin-bottom: 4px;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.compare-btn:hover {
+    background: #f9fafb;
+}
+.compare-view__diff-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #4b5563;
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ БЛОК: СРАВНЕНИЕ НП ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 150px;       /* Минимальная ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: auto !important; /* Если карточек много, появится скролл */
+    overflow-y: auto !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+}
+
+.compare-card {
+    flex: 1 1 var(--card-w) !important; /* Растягиваются, но не меньше 150px */
+    min-width: var(--card-w) !important;
+    height: 215px !important;
+
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
     width: 100%;
 }
 
-/* Плашка (каждая строка) */
-.compare-card__stat {
-    display: inline-flex;
-    flex-direction: row; /* Число и текст в одну строку */
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-radius: 4px;
-    padding: 4px 8px;
-    white-space: nowrap; /* ВАЖНО: запрещает перенос на новую строку внутри плашки */
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
 }
 
+/* Строка таблицы - идеальная сетка */
+.compare-row {
+    display: grid !important;
+    /* Первая колонка 230px, остальные делят остаток 1fr, но не меньше 150px */
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(var(--card-w), 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    margin-bottom: var(--gap) !important;
+}
+
+/* Первая колонка */
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    width: var(--col-title-w) !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Ячейки с данными */
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ БЛОК: СРАВНЕНИЕ НП (ИДЕАЛЬНАЯ СЕТКА) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 150px;       /* Минимальная ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: auto !important; /* Скролл, если карточек много */
+    overflow-y: auto !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    /* Сетка карточек: колонка названий + N колонок карточек */
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(var(--card-w), 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    min-width: max-content !important; /* Чтобы не сжимались меньше 150px */
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1; /* Первая колонка пустая */
+}
+
+.compare-card {
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100% !important;
+    min-width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+}
+
+/* Строка таблицы - ровно та же сетка, что и у карточек */
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(var(--card-w), 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    margin-bottom: var(--gap) !important;
+}
+
+/* Первая колонка */
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Ячейки с данными */
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-min-w: 150px;   /* Минимальная ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: auto !important; /* Если карточек много, появится скролл */
+    overflow-y: auto !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    /* Колонка 230px + N колонок по (мин. 150px, макс 1fr) */
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(var(--card-min-w), 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    min-width: max-content !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1;
+}
+
+.compare-card {
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100% !important;
+    min-width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+}
+
+/* Строка таблицы - ТОЧНАЯ КОПИЯ СЕТКИ КАРТОЧЕК */
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), minmax(var(--card-min-w), 1fr)) !important;
+    gap: var(--gap) !important;
+    width: 100% !important;
+    margin-bottom: var(--gap) !important;
+}
+
+/* Первая колонка */
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Ячейки с данными */
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+/* Подсветка */
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки с названиями */
+    --card-w: 160px;       /* Жесткая ширина карточки и колонки */
+    --gap: 5px;            /* Отступ между карточками */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА СКРОЛЛА --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Единственный контейнер, который скроллится */
+.compare-scroll-wrapper {
+    flex: 1 1 auto;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    /* Первая колонка 230px, остальные ровно по 160px */
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important; /* Растягивается ровно по карточкам */
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1;
+}
+
+.compare-card {
+    width: var(--card-w) !important;
+    height: 215px !important;
+    min-height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    /* Ширина заголовка = ширина первой колонки + все карточки */
+    width: calc(var(--col-title-w) + var(--compare-cols) * (var(--card-w) + var(--gap))) !important;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+/* Строка таблицы - идеальная копия сетки карточек */
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: var(--gap) !important;
+}
+
+/* Первая колонка (названия) */
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    width: var(--col-title-w) !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Ячейки с данными (ровно по 160px) */
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-w) !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+/* Подсветка */
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+
+/* Убираем лишние стили у тулбара */
+.compare-view__toolbar {
+    margin-bottom: 12px !important;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (КАРУСЕЛЬ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 160px;       /* Жесткая ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно карусели (скрывает все, что не влезает по X) */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important; /* Никакого скролла, только обрезка */
+    position: relative;
+    min-height: 0;
+}
+
+/* Трек, который двигается (карточки + таблицы) */
+.compare-scroll-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+    transition: transform 0.3s ease; /* Плавный сдвиг */
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1;
+}
+
+.compare-card {
+    width: var(--card-w) !important;
+    height: 215px !important;
+    min-height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: calc(var(--col-title-w) + var(--compare-cols) * (var(--card-w) + var(--gap))) !important;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: var(--gap) !important;
+}
+
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    width: var(--col-title-w) !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-w) !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (КАРУСЕЛЬ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 160px;       /* Жесткая ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно карусели (СКРЫВАЕТ ВСЕ, ЧТО НЕ ВЛЕЗАЕТ) */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important; /* Никакого горизонтального скролла */
+    position: relative;
+    min-height: 0;
+    /* Плавный сдвиг */
+    transition: margin-left 0.3s ease;
+}
+
+/* Трек, который двигается */
+.compare-carousel-track {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+    transition: margin-left 0.3s ease; /* Плавный сдвиг */
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1;
+}
+
+.compare-card {
+    width: var(--card-w) !important;
+    height: 215px !important;
+    min-height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: calc(var(--col-title-w) + var(--compare-cols) * (var(--card-w) + var(--gap))) !important;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: var(--gap) !important;
+}
+
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    width: var(--col-title-w) !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-w) !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (КАРУСЕЛЬ БЕЗ СКРОЛЛА) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 160px;       /* Жесткая ширина карточки */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important; /* Общий контейнер не скроллится */
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно карусели (ЖЕСТКО ОБРЕЗАЕТ ВСЁ, ЧТО НЕ ВЛЕЗАЕТ) */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important; /* Скрываем всё, что выходит за рамки */
+    position: relative;
+    min-height: 0;
+    /* Отключаем скролл мышью и тачпадом */
+    overscroll-behavior: contain;
+}
+
+/* Трек, который двигается */
+.compare-carousel-track {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+    /* Убираем transition, чтобы стрелки работали как замена контента */
+    transition: none;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (Grid) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+}
+
+.compare-cards-spacer {
+    grid-column: 1;
+}
+
+.compare-card {
+    width: var(--card-w) !important;
+    height: 215px !important;
+    min-height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (Grid) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content !important;
+}
+
+.compare-group__header {
+    border: none !important;
+    border-bottom: 2px solid #bfdbfe !important;
+    background: transparent !important;
+    padding: 12px 0 !important;
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: calc(var(--col-title-w) + var(--compare-cols) * (var(--card-w) + var(--gap))) !important;
+}
+
+.compare-table-grid {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-row {
+    display: grid !important;
+    grid-template-columns: var(--col-title-w) repeat(var(--compare-cols, 1), var(--card-w)) !important;
+    gap: var(--gap) !important;
+    width: max-content !important;
+    margin-bottom: var(--gap) !important;
+}
+
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    width: var(--col-title-w) !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9fafb !important;
+    padding: 8px 12px !important;
+    text-align: left !important;
+    font-weight: 600;
+    box-sizing: border-box !important;
+    font-size: 14px;
+    color: #374151;
+}
+
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-w) !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+}
+
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (КАК В СИТИЛИНКЕ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина левой колонки с названиями */
+    --card-w: 160px;       /* Ширина карточки и колонки с данными */
+    --gap: 5px;            /* Отступ */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important; /* Отключаем скролл на уровне всей страницы */
+}
+
+/* --- КАРУСЕЛЬ И СКРОЛЛ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно, в котором происходит сдвиг */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow-x: hidden !important; /* Никакого горизонтального скролла */
+    overflow-y: auto !important;   /* Только вертикальный скролл, если строк много */
+    position: relative;
+    min-height: 0;
+    background: #fff;
+}
+
+/* Трек, который двигается */
+.compare-carousel-track {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* transition: none; */
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none; /* JS покажет, если не влезает */
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    margin-bottom: 12px !important;
+    margin-left: 0 !important;
+    transition: margin-left 0.3s ease; /* Плавный сдвиг карточек */
+}
+
+/* Распорка над названиями (занимает 230px) */
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+}
+
+/* Сама карточка (ширина 160px) */
+.compare-card {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: var(--gap); /* Отступ между карточками */
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (GRID) ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+}
+
+.compare-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+/* Заголовок группы (НАСЕЛЕННЫЙ ПУНКТ, Мобильная связь и т.д.) */
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #fff;
+    position: sticky;
+    left: 0;
+    width: var(--col-title-w); /* Заголовок только над левой колонкой */
+    z-index: 10;
+}
+
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Строка таблицы */
+.compare-row {
+    display: flex;
+    width: 100%;
+    margin-bottom: var(--gap);
+}
+
+/* ЛЕВАЯ КОЛОНКА: Названия полей (фиксирована) */
+.compare-table__field-th {
+    display: flex;
+    align-items: center;
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    min-width: var(--col-title-w) !important;
+    border: 1px solid #ccc;
+    background-color: #f9fafb;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+/* ПРАВАЯ ЧАСТЬ: Колонки с данными (двигаются) */
+.compare-data-cells {
+    display: grid;
+    grid-template-columns: repeat(var(--compare-cols, 1), var(--card-w));
+    gap: var(--gap);
+    transition: margin-left 0.3s ease; /* Плавный сдвиг */
+}
+
+/* Ячейка с данными */
+.compare-table__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-w) !important;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* Подсветка */
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (КАК В СИТИЛИНКЕ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;  /* Ширина колонки названий */
+    --card-w: 160px;       /* Жесткая ширина карточки */
+    --gap: 5px;            /* Отступ между карточками */
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно карусели (скрывает всё, что выходит за края) */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important; /* Никакого скролла */
+    position: relative;
+    min-height: 0;
+}
+
+/* Трек (внутри него всё крутится) */
+.compare-carousel-track {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+}
+
+/* --- СТРЕЛКИ --- */
+.carousel-btn {
+    display: none;
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    font-size: 20px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-btn--prev { margin-right: 8px; }
+.carousel-btn--next { margin-left: 8px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+}
+
+/* Левая распорка (занимает 230px и стоит на месте) */
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+}
+
+/* Подвижная обертка с карточками */
+.compare-cards-movable {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+/* Карточка */
+.compare-card {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА ===== */
+/* ============================================================ */
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+/* Заголовок группы (фиксирован слева) */
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #fff;
+    position: sticky;
+    left: 0;
+    width: var(--col-title-w);
+    z-index: 10;
+}
+
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Строка таблицы */
+.compare-row {
+    display: flex;
+    margin-bottom: var(--gap);
+}
+
+/* Первая колонка (названия полей) - фиксирована */
+.compare-table__field-th {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    background-color: #f9fafb;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+/* Правая часть (данные) - двигается */
+.compare-data-cells {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-table__cell {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (С ВЕРТИКАЛЬНЫМ СКРОЛЛОМ ТАБЛИЦЫ) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;
+    --card-w: 160px;
+    --gap: 5px;
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Окно карусели */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important;
+    position: relative;
+    min-height: 0;
+
+    /* Ключевое: делаем колонку flex, чтобы таблица заняла остаток */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ (ФИКСИРОВАННЫЕ СВЕРХУ) ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important; /* Не сжимается */
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+}
+
+.compare-cards-movable {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-card {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (СКРОЛЛЯЩАЯСЯ) ===== */
+/* ============================================================ */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important; /* Занимает всё оставшееся место */
+    min-height: 0 !important;
+    overflow-y: auto !important; /* ВЕРТИКАЛЬНЫЙ СКРОЛЛ */
+    overflow-x: hidden !important;
+    position: relative;
+}
+
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #fff;
+    position: sticky;
+    left: 0;
+    width: var(--col-title-w);
+    z-index: 10;
+}
+
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+}
+
+.compare-row {
+    display: flex;
+    margin-bottom: var(--gap);
+}
+
+/* Левая колонка (названия) - Sticky */
+.compare-table__field-th {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    background-color: #f9fafb;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+/* Правая часть (данные) - Двигается */
+.compare-data-cells {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-table__cell {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+
+.compare-card__stat--provided .compare-card__stat-val {
+    color: #1d4ed8;
+}
 .compare-card__stat-val {
     font-size: 15px;
     font-weight: 800;
     line-height: 1;
 }
-
+.compare-card__stat--provided .compare-card__stat-label {
+    color: #3b82f6;
+}
+.compare-card__stat {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+.compare-card__stat--deficit .compare-card__stat-val {
+    color: #dc2626;
+}
+.compare-card__stat-val {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+}
+.compare-card__stat--deficit .compare-card__stat-label {
+    color: #ef4444;
+}
 .compare-card__stat-label {
     font-size: 10px;
     font-weight: 600;
@@ -3493,26 +5165,568 @@ button,
     letter-spacing: 0.5px;
     line-height: 1;
 }
-
-/* Синий стиль для обеспеченности */
-.compare-card__stat--provided {
-    background: #eff6ff;
+.compare-card__stat {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    white-space: nowrap;
 }
-.compare-card__stat--provided .compare-card__stat-val {
-    color: #1d4ed8;
-}
-.compare-card__stat--provided .compare-card__stat-label {
-    color: #3b82f6;
-}
-
-/* Красный стиль для дефицита */
 .compare-card__stat--deficit {
     background: #fef2f2;
 }
-.compare-card__stat--deficit .compare-card__stat-val {
-    color: #dc2626;
+.compare-card__stat--provided {
+    background: #eff6ff;
 }
-.compare-card__stat--deficit .compare-card__stat-label {
-    color: #ef4444;
+.compare-card__stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: auto;
+    margin-bottom: 4px;
+    width: 100%;
 }
-/* Остальные стили для compare-btn, таблиц и модалки остаются без изменений */
+.confirm-modal {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    animation: confirmPopIn 0.2s ease-out;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+confirm-modal__btn--yes {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+.confirm-modal__btn {
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+.confirm-modal__btn--no {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: #374151;
+}
+.confirm-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 40, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    padding: 20px;
+    animation: confirmFadeIn 0.18s ease-out;
+}
+.confirm-modal__title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin-bottom: 12px;
+}
+.confirm-modal__message {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.45;
+    margin-bottom: 24px;
+    white-space: pre-line;
+}
+.confirm-modal__btn--yes {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (ФИНАЛЬНЫЙ ВИД) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;
+    --card-w: 160px;
+    --gap: 5px;
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    position: relative; /* Важно для позиционирования стрелок */
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+    padding: 0 15px; /* Отступы, чтобы стрелки не перекрывали текст таблицы полностью */
+}
+
+/* Окно карусели */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important;
+    position: relative;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- СТРЕЛКИ (ПОЛУПРОЗРАЧНЫЕ КРУГИ) --- */
+.carousel-btn {
+    position: absolute;
+    top: 50%; /* Центрируем по вертикали относительно карточек */
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.04); /* Едва заметный серый фон */
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #555;
+    font-size: 18px;
+    display: none; /* JS покажет, если нужно */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease;
+}
+
+.carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+.carousel-btn:disabled {
+    opacity: 0;
+    cursor: default;
+}
+
+/* Позиционируем стрелку "Назад" слева (на границе колонки названий) */
+.carousel-btn--prev {
+    left: calc(var(--col-title-w) - 20px);
+}
+
+/* Позиционируем стрелку "Вперед" справа (у края окна) */
+.carousel-btn--next {
+    right: 0px;
+}
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white; /* Цвет фона совпадает с фоном контейнера */
+}
+
+.compare-cards-movable {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-card {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (СКРОЛЛЯЩАЯСЯ) ===== */
+/* ============================================================ */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important; /* Вертикальный скролл только тут */
+    overflow-x: hidden !important;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+/* Шапка группы (Населенный пункт, Мобильная связь) */
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #ececec;
+    position: sticky;
+    left: 0;
+    width: var(--col-title-w);
+    z-index: 10;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+}
+
+.compare-group__toggle {
+    font-size: 12px;
+    color: #3b82f6;
+}
+
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+}
+
+.compare-row {
+    display: flex;
+    margin-bottom: var(--gap);
+}
+
+/* Левая колонка (названия) - Sticky */
+.compare-table__field-th {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    background-color: #f9fafb;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+/* Правая часть (данные) - Двигается */
+.compare-data-cells {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-table__cell {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* ============================================================ */
+/* ===== ВОЗВРАЩАЕМ ПОДСВЕТКУ МАКСИМАЛЬНЫХ ЗНАЧЕНИЙ ===== */
+/* ============================================================ */
+
+/* Лучшее значение (синий фон) */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important; /* Светло-голубой */
+    color: #1e40af !important;            /* Темно-синий текст */
+    font-weight: 800 !important;
+    border-color: #93c5fd !important;
+}
+
+/* Значение "лучше, чем у других" (очень светлый голубой) */
+.compare-table__cell--better {
+    background-color: #eff6ff !important; /* Очень светлый */
+    color: #2563eb !important;
+    font-weight: 700 !important;
+    border-color: #bfdbfe !important;
+}
+
+/* Пустые значения */
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП (ФИНАЛЬНЫЙ ВИД) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --col-title-w: 230px;
+    --card-w: 160px;
+    --gap: 5px;
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+}
+
+/* --- ОБЕРТКА КАРУСЕЛИ --- */
+.compare-carousel-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 12px;
+    position: relative; /* Для абсолютного позиционирования стрелок */
+}
+
+/* Окно карусели */
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    overflow: hidden !important;
+    position: relative;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================================ */
+/* ===== СТРЕЛКИ (ПО ЦЕНТРУ КАРТОЧЕК) ===== */
+/* ============================================================ */
+.carousel-btn {
+    position: absolute;
+    /* Высота карточки 215px. Центр = 215 / 2 = 107.5px. Отнимаем половину высоты кнопки (20px) */
+    top: 107px;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #555;
+    font-size: 18px;
+    display: none; /* JS покажет */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease;
+}
+
+.carousel-btn:hover { background: rgba(0, 0, 0, 0.1); color: #000; }
+.carousel-btn:disabled { opacity: 0; cursor: default; }
+
+/* Позиционируем на границе фиксированной колонки названий */
+.carousel-btn--prev { left: calc(var(--col-title-w) - 20px); }
+/* Позиционируем у правого края */
+.carousel-btn--next { right: 10px; }
+
+/* ============================================================ */
+/* ===== КАРТОЧКИ ===== */
+/* ============================================================ */
+.compare-cards-row {
+    display: flex !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
+    position: relative; /* Важно для позиционирования стрелок */
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+}
+
+.compare-cards-movable {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-card {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    height: 215px !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* ============================================================ */
+/* ===== ТАБЛИЦА (СКРОЛЛЯЩАЯСЯ) ===== */
+/* ============================================================ */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    width: max-content !important;
+}
+
+.compare-group { display: flex; flex-direction: column; margin-bottom: 24px; }
+
+.compare-group__header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #ececec;
+    position: sticky;
+    left: 0;
+    width: var(--col-title-w);
+    z-index: 10;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+}
+.compare-group__toggle { font-size: 12px; color: #3b82f6; }
+.compare-group__body { display: flex; flex-direction: column; }
+
+.compare-row { display: flex; margin-bottom: var(--gap); }
+
+.compare-table__field-th {
+    flex: 0 0 var(--col-title-w) !important;
+    width: var(--col-title-w) !important;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    background-color: #f9fafb;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    margin-left: 2px;
+}
+
+.compare-data-cells {
+    display: flex;
+    gap: var(--gap);
+    transition: margin-left 0.3s ease;
+}
+
+.compare-table__cell {
+    flex: 0 0 var(--card-w) !important;
+    width: var(--card-w) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* ============================================================ */
+/* ===== ПОДСВЕТКА МАКСИМАЛЬНЫХ ЗНАЧЕНИЙ ===== */
+/* ============================================================ */
+
+/* Лучшее значение (синий фон) */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+    font-weight: 800 !important;
+    border-color: #93c5fd !important;
+}
+
+/* Значение "лучше, чем у других" */
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+    font-weight: 700 !important;
+    border-color: #bfdbfe !important;
+}
+
+/* Пустые значения */
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
