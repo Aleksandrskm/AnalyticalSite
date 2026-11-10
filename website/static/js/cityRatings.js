@@ -487,7 +487,6 @@ function addToCompare(settlementId) {
 
     const rating = allRatings[idStr] || {};
 
-    // Полная «плоская» запись: базовые поля + все поля рейтинга
     const record = {
         id: settlementId,
         name: settlement.name || settlement.NAME || `ID: ${settlementId}`,
@@ -499,18 +498,16 @@ function addToCompare(settlementId) {
         lat: settlement.lat || null,
         lon: settlement.lon || null,
         fias_id: settlement.fias_id || null,
-        // рейтинговые поля
         ...rating,
-        // фиксируем «итоговую» обеспеченность (на случай, если rating.rating undefined)
         rating: rating.rating !== undefined && rating.rating !== null
             ? Number(rating.rating)
             : null,
-        // служебное
         _addedAt: Date.now()
     };
 
     items.push(record);
     lsSetCompareItems(items);
+    updateCompareColsVar();
     return { ok: true };
 }
 
@@ -518,13 +515,22 @@ function removeFromCompare(settlementId) {
     const idStr = String(settlementId);
     const items = lsGetCompareItems().filter(it => String(it.id) !== idStr);
     lsSetCompareItems(items);
+    updateCompareColsVar();
     return items;
 }
 
 function clearCompare() {
     lsSetCompareItems([]);
+    updateCompareColsVar();
 }
-
+/**
+ * Синхронизирует CSS-переменную --compare-cols с реальным числом НП в сравнении.
+ */
+function updateCompareColsVar() {
+    const view = document.getElementById('compare-view');
+    if (!view) return;
+    view.style.setProperty('--compare-cols', String(lsGetCompareItems().length));
+}
 
 const DEFAULT_REGION = '29';
 const DEFAULT_ID_NP  = '';
@@ -4011,9 +4017,403 @@ function switchToCompareMode() {
     renderCompareView();
 }
 /**
- * Красивая модалка подтверждения с кнопками «Да» / «Нет».
- * Возвращает Promise<boolean>.
+ * Рисует только группы таблиц сравнения в переданный контейнер.
+ * Используется и при полном рендере, и при точечном удалении карточки.
  */
+function renderCompareTables(groupsContainer, items) {
+    if (!groupsContainer || !items || items.length === 0) return;
+
+    const groups = buildRatingGroups();
+    groups.unshift({
+        title: 'Населённый пункт',
+        fields: [
+            { key: 'population', label: 'Население' },
+            { key: 'area', label: 'Площадь (км²)' },
+            { key: 'district_name', label: 'Муниципальное образование' },
+            { key: 'region_name', label: 'Регион' }
+        ]
+    });
+
+    const diffCheckbox = document.getElementById('compare-diff-only');
+    const diffOnly = diffCheckbox ? diffCheckbox.checked : false;
+
+    const isDifferent = (key, itemsArr) => {
+        const vals = itemsArr.map(it => it[key]).filter(v => v !== undefined && v !== null && v !== '');
+        if (vals.length <= 1) return false;
+        const first = String(vals[0]);
+        return vals.some(v => String(v) !== first);
+    };
+
+    groups.forEach(group => {
+        const displayFields = group.fields.filter(f => !diffOnly || isDifferent(f.key, items));
+        if (displayFields.length === 0) return;
+
+        const groupBlock = document.createElement('div');
+        groupBlock.className = 'compare-group';
+
+        // Создаем шапку группы
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'compare-group__header';
+
+        const groupTitle = document.createElement('span');
+        groupTitle.className = 'compare-group__title';
+        groupTitle.textContent = group.title;
+
+        const toggleIcon = document.createElement('span');
+        toggleIcon.className = 'compare-group__toggle';
+        toggleIcon.innerHTML = '▲';
+
+        groupHeader.appendChild(groupTitle);
+        groupHeader.appendChild(toggleIcon);
+
+        const groupBody = document.createElement('div');
+        groupBody.className = 'compare-group__body';
+
+        // Обработчик клика для сворачивания
+        groupHeader.addEventListener('click', () => {
+            const isCollapsed = groupBody.style.display === 'none';
+            groupBody.style.display = isCollapsed ? 'flex' : 'none';
+            toggleIcon.innerHTML = isCollapsed ? '▲' : '▼';
+        });
+
+        // ВЫЧИСЛЯЕМ ЛУЧШИЕ ЗНАЧЕНИЯ (best/better)
+        const bestValues = {};
+        displayFields.forEach(f => {
+            const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
+            let best = null;
+            items.forEach(it => {
+                const v = it[f.key];
+                if (v === undefined || v === null || v === '' || isNaN(Number(v))) return;
+                const num = Number(v);
+                if (best === null) { best = num; return; }
+                if (lessBetter) { if (num < best) best = num; }
+                else { if (num > best) best = num; }
+            });
+            bestValues[f.key] = best;
+        });
+
+        // Заполняем строки
+        displayFields.forEach(f => {
+            const row = document.createElement('div');
+            row.className = 'compare-row';
+
+            // Левая колонка (названия) - Sticky
+            const th = document.createElement('div');
+            th.className = 'compare-table__field-th';
+            th.textContent = f.label;
+            row.appendChild(th);
+
+            // Правая колонка (данные) - Двигается
+            const dataCells = document.createElement('div');
+            dataCells.className = 'compare-data-cells';
+            dataCells.style.setProperty('--compare-cols', String(items.length));
+
+            const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
+            const best = bestValues[f.key];
+
+            items.forEach(it => {
+                const td = document.createElement('div');
+                td.className = 'compare-table__cell';
+
+                const raw = it[f.key];
+                const isEmpty = raw === undefined || raw === null || raw === '';
+                const isNum = !isEmpty && !isNaN(Number(raw));
+
+                if (isEmpty) {
+                    td.textContent = '—';
+                    td.classList.add('compare-table__cell--empty');
+                } else {
+                    td.textContent = isNum ? String(raw) : raw;
+                }
+
+                // Применяем подсветку
+                if (!isEmpty && isNum && best !== null) {
+                    const num = Number(raw);
+                    if (num === best) {
+                        td.classList.add('compare-table__cell--best');
+                    } else if (lessBetter ? (num < best) : (num > best)) {
+                        td.classList.add('compare-table__cell--better');
+                    }
+                }
+
+                dataCells.appendChild(td);
+            });
+
+            row.appendChild(dataCells);
+            groupBody.appendChild(row);
+        });
+
+        groupBlock.appendChild(groupHeader);
+        groupBlock.appendChild(groupBody);
+        groupsContainer.appendChild(groupBlock);
+    });
+}
+/**
+ * Точечно удаляет одну карточку и все соответствующие ей ячейки таблиц,
+ * не перерисовывая весь экран (сохраняет позицию горизонтального скролла).
+ */
+function removeCompareColumn(settlementId) {
+    // Для сохранения правильного состояния стрелок после удаления карточки,
+    // просто перерисовываем экран полностью.
+    renderCompareView();
+}
+function renderCompareView() {
+    const old = document.getElementById('compare-view');
+    if (old) old.remove();
+
+    const items = lsGetCompareItems();
+
+    const container = document.createElement('div');
+    container.id = 'compare-view';
+    container.className = 'compare-view';
+    container.style.setProperty('--compare-cols', String(items.length));
+
+    const header = document.createElement('div');
+    header.className = 'compare-view__header';
+    const title = document.createElement('h3');
+    title.className = 'compare-view__title';
+    title.textContent = 'Сравнение НП';
+    header.appendChild(title);
+    container.appendChild(header);
+
+    if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'compare-view__empty';
+        empty.textContent = 'Пока не добавлено ни одного НП для сравнения.';
+        container.appendChild(empty);
+        const tableContainer = document.querySelector('.table__rating');
+        if (tableContainer) {
+            const buttonsBlock = tableContainer.querySelector('.table_buttons');
+            if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
+            else tableContainer.appendChild(container);
+        }
+        return;
+    }
+
+    const carouselWrapper = document.createElement('div');
+    carouselWrapper.className = 'compare-carousel-wrapper';
+
+    const btnPrev = document.createElement('button');
+    btnPrev.className = 'carousel-btn carousel-btn--prev';
+    btnPrev.innerHTML = '❮';
+
+    const btnNext = document.createElement('button');
+    btnNext.className = 'carousel-btn carousel-btn--next';
+    btnNext.innerHTML = '❯';
+
+    const viewport = document.createElement('div');
+    viewport.className = 'compare-carousel-viewport';
+
+    // --- КАРТОЧКИ ---
+    const cardsRow = document.createElement('div');
+    cardsRow.className = 'compare-cards-row';
+
+    const leftSpacer = document.createElement('div');
+    leftSpacer.className = 'compare-cards-spacer';
+    cardsRow.appendChild(leftSpacer);
+
+    const cardsMovable = document.createElement('div');
+    cardsMovable.className = 'compare-cards-movable';
+    cardsMovable.style.setProperty('--compare-cols', String(items.length));
+
+    items.forEach(it => {
+        const card = document.createElement('div');
+        card.className = 'compare-card';
+        card.dataset.compareId = String(it.id);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'compare-card__remove';
+        closeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6 L18 18 M18 6 L6 18" stroke="#ef4444" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`;
+        closeBtn.addEventListener('click', async () => {
+            const ok = await showConfirmModal({
+                title: 'Убрать НП',
+                message: `Убрать «${it.name || 'ID: ' + it.id}» из сравнения?`,
+                yesText: 'Убрать',
+                noText: 'Отмена'
+            });
+            if (!ok) return;
+            removeFromCompare(it.id);
+            updateCompareButtonCounter();
+            removeCompareColumn(it.id);
+        });
+
+        const imgPlaceholder = document.createElement('div');
+        imgPlaceholder.className = 'compare-card__img-placeholder';
+        imgPlaceholder.innerHTML = `<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#b0c4de" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'compare-card__title';
+        titleEl.textContent = it.name || `ID: ${it.id}`;
+
+        const regionEl = document.createElement('div');
+        regionEl.className = 'compare-card__region';
+        regionEl.textContent = it.region_name || 'Регион не указан';
+
+        const statsEl = document.createElement('div');
+        statsEl.className = 'compare-card__stats';
+
+        const ratingVal = it.rating !== null ? Number(it.rating) : 0;
+        const providedEl = document.createElement('div');
+        providedEl.className = 'compare-card__stat compare-card__stat--provided';
+        providedEl.innerHTML = `<span class="compare-card__stat-val">${ratingVal.toFixed(1)}</span><span class="compare-card__stat-label">% обесп.</span>`;
+
+        const deficitVal = 100 - ratingVal;
+        const deficitEl = document.createElement('div');
+        deficitEl.className = 'compare-card__stat compare-card__stat--deficit';
+        deficitEl.innerHTML = `<span class="compare-card__stat-val">${deficitVal.toFixed(1)}</span><span class="compare-card__stat-label">% дефицит</span>`;
+
+        statsEl.appendChild(providedEl);
+        statsEl.appendChild(deficitEl);
+
+        card.appendChild(closeBtn);
+        card.appendChild(imgPlaceholder);
+        card.appendChild(titleEl);
+        card.appendChild(regionEl);
+        card.appendChild(statsEl);
+        cardsMovable.appendChild(card);
+    });
+
+    cardsRow.appendChild(cardsMovable);
+    viewport.appendChild(cardsRow);
+
+    // --- ТАБЛИЦА ---
+    const tableScrollArea = document.createElement('div');
+    tableScrollArea.className = 'compare-table-scroll-area';
+
+    const groupsContainer = document.createElement('div');
+    groupsContainer.className = 'compare-groups-container';
+    tableScrollArea.appendChild(groupsContainer);
+
+    renderCompareTables(groupsContainer, items);
+    viewport.appendChild(tableScrollArea);
+
+    carouselWrapper.appendChild(btnPrev);
+    carouselWrapper.appendChild(viewport);
+    carouselWrapper.appendChild(btnNext);
+    container.appendChild(carouselWrapper);
+
+    // --- ПАНЕЛЬ УПРАВЛЕНИЯ ---
+    const toolbar = document.createElement('div');
+    toolbar.className = 'compare-view__toolbar';
+
+    const clearAllBtn = document.createElement('button');
+    clearAllBtn.type = 'button';
+    clearAllBtn.className = 'compare-btn compare-btn--outline';
+    clearAllBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Очистить список
+    `;
+    clearAllBtn.addEventListener('click', async () => {
+        if (lsGetCompareItems().length === 0) return;
+        const ok = await showConfirmModal({
+            title: 'Очистить список',
+            message: 'Удалить все НП из сравнения? Это действие нельзя отменить.',
+            yesText: 'Да, очистить',
+            noText: 'Отмена'
+        });
+        if (!ok) return;
+        clearCompare();
+        updateCompareButtonCounter();
+        renderCompareView();
+    });
+    toolbar.appendChild(clearAllBtn);
+
+    const diffLabel = document.createElement('label');
+    diffLabel.className = 'compare-view__diff-toggle';
+    const diffCheckbox = document.createElement('input');
+    diffCheckbox.type = 'checkbox';
+    diffCheckbox.id = 'compare-diff-only';
+    const diffText = document.createElement('span');
+    diffText.textContent = 'Показывать только отличия';
+    diffLabel.appendChild(diffCheckbox);
+    diffLabel.appendChild(diffText);
+    toolbar.appendChild(diffLabel);
+    container.appendChild(toolbar);
+
+    diffCheckbox.addEventListener('change', () => {
+        const currentItems = lsGetCompareItems();
+        groupsContainer.innerHTML = '';
+        renderCompareTables(groupsContainer, currentItems);
+        updateCarousel();
+    });
+
+    // --- ЛОГИКА СДВИГА ---
+    let currentIndex = 0;
+    const cardWidth = 160;
+    const gap = 5;
+    const colTitleWidth = 230;
+
+    const updateCarousel = () => {
+        if (!viewport || !viewport.clientWidth) return;
+
+        const availableWidth = viewport.clientWidth - colTitleWidth;
+        const visibleCount = Math.max(1, Math.floor((availableWidth + gap) / (cardWidth + gap)));
+
+        // Ограничиваем индекс, чтобы при ресайзе не было пустого места
+        if (currentIndex > Math.max(0, items.length - visibleCount)) {
+            currentIndex = Math.max(0, items.length - visibleCount);
+        }
+
+        const offset = currentIndex * (cardWidth + gap);
+
+        cardsMovable.style.marginLeft = `-${offset}px`;
+
+        const allDataCells = groupsContainer.querySelectorAll('.compare-data-cells');
+        allDataCells.forEach(cell => {
+            cell.style.marginLeft = `-${offset}px`;
+        });
+
+        // ЛОГИКА СТРЕЛОК: Показываем, если элементов БОЛЬШЕ, чем влезает, ИЛИ если их 2 и больше (для надежности)
+        if (items.length >= 2 && items.length > visibleCount) {
+            btnPrev.style.display = 'flex';
+            btnNext.style.display = 'flex';
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex >= items.length - visibleCount;
+        } else {
+            btnPrev.style.display = 'none';
+            btnNext.style.display = 'none';
+        }
+    };
+
+    btnPrev.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+        }
+    });
+
+    btnNext.addEventListener('click', () => {
+        const availableWidth = viewport.clientWidth - colTitleWidth;
+        const visibleCount = Math.max(1, Math.floor((availableWidth + gap) / (cardWidth + gap)));
+        if (currentIndex < items.length - visibleCount) {
+            currentIndex++;
+            updateCarousel();
+        }
+    });
+
+    // Обработчик изменения размера окна (обычный)
+    window.addEventListener('resize', updateCarousel);
+
+    // ResizeObserver для отлова изменений именно контейнера (например, при сворачивании боковой панели)
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            updateCarousel();
+        });
+        ro.observe(viewport);
+    }
+
+    // Первичный запуск после отрисовки
+    setTimeout(updateCarousel, 50);
+
+    const tableContainer = document.querySelector('.table__rating');
+    if (tableContainer) {
+        const buttonsBlock = tableContainer.querySelector('.table_buttons');
+        if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
+        else tableContainer.appendChild(container);
+    }
+}
 function showConfirmModal(options = {}) {
     const {
         title = 'Подтверждение',
@@ -4085,309 +4485,7 @@ function showConfirmModal(options = {}) {
         document.body.appendChild(overlay);
     });
 }
-function renderCompareView() {
-    const old = document.getElementById('compare-view');
-    if (old) old.remove();
 
-    const items = lsGetCompareItems();
-
-    const container = document.createElement('div');
-    container.id = 'compare-view';
-    container.className = 'compare-view';
-
-    // ---------- Заголовок ----------
-    const header = document.createElement('div');
-    header.className = 'compare-view__header';
-
-    const title = document.createElement('h3');
-    title.className = 'compare-view__title';
-    title.textContent = 'Сравнение НП';
-    header.appendChild(title);
-    container.appendChild(header);
-
-    if (items.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'compare-view__empty';
-        empty.textContent = 'Пока не добавлено ни одного НП для сравнения.';
-        container.appendChild(empty);
-
-        const tableContainer = document.querySelector('.table__rating');
-        if (tableContainer) {
-            const buttonsBlock = tableContainer.querySelector('.table_buttons');
-            if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
-            else tableContainer.appendChild(container);
-        }
-        return;
-    }
-
-    // ---------- Карточки НП ----------
-    const cardsRow = document.createElement('div');
-    cardsRow.className = 'compare-cards-row';
-
-    // Левая колонка-распорка для выравнивания с таблицей (230px)
-    const leftSpacer = document.createElement('div');
-    leftSpacer.className = 'compare-cards-spacer';
-    cardsRow.appendChild(leftSpacer);
-
-    items.forEach(it => {
-        const card = document.createElement('div');
-        card.className = 'compare-card';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'compare-card__remove';
-        closeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`;
-        closeBtn.title = 'Убрать из сравнения';
-        closeBtn.addEventListener('click', async () => {
-            const ok = await showConfirmModal({
-                title: 'Убрать НП',
-                message: `Убрать «${it.name || 'ID: ' + it.id}» из сравнения?`,
-                yesText: 'Убрать',
-                noText: 'Отмена'
-            });
-            if (!ok) return;
-            removeFromCompare(it.id);
-            updateCompareButtonCounter();
-            renderCompareView();
-        });
-
-        const imgPlaceholder = document.createElement('div');
-        imgPlaceholder.className = 'compare-card__img-placeholder';
-        imgPlaceholder.innerHTML = `<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#b0c4de" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
-
-        const titleEl = document.createElement('div');
-        titleEl.className = 'compare-card__title';
-        titleEl.textContent = it.name || `ID: ${it.id}`;
-
-        const regionEl = document.createElement('div');
-        regionEl.className = 'compare-card__region';
-        regionEl.textContent = it.region_name || 'Регион не указан';
-
-        // ---------- Обеспеченность и Дефицит (в 2 строки) ----------
-        const statsEl = document.createElement('div');
-        statsEl.className = 'compare-card__stats';
-
-        // Обеспеченность (синяя)
-        const ratingVal = it.rating !== null ? Number(it.rating) : 0;
-        const providedEl = document.createElement('div');
-        providedEl.className = 'compare-card__stat compare-card__stat--provided';
-        providedEl.innerHTML = `
-            <span class="compare-card__stat-val">${ratingVal.toFixed(1)}</span>
-            <span class="compare-card__stat-label">% обесп.</span>
-        `;
-
-        // Дефицит (красный)
-        const deficitVal = 100 - ratingVal;
-        const deficitEl = document.createElement('div');
-        deficitEl.className = 'compare-card__stat compare-card__stat--deficit';
-        deficitEl.innerHTML = `
-            <span class="compare-card__stat-val">${deficitVal.toFixed(1)}</span>
-            <span class="compare-card__stat-label">% дефицит</span>
-        `;
-
-        statsEl.appendChild(providedEl);
-        statsEl.appendChild(deficitEl);
-
-
-        // Добавляем в карточку
-        card.appendChild(closeBtn);
-        card.appendChild(imgPlaceholder);
-        card.appendChild(titleEl);
-        card.appendChild(regionEl);
-        card.appendChild(statsEl); // <-- Вставляем сюда
-        cardsRow.appendChild(card);
-    });
-    container.appendChild(cardsRow);
-
-    // ---------- Панель управления (ПОД КАРТОЧКАМИ) ----------
-    const toolbar = document.createElement('div');
-    toolbar.className = 'compare-view__toolbar';
-
-    // Кнопка очистки
-    const clearAllBtn = document.createElement('button');
-    clearAllBtn.type = 'button';
-    clearAllBtn.className = 'compare-btn compare-btn--outline';
-    clearAllBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        Очистить список
-    `;
-    clearAllBtn.addEventListener('click', async () => {
-        if (items.length === 0) return;
-        const ok = await showConfirmModal({
-            title: 'Очистить список',
-            message: 'Удалить все НП из сравнения? Это действие нельзя отменить.',
-            yesText: 'Да, очистить',
-            noText: 'Отмена'
-        });
-        if (!ok) return;
-        clearCompare();
-        updateCompareButtonCounter();
-        renderCompareView();
-    });
-    toolbar.appendChild(clearAllBtn);
-
-    // Чекбокс "Показывать только отличия"
-    const diffLabel = document.createElement('label');
-    diffLabel.className = 'compare-view__diff-toggle';
-    const diffCheckbox = document.createElement('input');
-    diffCheckbox.type = 'checkbox';
-    diffCheckbox.id = 'compare-diff-only';
-
-    const diffText = document.createElement('span');
-    diffText.textContent = 'Показывать только отличия';
-
-    diffLabel.appendChild(diffCheckbox);
-    diffLabel.appendChild(diffText);
-    toolbar.appendChild(diffLabel);
-
-    container.appendChild(toolbar);
-
-    // ---------- Данные для таблиц ----------
-    const groups = buildRatingGroups();
-
-    // Добавляем группу "Населенный пункт" в начало (без ID)
-    groups.unshift({
-        title: 'Населённый пункт',
-        fields: [
-            { key: 'population', label: 'Население' },
-            { key: 'area', label: 'Площадь (км²)' },
-            { key: 'district_name', label: 'Муниципальное образование' },
-            { key: 'region_name', label: 'Регион' }
-        ]
-    });
-
-    // Функция проверки, отличается ли значение от других
-    const isDifferent = (key, itemsArr) => {
-        const vals = itemsArr.map(it => it[key]).filter(v => v !== undefined && v !== null && v !== '');
-        if (vals.length <= 1) return false;
-        const first = String(vals[0]);
-        return vals.some(v => String(v) !== first);
-    };
-
-    // ---------- Отрисовка сгруппированных таблиц ----------
-    const renderTables = () => {
-        const oldTables = container.querySelectorAll('.compare-group');
-        oldTables.forEach(t => t.remove());
-
-        const diffOnly = diffCheckbox.checked;
-
-        groups.forEach(group => {
-            // Фильтруем поля, если включен режим "только отличия"
-            const displayFields = group.fields.filter(f => {
-                if (!diffOnly) return true;
-                return isDifferent(f.key, items);
-            });
-
-            if (displayFields.length === 0) return;
-
-            const groupBlock = document.createElement('div');
-            groupBlock.className = 'compare-group';
-
-            const groupHeader = document.createElement('div');
-            groupHeader.className = 'compare-group__header';
-
-            const groupTitle = document.createElement('span');
-            groupTitle.className = 'compare-group__title';
-            groupTitle.textContent = group.title;
-
-            const toggleIcon = document.createElement('span');
-            toggleIcon.className = 'compare-group__toggle';
-            toggleIcon.innerHTML = '▲';
-
-            groupHeader.appendChild(groupTitle);
-            groupHeader.appendChild(toggleIcon);
-
-            const groupBody = document.createElement('div');
-            groupBody.className = 'compare-group__body';
-
-            groupHeader.addEventListener('click', () => {
-                const isCollapsed = groupBody.style.display === 'none';
-                groupBody.style.display = isCollapsed ? 'block' : 'none';
-                toggleIcon.innerHTML = isCollapsed ? '▲' : '▼';
-            });
-
-            const tbl = document.createElement('table');
-            tbl.className = 'compare-table';
-
-            const tbody = document.createElement('tbody');
-
-            const bestValues = {};
-            displayFields.forEach(f => {
-                const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
-                let best = null;
-                items.forEach(it => {
-                    const v = it[f.key];
-                    if (v === undefined || v === null || v === '' || isNaN(Number(v))) return;
-                    const num = Number(v);
-                    if (best === null) { best = num; return; }
-                    if (lessBetter) { if (num < best) best = num; }
-                    else { if (num > best) best = num; }
-                });
-                bestValues[f.key] = best;
-            });
-
-            displayFields.forEach(f => {
-                const tr = document.createElement('tr');
-
-                const th = document.createElement('th');
-                th.className = 'compare-table__field-th';
-                th.textContent = f.label;
-                tr.appendChild(th);
-
-                const lessBetter = COMPARE_LESS_IS_BETTER.has(f.key);
-                const best = bestValues[f.key];
-
-                items.forEach(it => {
-                    const td = document.createElement('td');
-                    td.className = 'compare-table__cell';
-
-                    const raw = it[f.key];
-                    const isEmpty = raw === undefined || raw === null || raw === '';
-                    const isNum = !isEmpty && !isNaN(Number(raw));
-
-                    if (isEmpty) {
-                        td.textContent = '—';
-                        td.classList.add('compare-table__cell--empty');
-                    } else {
-                        td.textContent = isNum ? String(raw) : raw;
-                    }
-
-                    if (!isEmpty && isNum && best !== null) {
-                        const num = Number(raw);
-                        if (num === best) {
-                            td.classList.add('compare-table__cell--best');
-                        } else if (lessBetter ? (num < best) : (num > best)) {
-                            td.classList.add('compare-table__cell--better');
-                        }
-                    }
-
-                    td.title = `${f.label}: ${td.textContent}`;
-                    tr.appendChild(td);
-                });
-
-                tbody.appendChild(tr);
-            });
-
-            tbl.appendChild(tbody);
-            groupBody.appendChild(tbl);
-            groupBlock.appendChild(groupHeader);
-            groupBlock.appendChild(groupBody);
-            container.appendChild(groupBlock);
-        });
-    };
-
-    renderTables();
-    diffCheckbox.addEventListener('change', renderTables);
-
-    // ---------- Вставка в DOM ----------
-    const tableContainer = document.querySelector('.table__rating');
-    if (tableContainer) {
-        const buttonsBlock = tableContainer.querySelector('.table_buttons');
-        if (buttonsBlock) tableContainer.insertBefore(container, buttonsBlock);
-        else tableContainer.appendChild(container);
-    }
-}
 /**
  * Полностью убирает экран сравнения из DOM.
  * Вызывается при переходе в любой другой режим.
