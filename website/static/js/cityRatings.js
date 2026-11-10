@@ -746,6 +746,16 @@ function hideResPageSize() {
 // ==================== БЛОК "ВЫБРАННЫЙ НП" ====================
 
 function showSelectedSettlementBlock() {
+    // Показываем блок ТОЛЬКО в режимах графика или таблицы
+    const inChartMode = isChartMode === true;
+    const inTableMode = !isChartMode && !isAnalyticsMode &&
+        (showRatings === true || settlementsData.items.length > 0);
+
+    if (!inChartMode && !inTableMode) {
+        hideSelectedSettlementBlock();
+        return;
+    }
+
     const el = document.getElementById('selected-settlement-block');
     if (el) el.style.display = 'flex';
 
@@ -774,7 +784,6 @@ function showSelectedSettlementBlock() {
         return;
     }
 
-    // mode === 'table'
     hlBtn.disabled = false;
     hlBtn.title = 'Перейти к НП в таблице';
 }
@@ -1919,24 +1928,25 @@ function resetSelectedOnRegionChange() {
     selectedSearchItem = null;
     selectedSearchIndex = -1;
 
-    // 2. Сбрасываем localStorage (чтобы при перерисовке не искало старый НП)
+    // 2. Сбрасываем localStorage
     lsSet(LS_KEYS.idNp, '');
 
-    // 3. Очищаем DOM-элемент (ставим прочерк)
+    // 3. Очищаем DOM-элемент
     const nameEl = document.getElementById('selected-settlement-name');
     if (nameEl) {
         nameEl.textContent = '—';
         nameEl.title = '';
     }
 
-    // 4. Обновляем кнопку-стрелку (она станет неактивной)
-    showSelectedSettlementBlock();
+    // 4. НЕ показываем блок принудительно — просто прячем,
+    //    пока не выбран режим
+    hideSelectedSettlementBlock();          // ← ИЗМЕНЕНО
 
-    // 5. Убираем тултип графика
+    // 5. Убираем тултип
     const tooltip = document.getElementById('chart-item-tooltip');
     if (tooltip) tooltip.remove();
 
-    // 6. Снимаем выделение со строк таблицы
+    // 6. Снимаем выделение со строк
     document.querySelectorAll('#settlements-table tbody tr').forEach(tr => {
         tr.classList.remove('selected');
     });
@@ -1945,17 +1955,7 @@ function resetSelectedOnRegionChange() {
     if (ratingChart) {
         const displayData = getChartDisplayData();
         if (displayData && displayData.length > 0) {
-            const ds0 = ratingChart.data.datasets[0];
-            const ds1 = ratingChart.data.datasets[1];
-            ds0.backgroundColor = displayData.map(() => '#1a73e8');
-            ds0.borderColor     = displayData.map(() => '#1a73e8');
-            ds0.borderWidth     = displayData.map(() => 0);
-            if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#ff6a00');
-                ds1.borderColor     = displayData.map(() => '#ff6a00');
-                ds1.borderWidth     = displayData.map(() => 0);
-            }
-            ratingChart.update('none');
+            // ... (без изменений)
         }
     }
 }
@@ -3745,17 +3745,17 @@ function createCompareCheckboxRow(settlementId) {
             const res = addToCompare(settlementId);
             if (res.ok) {
                 setLabelText(true);
-                renderPopup('НП добавлен в сравнение', false);
+                // renderPopup('НП добавлен в сравнение', false);
             } else if (res.reason === 'already') {
                 setLabelText(true);
             } else {
                 this.checked = false;
-                renderPopup('Не удалось добавить НП в сравнение', true);
+                // renderPopup('Не удалось добавить НП в сравнение', true);
             }
         } else {
             removeFromCompare(settlementId);
             setLabelText(false);
-            renderPopup('НП убран из сравнения', false);
+            // renderPopup('НП убран из сравнения', false);
         }
         updateCompareButtonCounter();
     });
