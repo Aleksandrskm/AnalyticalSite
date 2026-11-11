@@ -3,6 +3,171 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/planning_development.css') }}">
 
+<!--<h2>Детализация обеспеченности ТИ НП</h2>-->
+
+<!--<div class="pd-header-block">-->
+<!--    <div class="pd-header-text">деревня Беклемишевская</div>-->
+<!--    <div class="pd-header-text">Архангельская область, Устьянский муниципальный район</div>-->
+<!--</div>-->
+
+<!--<main class="pd-layout">-->
+<!--    <section class="pd-top-overview" aria-label="Общая информация и обеспеченность">-->
+<!--        <div class="pd-location-data pd-panel">-->
+<!--            <div class="pd-data-title">Показатели населённого пункта</div>-->
+<!--            <div class="pd-data-row"><span>Население</span><strong>877</strong></div>-->
+<!--            <div class="pd-data-row pd-data-row&#45;&#45;emphasis"><span>Площадь, кв. км.</span><strong>1</strong></div>-->
+<!--            <div class="pd-data-row"><span>Широта</span><strong>50.295574</strong></div>-->
+<!--            <div class="pd-data-row"><span>Долгота</span><strong>103.331812</strong></div>-->
+<!--            <div class="pd-data-row"><span>Код ФИАС</span><strong class="pd-code">a7392390-b3df-4c58-be2c-181154bfea1c</strong></div>-->
+<!--            <div class="pd-data-warning">(если = 0 или не заполнено)</div>-->
+<!--        </div>-->
+
+<!--        <div class="pd-overall pd-panel">-->
+<!--            <div class="pd-blue-title">Обеспеченность ТИ в НП</div>-->
+<!--            <div class="pd-gauge pd-gauge&#45;&#45;large">-->
+<!--                <div class="pd-gauge-track">-->
+<!--                    <span class="pd-gauge-segment pd-seg-orange"></span>-->
+<!--                    <span class="pd-gauge-segment pd-seg-cyan"></span>-->
+<!--                    <span class="pd-gauge-segment pd-seg-blue"></span>-->
+<!--                    <span class="pd-gauge-segment pd-seg-lime"></span>-->
+<!--                    <span class="pd-gauge-marker" style="left:82%"></span>-->
+<!--                </div>-->
+<!--                <div class="pd-gauge-value">82%</div>-->
+<!--            </div>-->
+<!--            <div class="pd-overall-legend">-->
+<!--                <span>Обеспеченность <b>82%</b></span>-->
+<!--                <span>Дефицит <b>18%</b></span>-->
+<!--            </div>-->
+<!--            <div class="pd-overall-formula">-->
+<!--                82% = (Моб 82% × 0,4) + (ШПД 72% × 0,3) + …-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        <div class="pd-weights pd-panel">-->
+<!--            <div class="pd-link-title">Коэффициенты значимости<br>видов связи <span>▷</span></div>-->
+<!--            <div class="pd-weight-list">-->
+<!--                <div><span>Мобильная связь</span><b>0,4</b></div>-->
+<!--                <div><span>ШПД</span><b>0,2</b></div>-->
+<!--                <div><span>Телевещание</span><b>0,2</b></div>-->
+<!--                <div><span>Радиостанции</span><b>0,1</b></div>-->
+<!--                <div><span>Спутниковая связь</span><b>0</b></div>-->
+<!--                <div><span>Проводная связь</span><b>0,2</b></div>-->
+<!--                <div><span>Почтовая связь</span><b>0</b></div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </section>-->
+
+<!--    <section class="pd-types-layout" aria-label="Виды связи и коэффициенты">-->
+<!--        <div class="pd-private-weights pd-panel">-->
+<!--            <div class="pd-link-title">Коэффициенты значимости<br>частных показателей <span>▷</span></div>-->
+<!--            <div class="pd-private-list">-->
+<!--                <div><b>D</b><span>Территориальная доступность</span><strong>0,4</strong></div>-->
+<!--                <div><b>E</b><span>Абонентская ёмкость</span><strong>0,3</strong></div>-->
+<!--                <div><b>T</b><span>Пропускная способность</span><strong>0,2</strong></div>-->
+<!--                <div><b>K</b><span>Конкурентность</span><strong>0,1</strong></div>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        <div class="pd-types-panel">-->
+<!--            <div class="pd-blue-title">Виды связи</div>-->
+<!--            <div class="pd-type-gauges" id="pd-type-gauges">-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>Мобильная связь</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>ШПД WiFi</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:72%"></i></div>-->
+<!--                    <strong>72%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>ТВ</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>РВ</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>Спутниковая связь</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>Проводная связь</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--                <div class="pd-type-gauge">-->
+<!--                    <b>Почтовая связь</b>-->
+<!--                    <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>-->
+<!--                    <strong>82%</strong><small>Обеспеченность</small>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </section>-->
+
+<!--    <section class="pd-method-layout" aria-label="Методика расчёта">-->
+<!--        <div class="pd-method-notes">-->
+<!--            <div class="pd-note-heading">Норма конкурентности =<br>3 оператора по всем технологиям</div>-->
+<!--            <div class="pd-method-formula">-->
+<!--                <div><b>D</b> Терр. доступность <span>— суммарная площадь покрытия БС, кв. км.</span></div>-->
+<!--                <div><b>E</b> Аб. ёмкость <span>— суммарная ёмкость возможных подключений, кол. аб.</span></div>-->
+<!--                <div><b>T</b> Пр. способность <span>— суммарно, Мбит/сек.</span></div>-->
+<!--                <div><b>K</b> Конкурентность <span>— суммарное количество операторов.</span></div>-->
+<!--                <p>Для ТВ и РВ в качестве абонентской ёмкости учитывается население НП.</p>-->
+<!--            </div>-->
+<!--            <div class="pd-selection-note">-->
+<!--                <b>Отбор БС</b> — дальность от базовой станции до центра НП учитывается по радиусу покрытия.-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        <div class="pd-coeff-matrix">-->
+<!--            <div class="pd-blue-title">Для всех видов связи</div>-->
+<!--            <div class="pd-matrix-caption">Показатели и коэффициенты</div>-->
+<!--            <table class="pd-matrix-table">-->
+<!--                <thead>-->
+<!--                    <tr>-->
+<!--                        <th></th><th>Моб.</th><th>ШПД</th><th>ТВ</th><th>РВ</th><th>СпС</th><th>Пров.</th><th>Почт.</th>-->
+<!--                    </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                    <tr><th>D</th><td>0,4</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>-->
+<!--                    <tr><th>E</th><td>0,3</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>-->
+<!--                    <tr><th>T</th><td>0,2</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>-->
+<!--                    <tr><th>K</th><td>0,1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>-->
+<!--                </tbody>-->
+<!--            </table>-->
+<!--            <div class="pd-matrix-note">Расчётные веса можно уточнять по исходным данным и правилам методики.</div>-->
+<!--        </div>-->
+<!--    </section>-->
+
+<!--    <section class="pd-tech-section" aria-label="Показатели по объектам инфраструктуры">-->
+<!--        <div class="pd-blue-title">Технологии и объекты инфраструктуры</div>-->
+<!--        <div class="pd-tech-grid" id="pd-dashboard-grid">-->
+<!--            &lt;!&ndash; Карточки технологий формируются локальным JavaScript. &ndash;&gt;-->
+<!--        </div>-->
+<!--    </section>-->
+
+<!--    <section class="pd-bottom-notes">-->
+<!--        <div class="pd-bottom-note">-->
+<!--            <b>Расчёт территориальной доступности</b>-->
+<!--            <span>D — суммарная площадь территории покрытия базовых станций, кв. км.</span>-->
+<!--            <span>Отбор базовых станций выполняется по расстоянию до центра населённого пункта.</span>-->
+<!--        </div>-->
+<!--        <div class="pd-bottom-note pd-bottom-note&#45;&#45;ka">-->
+<!--            <b>Доступность КА</b>-->
+<!--            <span>Отбираем по радиусу от центра, как и базовые станции.</span>-->
+<!--            <span>Для узлов связи и таксофонов учитывается отдельное правило отбора.</span>-->
+<!--        </div>-->
+<!--    </section>-->
+<!--</main>-->
+
+<!--<script src="{{ url_for('static', filename='js/planning_development.js') }}" defer></script>-->
+
 <h2>Детализация обеспеченности ТИ НП</h2>
 
 <div class="pd-header-block">
@@ -10,12 +175,12 @@
     <div class="pd-header-text">Архангельская область, Устьянский муниципальный район</div>
 </div>
 
-<main class="pd-layout">
-    <section class="pd-top-overview" aria-label="Общая информация и обеспеченность">
+<main class="pd-layout pd-screen-layout">
+    <section class="pd-top-overview pd-screen-overview" aria-label="Общая информация и обеспеченность">
         <div class="pd-location-data pd-panel">
             <div class="pd-data-title">Показатели населённого пункта</div>
             <div class="pd-data-row"><span>Население</span><strong>877</strong></div>
-            <div class="pd-data-row pd-data-row--emphasis"><span>Площадь, кв. км.</span><strong>1</strong></div>
+            <div class="pd-data-row"><span>Площадь, кв. км.</span><strong>1</strong></div>
             <div class="pd-data-row"><span>Широта</span><strong>50.295574</strong></div>
             <div class="pd-data-row"><span>Долгота</span><strong>103.331812</strong></div>
             <div class="pd-data-row"><span>Код ФИАС</span><strong class="pd-code">a7392390-b3df-4c58-be2c-181154bfea1c</strong></div>
@@ -23,7 +188,9 @@
         </div>
 
         <div class="pd-overall pd-panel">
-            <div class="pd-blue-title">Обеспеченность ТИ в НП</div>
+            <div class="pd-overall-heading">
+                <span class="pd-blue-title">Обеспеченность ТИ в населенном пункте</span>
+            </div>
             <div class="pd-gauge pd-gauge--large">
                 <div class="pd-gauge-track">
                     <span class="pd-gauge-segment pd-seg-orange"></span>
@@ -35,136 +202,143 @@
                 <div class="pd-gauge-value">82%</div>
             </div>
             <div class="pd-overall-legend">
-                <span>Обеспеченность <b>82%</b></span>
-                <span>Дефицит <b>18%</b></span>
+                <span class="pd-positive">Обеспеченность <b>82%</b></span>
+                <span class="pd-negative">Дефицит <b>18%</b></span>
             </div>
-            <div class="pd-overall-formula">
-                82% = (Моб 82% × 0,4) + (ШПД 72% × 0,3) + …
-            </div>
+<!--            <div class="pd-overall-hints">-->
+<!--                <span class="pd-positive">⬆ пишем зелёным</span>-->
+<!--                <span class="pd-negative">⬆ пишем красным</span>-->
+<!--                <span class="pd-hint-note">(и ниже тоже)</span>-->
+<!--            </div>-->
         </div>
 
         <div class="pd-weights pd-panel">
-            <div class="pd-link-title">Коэффициенты значимости<br>видов связи <span>▷</span></div>
-            <div class="pd-weight-list">
-                <div><span>Мобильная связь</span><b>0,4</b></div>
-                <div><span>ШПД</span><b>0,2</b></div>
-                <div><span>Телевещание</span><b>0,2</b></div>
-                <div><span>Радиостанции</span><b>0,1</b></div>
-                <div><span>Спутниковая связь</span><b>0</b></div>
-                <div><span>Проводная связь</span><b>0,2</b></div>
-                <div><span>Почтовая связь</span><b>0</b></div>
+            <button class="pd-link-title pd-expand-button" type="button" aria-expanded="false" aria-controls="pd-kind-coefficients">
+                Коэффициенты значимости видов связи <span>▷</span>
+            </button>
+            <div class="pd-expand-content" id="pd-kind-coefficients" hidden>
+                <table class="pd-coeff-table">
+                    <thead><tr><th>Вид связи</th><th>Коэффициент</th></tr></thead>
+                    <tbody>
+                        <tr><td>Мобильная связь</td><td>1,0</td></tr>
+                        <tr><td>ШПД WiFi</td><td>1,0</td></tr>
+                        <tr><td>ТВ</td><td>1,0</td></tr>
+                        <tr><td>РВ</td><td>1,0</td></tr>
+                        <tr><td>Спутниковая связь</td><td>1,0</td></tr>
+                        <tr><td>Проводная связь</td><td>1,0</td></tr>
+                        <tr><td>Почтовая связь</td><td>1,0</td></tr>
+                    </tbody>
+                </table>
+            </div>
+<div class="pd-private-weights pd-panel">
+            <button class="pd-link-title pd-expand-button" type="button" aria-expanded="false" aria-controls="pd-private-coefficients">
+                Коэффициенты значимости частных показателей <span>▷</span>
+            </button>
+            <div class="pd-expand-content" id="pd-private-coefficients" hidden>
+                <table class="pd-coeff-table">
+                    <thead><tr><th>Частный показатель</th><th>Коэффициент значимости</th></tr></thead>
+                    <tbody>
+                        <tr><td>Обеспеченность</td><td>1,0</td></tr>
+                        <tr><td>Количество объектов</td><td>1,0</td></tr>
+                        <tr><td>Площадь покрытия</td><td>1,0</td></tr>
+                        <tr><td>Ёмкость</td><td>1,0</td></tr>
+                        <tr><td>Количество операторов</td><td>1,0</td></tr>
+                    </tbody>
+                </table>
+            </table>
             </div>
         </div>
     </section>
 
-    <section class="pd-types-layout" aria-label="Виды связи и коэффициенты">
-        <div class="pd-private-weights pd-panel">
-            <div class="pd-link-title">Коэффициенты значимости<br>частных показателей <span>▷</span></div>
-            <div class="pd-private-list">
-                <div><b>D</b><span>Территориальная доступность</span><strong>0,4</strong></div>
-                <div><b>E</b><span>Абонентская ёмкость</span><strong>0,3</strong></div>
-                <div><b>T</b><span>Пропускная способность</span><strong>0,2</strong></div>
-                <div><b>K</b><span>Конкурентность</span><strong>0,1</strong></div>
-            </div>
-        </div>
-
+    <section class="pd-types-layout pd-screen-types" aria-label="Виды связи">
         <div class="pd-types-panel">
-            <div class="pd-blue-title">Виды связи</div>
+            <div class="pd-blue-title">Виды и технологии связи</div>
             <div class="pd-type-gauges" id="pd-type-gauges">
                 <div class="pd-type-gauge">
                     <b>Мобильная связь</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>ШПД WiFi</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:72%"></i></div>
-                    <strong>72%</strong><small>Обеспеченность</small>
+                    <strong>72%</strong>
+                    <div class="pd-type-legend"><span>Обеспеченность&nbsp; 72%</span><span>Дефицит&nbsp; 28%</span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>ТВ</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>РВ</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>Спутниковая связь</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>Проводная связь</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
                 <div class="pd-type-gauge">
                     <b>Почтовая связь</b>
                     <div class="pd-gauge-track"><i class="pd-gauge-marker" style="left:82%"></i></div>
-                    <strong>82%</strong><small>Обеспеченность</small>
+                    <strong>82%</strong>
+                    <div class="pd-type-legend"><span class="pd-positive">Обеспеченность&nbsp; <b>82%</b></span><span class="pd-negative">Дефицит&nbsp; <b>18%</b></span></div>
                 </div>
             </div>
         </div>
-    </section>
-
-    <section class="pd-method-layout" aria-label="Методика расчёта">
-        <div class="pd-method-notes">
-            <div class="pd-note-heading">Норма конкурентности =<br>3 оператора по всем технологиям</div>
-            <div class="pd-method-formula">
-                <div><b>D</b> Терр. доступность <span>— суммарная площадь покрытия БС, кв. км.</span></div>
-                <div><b>E</b> Аб. ёмкость <span>— суммарная ёмкость возможных подключений, кол. аб.</span></div>
-                <div><b>T</b> Пр. способность <span>— суммарно, Мбит/сек.</span></div>
-                <div><b>K</b> Конкурентность <span>— суммарное количество операторов.</span></div>
-                <p>Для ТВ и РВ в качестве абонентской ёмкости учитывается население НП.</p>
-            </div>
-            <div class="pd-selection-note">
-                <b>Отбор БС</b> — дальность от базовой станции до центра НП учитывается по радиусу покрытия.
-            </div>
-        </div>
-
-        <div class="pd-coeff-matrix">
-            <div class="pd-blue-title">Для всех видов связи</div>
-            <div class="pd-matrix-caption">Показатели и коэффициенты</div>
-            <table class="pd-matrix-table">
-                <thead>
-                    <tr>
-                        <th></th><th>Моб.</th><th>ШПД</th><th>ТВ</th><th>РВ</th><th>СпС</th><th>Пров.</th><th>Почт.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><th>D</th><td>0,4</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                    <tr><th>E</th><td>0,3</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                    <tr><th>T</th><td>0,2</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                    <tr><th>K</th><td>0,1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                </tbody>
-            </table>
-            <div class="pd-matrix-note">Расчётные веса можно уточнять по исходным данным и правилам методики.</div>
         </div>
     </section>
 
-    <section class="pd-tech-section" aria-label="Показатели по объектам инфраструктуры">
-        <div class="pd-blue-title">Технологии и объекты инфраструктуры</div>
-        <div class="pd-tech-grid" id="pd-dashboard-grid">
-            <!-- Карточки технологий формируются локальным JavaScript. -->
-        </div>
-    </section>
-
-    <section class="pd-bottom-notes">
-        <div class="pd-bottom-note">
-            <b>Расчёт территориальной доступности</b>
-            <span>D — суммарная площадь территории покрытия базовых станций, кв. км.</span>
-            <span>Отбор базовых станций выполняется по расстоянию до центра населённого пункта.</span>
-        </div>
-        <div class="pd-bottom-note pd-bottom-note--ka">
-            <b>Доступность КА</b>
-            <span>Отбираем по радиусу от центра, как и базовые станции.</span>
-            <span>Для узлов связи и таксофонов учитывается отдельное правило отбора.</span>
+    <section class="pd-tech-section pd-screen-tech" aria-label="Технологии и объекты инфраструктуры">
+        <div class="pd-tech-grid pd-category-grid" id="pd-dashboard-grid">
+            <!-- Карточки формируются JavaScript и группируются по видам связи. -->
         </div>
     </section>
 </main>
 
+<script>
+    // Локальные часы в прежнем месте базовой шапки.
+    (function () {
+        const timer = document.getElementById('timer-start');
+        const pad = value => String(value).padStart(2, '0');
+        function updateClock() {
+            const now = new Date();
+            timer.textContent = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ` +
+                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
+        updateClock();
+        window.setInterval(updateClock, 1000);
+    })();
+</script>
 <script src="{{ url_for('static', filename='js/planning_development.js') }}" defer></script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.pd-expand-button').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const panel = document.getElementById(button.getAttribute('aria-controls'));
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            button.setAttribute('aria-expanded', String(!expanded));
+            panel.hidden = expanded;
+            button.classList.toggle('is-open', !expanded);
+        });
+    });
+});
+</script>
+
+
+
 {% endblock %}
