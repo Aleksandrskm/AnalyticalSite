@@ -92,7 +92,6 @@ function createTypeGauge(category, percent) {
 
     el.querySelector('b').textContent = category;
     el.querySelector('.pd-gauge-marker').style.left = `${percent}%`;
-    el.querySelector('strong').textContent = `${percent}%`;
 
     const legends = el.querySelectorAll('.pd-type-legend b');
     legends[0].textContent = `${percent}%`;
@@ -148,11 +147,11 @@ function createChart(percent) {
 
 function createTable(data) {
     const rows = [
-        ['Обеспеч., %', data.percent, true],
-        ['Кол-во', data.qty, false],
-        ['Пл. кв. км', data.area, false],
-        ['Ёмкость, аб.', data.capacity, false],
-        ['Кол-во операт.', data.operators, false]
+        ['Количество', data.percent, true],
+        ['Пл. доступн., кв.км', data.qty, false],
+        ['Аб. емкость, аб.', data.area, false],
+        ['Проп. сп., Мбит/с', data.capacity, false],
+        ['Кол. операт.', data.operators, false]
     ];
 
     const table = document.createElement('table');
@@ -203,11 +202,6 @@ function renderTechnologyCards() {
         const column = document.createElement('section');
         column.className = 'pd-category-column';
 
-        const heading = document.createElement('h3');
-        heading.className = 'pd-category-column__heading';
-        heading.textContent = category;
-        column.appendChild(heading);
-
         const list = document.createElement('div');
         list.className = 'pd-category-column__cards';
         for (const item of cards) list.appendChild(createCard(item));
@@ -238,3 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+const typeGauges = document.getElementById('pd-type-gauges');
+const categoryGrid = document.getElementById('pd-dashboard-grid');
+if (typeGauges && categoryGrid) {
+    typeGauges.addEventListener('scroll', () => { categoryGrid.scrollLeft = typeGauges.scrollLeft; });
+    categoryGrid.addEventListener('scroll', () => { typeGauges.scrollLeft = categoryGrid.scrollLeft; });
+}
