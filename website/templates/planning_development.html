@@ -47,9 +47,9 @@
                     <thead><tr><th>Вид связи</th><th>Коэффициент</th></tr></thead>
                     <tbody>
                         <tr><td>Мобильная связь</td><td>1,0</td></tr>
-                        <tr><td>ШПД WiFi</td><td>1,0</td></tr>
-                        <tr><td>ТВ</td><td>1,0</td></tr>
-                        <tr><td>РВ</td><td>1,0</td></tr>
+                        <tr><td>ШПД</td><td>1,0</td></tr>
+                        <tr><td>Телевидение</td><td>1,0</td></tr>
+                        <tr><td>Радиовещание</td><td>1,0</td></tr>
                         <tr><td>Спутниковая связь</td><td>1,0</td></tr>
                         <tr><td>Проводная связь</td><td>1,0</td></tr>
                         <tr><td>Почтовая связь</td><td>1,0</td></tr>
@@ -90,20 +90,5 @@
     </section>
 </main>
 
-<script>
-    (function () {
-        const timer = document.getElementById('timer-start');
-        if (!timer) return;
-        const pad = v => String(v).padStart(2, '0');
-        const tick = () => {
-            const n = new Date();
-            timer.textContent =
-                `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())} ` +
-                `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
-        };
-        tick();
-        setInterval(tick, 1000);
-    })();
-</script>
 <script src="{{ url_for('static', filename='js/planning_development.js') }}" defer></script>
 {% endblock %}

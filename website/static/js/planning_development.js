@@ -3,7 +3,7 @@
 // ==================== Данные ====================
 
 const CATEGORY_ORDER = [
-    'Мобильная связь', 'ШПД WiFi', 'ТВ', 'РВ',
+    'Мобильная связь', 'ШПД', 'Телевидение', 'Радиовещание',
     'Спутниковая связь', 'Проводная связь', 'Почтовая связь'
 ];
 
@@ -12,13 +12,12 @@ const TECHNOLOGY_CARDS = [
     { category: 'Мобильная связь', title: 'LTE (4G)', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
     { category: 'Мобильная связь', title: 'GSM (2G)', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
     { category: 'Мобильная связь', title: 'TETRA', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-    { category: 'ШПД WiFi', title: 'Точки доступа WiFi', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-    { category: 'ТВ', title: 'Вышки ТВ', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-    { category: 'РВ', title: 'Вышки РВ', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { category: 'ШПД', title: 'Точки доступа WiFi', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { category: 'Телевидение', title: 'Вышки ТВ', percent: 80, qty: 50, area: 1, capacity: null, operators: 1 },
+    { category: 'Радиовещание', title: 'Вышки РВ', percent: 80, qty: 50, area: 1, capacity: null, operators: 1 },
     { category: 'Спутниковая связь', title: 'Сп. терм. и тлф', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
     { category: 'Спутниковая связь', title: 'ЗССС', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
-    { category: 'Спутниковая связь', title: 'Доступность КА', percent: 80, qty: 60, area: 1, capacity: 60, operators: 1 },
-    { category: 'Проводная связь', title: 'Узлы связи', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
+    { category: 'Проводная связь', title: 'ВОЛС', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
     { category: 'Проводная связь', title: 'Таксофоны', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 },
     { category: 'Почтовая связь', title: 'Почтовые отделения', percent: 80, qty: 50, area: 1, capacity: 50, operators: 1 }
 ];
@@ -34,8 +33,10 @@ function clampPercent(value) {
 }
 
 function getScaleColor(percent) {
-    const index = Math.min(SCALE_COLORS.length - 1,
-                         Math.floor((100 - clampPercent(percent)) / 20));
+    const index = Math.min(
+        SCALE_COLORS.length - 1,
+        Math.floor((100 - clampPercent(percent)) / 20)
+    );
     return SCALE_COLORS[index];
 }
 
@@ -44,16 +45,18 @@ function getArrowTop(percent) {
 }
 
 function groupCardsByCategory() {
-    const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]));
+    const groups = new Map(CATEGORY_ORDER.map(c => [c, []]));
     for (const item of TECHNOLOGY_CARDS) {
-        if (groups[item.category]) groups[item.category].push(item);
+        const list = groups.get(item.category);
+        if (list) list.push(item);
     }
     return groups;
 }
 
 function averagePercent(cards) {
     if (!cards.length) return null;
-    const sum = cards.reduce((acc, item) => acc + Number(item.percent || 0), 0);
+    let sum = 0;
+    for (const item of cards) sum += Number(item.percent) || 0;
     return Math.round(sum / cards.length);
 }
 
@@ -62,10 +65,8 @@ function averagePercent(cards) {
 function renderOverallGauge() {
     const avg = averagePercent(TECHNOLOGY_CARDS);
     if (avg === null) return;
-    const deficit = 100 - avg;
 
-    const valueEl = document.querySelector('.pd-gauge--large .pd-gauge-value');
-    if (valueEl) valueEl.textContent = `${avg}%`;
+    const deficit = 100 - avg;
 
     const markerEl = document.querySelector('.pd-gauge--large .pd-gauge-marker');
     if (markerEl) markerEl.style.left = `${avg}%`;
@@ -79,23 +80,29 @@ function renderOverallGauge() {
 
 function createTypeGauge(category, percent) {
     const deficit = 100 - percent;
+
     const el = document.createElement('div');
     el.className = 'pd-type-gauge';
-    el.innerHTML =
-        '<b></b>' +
-        '<div class="pd-gauge-track"><i class="pd-gauge-marker"></i></div>' +
-        '<strong></strong>' +
-        '<div class="pd-type-legend">' +
-            '<span class="pd-positive">Обеспеченность&nbsp; <b></b></span>' +
-            '<span class="pd-negative">Дефицит&nbsp; <b></b></span>' +
-        '</div>';
 
-    el.querySelector('b').textContent = category;
-    el.querySelector('.pd-gauge-marker').style.left = `${percent}%`;
+    const title = document.createElement('b');
+    title.textContent = category;
+    el.appendChild(title);
 
-    const legends = el.querySelectorAll('.pd-type-legend b');
-    legends[0].textContent = `${percent}%`;
-    legends[1].textContent = `${deficit}%`;
+    const track = document.createElement('div');
+    track.className = 'pd-gauge-track';
+
+    const marker = document.createElement('i');
+    marker.className = 'pd-gauge-marker';
+    marker.style.left = `${percent}%`;
+    track.appendChild(marker);
+    el.appendChild(track);
+
+    const legend = document.createElement('div');
+    legend.className = 'pd-type-legend';
+    legend.innerHTML =
+        `<span class="pd-positive">Обеспеченность&nbsp; <b>${percent}%</b></span>` +
+        `<span class="pd-negative">Дефицит&nbsp; <b>${deficit}%</b></span>`;
+    el.appendChild(legend);
 
     return el;
 }
@@ -108,7 +115,7 @@ function renderTypeGauges() {
     const fragment = document.createDocumentFragment();
 
     for (const category of CATEGORY_ORDER) {
-        const avg = averagePercent(groups[category]);
+        const avg = averagePercent(groups.get(category) || []);
         if (avg !== null) fragment.appendChild(createTypeGauge(category, avg));
     }
 
@@ -123,12 +130,15 @@ function createChart(percent) {
 
     const chart = document.createElement('div');
     chart.className = 'pd-mini-chart';
+
+    const zones = document.createDocumentFragment();
     for (const color of SCALE_COLORS) {
         const zone = document.createElement('div');
         zone.className = 'pd-mini-chart__zone';
         zone.style.background = color;
-        chart.appendChild(zone);
+        zones.appendChild(zone);
     }
+    chart.appendChild(zones);
 
     const arrowGroup = document.createElement('div');
     arrowGroup.className = 'pd-arrow-group';
@@ -157,6 +167,8 @@ function createTable(data) {
     const table = document.createElement('table');
     table.className = 'pd-card-table';
 
+    const fragment = document.createDocumentFragment();
+
     for (const [label, value, positive] of rows) {
         const tr = document.createElement('tr');
 
@@ -166,11 +178,13 @@ function createTable(data) {
 
         const tdValue = document.createElement('td');
         tdValue.className = 'td-value' + (positive ? ' pd-positive' : '');
-        tdValue.textContent = value;
+        tdValue.textContent = value ?? '—';
 
         tr.append(tdLabel, tdValue);
-        table.appendChild(tr);
+        fragment.appendChild(tr);
     }
+
+    table.appendChild(fragment);
     return table;
 }
 
@@ -196,14 +210,15 @@ function renderTechnologyCards() {
     const fragment = document.createDocumentFragment();
 
     for (const category of CATEGORY_ORDER) {
-        const cards = groups[category];
-        if (!cards.length) continue;
+        const cards = groups.get(category);
+        if (!cards || !cards.length) continue;
 
         const column = document.createElement('section');
         column.className = 'pd-category-column';
 
         const list = document.createElement('div');
         list.className = 'pd-category-column__cards';
+
         for (const item of cards) list.appendChild(createCard(item));
         column.appendChild(list);
 
@@ -213,29 +228,74 @@ function renderTechnologyCards() {
     container.replaceChildren(fragment);
 }
 
+// ==================== Раскрывающиеся таблицы ====================
+
+function initExpandButtons() {
+    document.addEventListener('click', event => {
+        const button = event.target.closest('.pd-expand-button');
+        if (!button) return;
+
+        const panel = document.getElementById(button.getAttribute('aria-controls'));
+        if (!panel) return;
+
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!expanded));
+        panel.hidden = expanded;
+        button.classList.toggle('is-open', !expanded);
+    });
+}
+
+// ==================== Синхронизация горизонтального скролла ====================
+
+function initScrollSync() {
+    const typeGauges = document.getElementById('pd-type-gauges');
+    const categoryGrid = document.getElementById('pd-dashboard-grid');
+    if (!typeGauges || !categoryGrid) return;
+
+    const sync = (source, target) => {
+        let scheduled = false;
+
+        source.addEventListener('scroll', () => {
+            if (scheduled) return;
+            scheduled = true;
+
+            requestAnimationFrame(() => {
+                target.scrollLeft = source.scrollLeft;
+                scheduled = false;
+            });
+        }, { passive: true });
+    };
+
+    sync(typeGauges, categoryGrid);
+    sync(categoryGrid, typeGauges);
+}
+
+// ==================== Таймер ====================
+
+function initTimer() {
+    const timer = document.getElementById('timer-start');
+    if (!timer) return;
+
+    const pad = v => String(v).padStart(2, '0');
+
+    const tick = () => {
+        const n = new Date();
+        timer.textContent =
+            `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())} ` +
+            `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+    };
+
+    tick();
+    setInterval(tick, 1000);
+}
+
 // ==================== Инициализация ====================
 
 document.addEventListener('DOMContentLoaded', () => {
     renderTypeGauges();
     renderOverallGauge();
     renderTechnologyCards();
-
-    document.querySelectorAll('.pd-expand-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const panel = document.getElementById(button.getAttribute('aria-controls'));
-            if (!panel) return;
-
-            const expanded = button.getAttribute('aria-expanded') === 'true';
-            button.setAttribute('aria-expanded', String(!expanded));
-            panel.hidden = expanded;
-            button.classList.toggle('is-open', !expanded);
-        });
-    });
+    initExpandButtons();
+    initScrollSync();
+    initTimer();
 });
-
-const typeGauges = document.getElementById('pd-type-gauges');
-const categoryGrid = document.getElementById('pd-dashboard-grid');
-if (typeGauges && categoryGrid) {
-    typeGauges.addEventListener('scroll', () => { categoryGrid.scrollLeft = typeGauges.scrollLeft; });
-    categoryGrid.addEventListener('scroll', () => { typeGauges.scrollLeft = categoryGrid.scrollLeft; });
-}
