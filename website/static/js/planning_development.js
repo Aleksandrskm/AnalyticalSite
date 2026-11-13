@@ -246,23 +246,33 @@ function initExpandButtons() {
 }
 
 // ==================== Синхронизация горизонтального скролла ====================
+// Защита от «эха»: пока пользователь тянет один контейнер, события scroll
+// от парного игнорируются; субпиксельные расхождения < 1px не применяются.
 
 function initScrollSync() {
     const typeGauges = document.getElementById('pd-type-gauges');
     const categoryGrid = document.getElementById('pd-dashboard-grid');
     if (!typeGauges || !categoryGrid) return;
 
+    let activeSource = null;
+    let releaseTimer = 0;
+
     const sync = (source, target) => {
-        let scheduled = false;
-
         source.addEventListener('scroll', () => {
-            if (scheduled) return;
-            scheduled = true;
+            // Событие порождено нашим же присвоением scrollLeft — пропускаем
+            if (activeSource && activeSource !== source) return;
 
-            requestAnimationFrame(() => {
-                target.scrollLeft = source.scrollLeft;
-                scheduled = false;
-            });
+            activeSource = source;
+
+            const value = source.scrollLeft;
+            // Присваиваем только при реальном расхождении ≥ 1px
+            if (Math.abs(target.scrollLeft - value) >= 1) {
+                target.scrollLeft = value;
+            }
+
+            // Отпускаем блокировку, когда прокрутка затихла
+            clearTimeout(releaseTimer);
+            releaseTimer = setTimeout(() => { activeSource = null; }, 80);
         }, { passive: true });
     };
 

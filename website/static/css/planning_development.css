@@ -516,9 +516,8 @@ body {
     flex-direction: column;
     width: 100%;
     min-width: 140px;
-    max-width: 190px;
-    min-height: 220px;
-    max-height: 220px;
+    max-width: 140px;
+    min-height: 200px;
     padding-top: 6px;
     border: 1px solid var(--pd-border);
     border-radius: var(--pd-radius-sm);
