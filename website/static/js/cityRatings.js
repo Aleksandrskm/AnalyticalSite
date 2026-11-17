@@ -814,12 +814,12 @@ function setSelectedSettlement(item, mode) {
         if (displayData && displayData.length > 0) {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
-            ds0.backgroundColor = displayData.map(() => '#1a73e8');
-            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.backgroundColor = displayData.map(() => '#638CE8');
+            ds0.borderColor     = displayData.map(() => '#638CE8');
             ds0.borderWidth     = displayData.map(() => 0);
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#ff6a00');
-                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.backgroundColor = displayData.map(() => '#F4AE73');
+                ds1.borderColor     = displayData.map(() => '#F4AE73');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -873,12 +873,12 @@ function resetAndHideSelectedSettlement() {
         if (displayData && displayData.length > 0) {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
-            ds0.backgroundColor = displayData.map(() => '#1a73e8');
-            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.backgroundColor = displayData.map(() => '#638CE8');
+            ds0.borderColor     = displayData.map(() => '#638CE8');
             ds0.borderWidth     = displayData.map(() => 0);
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#ff6a00');
-                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.backgroundColor = displayData.map(() => '#F4AE73');
+                ds1.borderColor     = displayData.map(() => '#F4AE73');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -917,13 +917,13 @@ function clearSelectedSettlement() {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
 
-            ds0.backgroundColor = displayData.map(() => '#1a73e8');
-            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.backgroundColor = displayData.map(() => '#638CE8');
+            ds0.borderColor     = displayData.map(() => '#638CE8');
             ds0.borderWidth     = displayData.map(() => 0);
 
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#ff6a00');
-                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.backgroundColor = displayData.map(() => '#F4AE73');
+                ds1.borderColor     = displayData.map(() => '#F4AE73');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -1011,13 +1011,13 @@ function handleSelectedHighlight() {
 
         const isSel = (d) => String(d.id) === String(selectedSettlementId);
 
-        ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
-        ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#1a73e8');
+        ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#638CE8');
+        ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#638CE8');
         ds0.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
 
         if (ds1) {
-            ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
-            ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#ff6a00');
+            ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#F4AE73');
+            ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#F4AE73');
             ds1.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
         }
 
@@ -1419,14 +1419,14 @@ function selectSearchResult(item, index) {
 
     // 3. Красим выделенный столбец
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -1753,13 +1753,13 @@ function clearChartSelection() {
     const displayData = getChartDisplayData();
     if (!displayData || displayData.length === 0) return;
 
-    ratingChart.data.datasets[0].backgroundColor = '#1a73e8';
-    ratingChart.data.datasets[0].borderColor     = '#1a73e8';
+    ratingChart.data.datasets[0].backgroundColor = '#638CE8';
+    ratingChart.data.datasets[0].borderColor     = '#638CE8';
     ratingChart.data.datasets[0].borderWidth     = 0;
 
     if (ratingChart.data.datasets[1]) {
-        ratingChart.data.datasets[1].backgroundColor = '#ff6a00';
-        ratingChart.data.datasets[1].borderColor     = '#ff6a00';
+        ratingChart.data.datasets[1].backgroundColor = '#F4AE73';
+        ratingChart.data.datasets[1].borderColor     = '#F4AE73';
         ratingChart.data.datasets[1].borderWidth     = 0;
     }
 
@@ -1811,13 +1811,13 @@ function restoreSelectionById(attempt = 0) {
     const ds0 = ratingChart.data.datasets[0];
     const ds1 = ratingChart.data.datasets[1];
 
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ds1) {
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -2080,14 +2080,14 @@ function restoreSelectionAfterUpdate() {
     };
 
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#1a73e8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ff6a00');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -2706,11 +2706,11 @@ function rebuildChartPreservingZoom() {
 
     ratingChart.data.labels = labels;
     ratingChart.data.datasets[0].data = providedValues;
-    ratingChart.data.datasets[0].backgroundColor = '#1a73e8';
-    ratingChart.data.datasets[0].borderColor = '#1a73e8';
+    ratingChart.data.datasets[0].backgroundColor = '#638CE8';
+    ratingChart.data.datasets[0].borderColor = '#638CE8';
     ratingChart.data.datasets[1].data = deficitValues;
-    ratingChart.data.datasets[1].backgroundColor = '#ff6a00';
-    ratingChart.data.datasets[1].borderColor = '#ff6a00';
+    ratingChart.data.datasets[1].backgroundColor = '#F4AE73';
+    ratingChart.data.datasets[1].borderColor = '#F4AE73';
 
     if (savedMin !== undefined && savedMax !== undefined) {
         ratingChart.options.scales.x.min = savedMin;
@@ -2812,8 +2812,8 @@ function createRatingChart(data, type) {
     const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
     const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    const providedColors = displayData.map(() => '#1a73e8');
-    const deficitColors  = displayData.map(() => '#ff6a00');
+    const providedColors = displayData.map(() => '#638CE8');
+    const deficitColors  = displayData.map(() => '#F4AE73');
 
     // ==================== РАСЧЁТ СТАТИСТИКИ ====================
     const ratingsAll = sortedData.map(it => Number(it.rating) || 0);
@@ -2934,7 +2934,7 @@ function createRatingChart(data, type) {
                     ds0.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#ff1a1a';
                         if (isSelectedAt(i)) return '#ff0000';
-                        return '#1a73e8';
+                        return '#638CE8';
                     });
                     ds0.borderColor = ds0.backgroundColor;
                     ds0.hoverBackgroundColor = '#ff1a1a';
@@ -2942,7 +2942,7 @@ function createRatingChart(data, type) {
                     ds1.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#cc0000';
                         if (isSelectedAt(i)) return '#cc0000';
-                        return '#ff6a00';
+                        return '#F4AE73';
                     });
                     ds1.borderColor = ds1.backgroundColor;
                     ds1.hoverBackgroundColor = '#cc0000';
@@ -2950,12 +2950,12 @@ function createRatingChart(data, type) {
                     canvas.style.cursor = 'default';
 
                     ds0.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#ff0000' : '#1a73e8'
+                        isSelectedAt(i) ? '#ff0000' : '#638CE8'
                     );
                     ds0.borderColor = ds0.backgroundColor;
 
                     ds1.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#cc0000' : '#ff6a00'
+                        isSelectedAt(i) ? '#cc0000' : '#F4AE73'
                     );
                     ds1.borderColor = ds1.backgroundColor;
                 }
@@ -2976,16 +2976,16 @@ function createRatingChart(data, type) {
                             return [
                                 {
                                     text: 'Обеспеченность,%',
-                                    fillStyle: '#1a73e8',
-                                    strokeStyle: '#1a73e8',
+                                    fillStyle: '#638CE8',
+                                    strokeStyle: '#638CE8',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 0
                                 },
                                 {
                                     text: 'Дефицит,%',
-                                    fillStyle: '#ff6a00',
-                                    strokeStyle: '#ff6a00',
+                                    fillStyle: '#F4AE73',
+                                    strokeStyle: '#F4AE73',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 1
@@ -3024,9 +3024,9 @@ function createRatingChart(data, type) {
                         },
                         labelColor: function(context) {
                             if (context.datasetIndex === 0) {
-                                return { borderColor: '#1a73e8', backgroundColor: '#1a73e8', borderWidth: 1, borderRadius: 2 };
+                                return { borderColor: '#638CE8', backgroundColor: '#638CE8', borderWidth: 1, borderRadius: 2 };
                             }
-                            return { borderColor: '#ff6a00', backgroundColor: '#ff6a00', borderWidth: 1, borderRadius: 2 };
+                            return { borderColor: '#F4AE73', backgroundColor: '#F4AE73', borderWidth: 1, borderRadius: 2 };
                         },
                         labelTextColor: function(context) {
                             return '#000000';
@@ -5991,11 +5991,11 @@ function renderAnalyticsDashboard() {
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
-        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#f57c00' },
-        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#5FF1FF' },
-        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#005BFB' },
-        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#69F034' },
-        { label: '81-100', min: 81,  max: 100, count: 0, color: '#0F8A0B' },
+        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#F5AD72' },
+        { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#4CBDF7' },
+        { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#618CEA' },
+        { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#A7E431' },
+        { label: '81-100', min: 81,  max: 100, count: 0, color: '#3BC35D' },
     ];
 
     items.forEach(item => {
@@ -6234,16 +6234,16 @@ function renderAnalyticsDashboard() {
                 {
                     label: 'Обеспеченность,%',
                     data: serviceStats.map(s => s.provided),
-                    backgroundColor: '#1a73e8',
-                    borderColor: '#1a73e8',
+                    backgroundColor: '#638CE8',
+                    borderColor: '#638CE8',
                     borderWidth: 0,
                     stack: 'total'
                 },
                 {
                     label: 'Дефицит,%',
                     data: serviceStats.map(s => s.deficit),
-                    backgroundColor: '#ff6a00',
-                    borderColor: '#ff6a00',
+                    backgroundColor: '#F4AE73',
+                    borderColor: '#F4AE73',
                     borderWidth: 0,
                     stack: 'total'
                 }
@@ -6290,16 +6290,16 @@ function renderAnalyticsDashboard() {
                 {
                     label: 'Обеспеченность,%',
                     data: mobileStats.map(s => s.provided),
-                    backgroundColor: '#1a73e8',
-                    borderColor: '#1a73e8',
+                    backgroundColor: '#638CE8',
+                    borderColor: '#638CE8',
                     borderWidth: 0,
                     stack: 'total'
                 },
                 {
                     label: 'Дефицит,%',
                     data: mobileStats.map(s => s.deficit),
-                    backgroundColor: '#ff6a00',
-                    borderColor: '#ff6a00',
+                    backgroundColor: '#F4AE73',
+                    borderColor: '#F4AE73',
                     borderWidth: 0,
                     stack: 'total'
                 }
@@ -8308,13 +8308,13 @@ function handleSelectedClear() {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
 
-            ds0.backgroundColor = displayData.map(() => '#1a73e8');
-            ds0.borderColor     = displayData.map(() => '#1a73e8');
+            ds0.backgroundColor = displayData.map(() => '#638CE8');
+            ds0.borderColor     = displayData.map(() => '#638CE8');
             ds0.borderWidth     = displayData.map(() => 0);
 
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#ff6a00');
-                ds1.borderColor     = displayData.map(() => '#ff6a00');
+                ds1.backgroundColor = displayData.map(() => '#F4AE73');
+                ds1.borderColor     = displayData.map(() => '#F4AE73');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
         }
