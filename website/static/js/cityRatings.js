@@ -814,12 +814,12 @@ function setSelectedSettlement(item, mode) {
         if (displayData && displayData.length > 0) {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
-            ds0.backgroundColor = displayData.map(() => '#638CE8');
-            ds0.borderColor     = displayData.map(() => '#638CE8');
+            ds0.backgroundColor = displayData.map(() => '#4AC15D');
+            ds0.borderColor     = displayData.map(() => '#4AC15D');
             ds0.borderWidth     = displayData.map(() => 0);
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#F4AE73');
-                ds1.borderColor     = displayData.map(() => '#F4AE73');
+                ds1.backgroundColor = displayData.map(() => '#ED933B');
+                ds1.borderColor     = displayData.map(() => '#ED933B');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -873,12 +873,12 @@ function resetAndHideSelectedSettlement() {
         if (displayData && displayData.length > 0) {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
-            ds0.backgroundColor = displayData.map(() => '#638CE8');
-            ds0.borderColor     = displayData.map(() => '#638CE8');
+            ds0.backgroundColor = displayData.map(() => '#4AC15D');
+            ds0.borderColor     = displayData.map(() => '#4AC15D');
             ds0.borderWidth     = displayData.map(() => 0);
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#F4AE73');
-                ds1.borderColor     = displayData.map(() => '#F4AE73');
+                ds1.backgroundColor = displayData.map(() => '#ED933B');
+                ds1.borderColor     = displayData.map(() => '#ED933B');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -917,13 +917,13 @@ function clearSelectedSettlement() {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
 
-            ds0.backgroundColor = displayData.map(() => '#638CE8');
-            ds0.borderColor     = displayData.map(() => '#638CE8');
+            ds0.backgroundColor = displayData.map(() => '#4AC15D');
+            ds0.borderColor     = displayData.map(() => '#4AC15D');
             ds0.borderWidth     = displayData.map(() => 0);
 
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#F4AE73');
-                ds1.borderColor     = displayData.map(() => '#F4AE73');
+                ds1.backgroundColor = displayData.map(() => '#ED933B');
+                ds1.borderColor     = displayData.map(() => '#ED933B');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
             ratingChart.update('none');
@@ -1011,13 +1011,13 @@ function handleSelectedHighlight() {
 
         const isSel = (d) => String(d.id) === String(selectedSettlementId);
 
-        ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#638CE8');
-        ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#638CE8');
+        ds0.backgroundColor = displayData.map(d => isSel(d) ? '#ff0000' : '#4AC15D');
+        ds0.borderColor     = displayData.map(d => isSel(d) ? '#ff0000' : '#4AC15D');
         ds0.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
 
         if (ds1) {
-            ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#F4AE73');
-            ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#F4AE73');
+            ds1.backgroundColor = displayData.map(d => isSel(d) ? '#cc0000' : '#ED933B');
+            ds1.borderColor     = displayData.map(d => isSel(d) ? '#cc0000' : '#ED933B');
             ds1.borderWidth     = displayData.map(d => isSel(d) ? 3 : 0);
         }
 
@@ -1419,14 +1419,14 @@ function selectSearchResult(item, index) {
 
     // 3. Красим выделенный столбец
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -1474,6 +1474,26 @@ function showItemTooltip(item, chartIndex) {
 
     if (!item) return;
 
+    // === Пересчитываем индекс для корректного позиционирования ===
+    const displayData = getChartDisplayData();
+    let idx = chartIndex;
+
+    if (!Array.isArray(displayData) || displayData.length === 0) {
+        return;
+    }
+
+    if (idx === undefined || idx === null || idx < 0 || idx >= displayData.length) {
+        idx = displayData.findIndex(d =>
+            (item.id !== undefined && item.id !== null && d.id !== undefined && d.id !== null)
+                ? String(d.id) === String(item.id)
+                : (d.name && item.name && d.name === item.name)
+        );
+    }
+
+    if (idx === -1) {
+        idx = 0;
+    }
+
     const tooltip = document.createElement('div');
     tooltip.id = 'chart-item-tooltip';
     tooltip.className = 'chart-tooltip';
@@ -1481,8 +1501,8 @@ function showItemTooltip(item, chartIndex) {
     const rating = Number(item.rating) || 0;
     const hasRating = item.rating !== undefined && item.rating !== null && !isNaN(item.rating);
 
-    const ratingText   = hasRating ? `${Math.round(rating)}%` : 'не получен';
-    const deficitText  = hasRating ? `${Math.round(100 - rating)}%` : 'не получен';
+    const ratingText  = hasRating ? `${Math.round(rating)}%` : 'не получен';
+    const deficitText = hasRating ? `${Math.round(100 - rating)}%` : 'не получен';
 
     const population = item.population || 0;
     const region = item.region_name || 'Н/Д';
@@ -1497,11 +1517,11 @@ function showItemTooltip(item, chartIndex) {
     } else if (chartAllData.length > 0) {
         const ordered = [...chartAllData].sort((a, b) => (b.rating || 0) - (a.rating || 0));
         totalPlaces = ordered.length;
-        const idx = ordered.findIndex(d =>
+        const pos = ordered.findIndex(d =>
             (d.id !== undefined && item.id !== undefined && d.id === item.id) ||
             (d.name && item.name && d.name === item.name)
         );
-        if (idx !== -1) placeText = idx + 1;
+        if (pos !== -1) placeText = pos + 1;
     }
 
     const titleEl = document.createElement('div');
@@ -1512,19 +1532,24 @@ function showItemTooltip(item, chartIndex) {
     const bodyEl = document.createElement('div');
     bodyEl.className = 'chart-tooltip__body';
 
-    const addRow = (swatchClass, text) => {
+    // === ВОЗВРАЩАЕМ БАЗОВЫЕ ЦВЕТА (независимо от выделения) ===
+    const providedColor = '#4AC15D'; // Зеленый
+    const deficitColor  = '#ED933B'; // Оранжевый
+
+    const addRow = (swatchColor, text) => {
         const row = document.createElement('div');
-        if (swatchClass) {
+        if (swatchColor) {
             const sw = document.createElement('span');
-            sw.className = 'chart-tooltip__swatch ' + swatchClass;
+            sw.className = 'chart-tooltip__swatch';
+            sw.style.backgroundColor = swatchColor;
             row.appendChild(sw);
         }
         row.appendChild(document.createTextNode(text));
         bodyEl.appendChild(row);
     };
 
-    addRow('chart-tooltip__swatch--provided', `Обеспеченность: ${ratingText}`);
-    addRow('chart-tooltip__swatch--deficit',  `Дефицит: ${deficitText}`);
+    addRow(providedColor, `Обеспеченность: ${ratingText}`);
+    addRow(deficitColor,  `Дефицит: ${deficitText}`);
     addRow(null, `Место в обеспеченности: ${placeText} из ${totalPlaces}`);
     addRow(null, `Население: ${population.toLocaleString()} чел.`);
     addRow(null, region);
@@ -1539,7 +1564,7 @@ function showItemTooltip(item, chartIndex) {
     tooltip.style.top  = '-9999px';
     tooltip.style.maxWidth = Math.min(400, window.innerWidth - 40) + 'px';
 
-    // Позиционируем с повторными попытками, пока chartArea не готов
+    // Позиционируем
     let attempts = 0;
     const tryPosition = () => {
         if (!ratingChart || !ratingChart.chartArea) {
@@ -1549,7 +1574,7 @@ function showItemTooltip(item, chartIndex) {
             }
             return;
         }
-        positionTooltipOverBar(tooltip, chartIndex);
+        positionTooltipOverBar(tooltip, idx);
     };
     requestAnimationFrame(tryPosition);
 }
@@ -1753,13 +1778,13 @@ function clearChartSelection() {
     const displayData = getChartDisplayData();
     if (!displayData || displayData.length === 0) return;
 
-    ratingChart.data.datasets[0].backgroundColor = '#638CE8';
-    ratingChart.data.datasets[0].borderColor     = '#638CE8';
+    ratingChart.data.datasets[0].backgroundColor = '#4AC15D';
+    ratingChart.data.datasets[0].borderColor     = '#4AC15D';
     ratingChart.data.datasets[0].borderWidth     = 0;
 
     if (ratingChart.data.datasets[1]) {
-        ratingChart.data.datasets[1].backgroundColor = '#F4AE73';
-        ratingChart.data.datasets[1].borderColor     = '#F4AE73';
+        ratingChart.data.datasets[1].backgroundColor = '#ED933B';
+        ratingChart.data.datasets[1].borderColor     = '#ED933B';
         ratingChart.data.datasets[1].borderWidth     = 0;
     }
 
@@ -1811,13 +1836,13 @@ function restoreSelectionById(attempt = 0) {
     const ds0 = ratingChart.data.datasets[0];
     const ds1 = ratingChart.data.datasets[1];
 
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ds1) {
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -2080,14 +2105,14 @@ function restoreSelectionAfterUpdate() {
     };
 
     const ds0 = ratingChart.data.datasets[0];
-    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
-    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#638CE8');
+    ds0.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
+    ds0.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#ff0000' : '#4AC15D');
     ds0.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
 
     if (ratingChart.data.datasets[1]) {
         const ds1 = ratingChart.data.datasets[1];
-        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
-        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#F4AE73');
+        ds1.backgroundColor = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
+        ds1.borderColor     = displayData.map((d, i) => isSelectedAt(i) ? '#cc0000' : '#ED933B');
         ds1.borderWidth     = displayData.map((d, i) => isSelectedAt(i) ? 3 : 0);
     }
 
@@ -2706,11 +2731,11 @@ function rebuildChartPreservingZoom() {
 
     ratingChart.data.labels = labels;
     ratingChart.data.datasets[0].data = providedValues;
-    ratingChart.data.datasets[0].backgroundColor = '#638CE8';
-    ratingChart.data.datasets[0].borderColor = '#638CE8';
+    ratingChart.data.datasets[0].backgroundColor = '#4AC15D';
+    ratingChart.data.datasets[0].borderColor = '#4AC15D';
     ratingChart.data.datasets[1].data = deficitValues;
-    ratingChart.data.datasets[1].backgroundColor = '#F4AE73';
-    ratingChart.data.datasets[1].borderColor = '#F4AE73';
+    ratingChart.data.datasets[1].backgroundColor = '#ED933B';
+    ratingChart.data.datasets[1].borderColor = '#ED933B';
 
     if (savedMin !== undefined && savedMax !== undefined) {
         ratingChart.options.scales.x.min = savedMin;
@@ -2731,8 +2756,7 @@ function rebuildChartPreservingZoom() {
     }
 }
 
-// ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
-// ==================== СОЗДАНИЕ ДИАГРАММЫ ====================
+
 function createRatingChart(data, type) {
     const canvas = document.getElementById('rating-chart');
     if (!canvas) {
@@ -2812,8 +2836,8 @@ function createRatingChart(data, type) {
     const providedValues = displayData.map(item => Math.max(0, Math.min(100, item.rating || 0)));
     const deficitValues = displayData.map(item => 100 - Math.max(0, Math.min(100, item.rating || 0)));
 
-    const providedColors = displayData.map(() => '#638CE8');
-    const deficitColors  = displayData.map(() => '#F4AE73');
+    const providedColors = displayData.map(() => '#4AC15D');
+    const deficitColors  = displayData.map(() => '#ED933B');
 
     // ==================== РАСЧЁТ СТАТИСТИКИ ====================
     const ratingsAll = sortedData.map(it => Number(it.rating) || 0);
@@ -2934,7 +2958,7 @@ function createRatingChart(data, type) {
                     ds0.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#ff1a1a';
                         if (isSelectedAt(i)) return '#ff0000';
-                        return '#638CE8';
+                        return '#4AC15D';
                     });
                     ds0.borderColor = ds0.backgroundColor;
                     ds0.hoverBackgroundColor = '#ff1a1a';
@@ -2942,7 +2966,7 @@ function createRatingChart(data, type) {
                     ds1.backgroundColor = displayData.map((d, i) => {
                         if (i === hoverIdx) return '#cc0000';
                         if (isSelectedAt(i)) return '#cc0000';
-                        return '#F4AE73';
+                        return '#ED933B';
                     });
                     ds1.borderColor = ds1.backgroundColor;
                     ds1.hoverBackgroundColor = '#cc0000';
@@ -2950,12 +2974,12 @@ function createRatingChart(data, type) {
                     canvas.style.cursor = 'default';
 
                     ds0.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#ff0000' : '#638CE8'
+                        isSelectedAt(i) ? '#ff0000' : '#4AC15D'
                     );
                     ds0.borderColor = ds0.backgroundColor;
 
                     ds1.backgroundColor = displayData.map((d, i) =>
-                        isSelectedAt(i) ? '#cc0000' : '#F4AE73'
+                        isSelectedAt(i) ? '#cc0000' : '#ED933B'
                     );
                     ds1.borderColor = ds1.backgroundColor;
                 }
@@ -2976,16 +3000,16 @@ function createRatingChart(data, type) {
                             return [
                                 {
                                     text: 'Обеспеченность,%',
-                                    fillStyle: '#638CE8',
-                                    strokeStyle: '#638CE8',
+                                    fillStyle: '#4AC15D',
+                                    strokeStyle: '#4AC15D',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 0
                                 },
                                 {
                                     text: 'Дефицит,%',
-                                    fillStyle: '#F4AE73',
-                                    strokeStyle: '#F4AE73',
+                                    fillStyle: '#ED933B',
+                                    strokeStyle: '#ED933B',
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 1
@@ -3024,9 +3048,9 @@ function createRatingChart(data, type) {
                         },
                         labelColor: function(context) {
                             if (context.datasetIndex === 0) {
-                                return { borderColor: '#638CE8', backgroundColor: '#638CE8', borderWidth: 1, borderRadius: 2 };
+                                return { borderColor: '#4AC15D', backgroundColor: '#4AC15D', borderWidth: 1, borderRadius: 2 };
                             }
-                            return { borderColor: '#F4AE73', backgroundColor: '#F4AE73', borderWidth: 1, borderRadius: 2 };
+                            return { borderColor: '#ED933B', backgroundColor: '#ED933B', borderWidth: 1, borderRadius: 2 };
                         },
                         labelTextColor: function(context) {
                             return '#000000';
@@ -5991,7 +6015,7 @@ function renderAnalyticsDashboard() {
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     // ==================== ДАННЫЕ ДЛЯ КРУГОВОЙ ====================
     const categories = [
-        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#F5AD72' },
+        { label: '0-20',   min: 0,   max: 20,  count: 0, color: '#ED933B' },
         { label: '21-40',  min: 21,  max: 40,  count: 0, color: '#4CBDF7' },
         { label: '41-60',  min: 41,  max: 60,  count: 0, color: '#618CEA' },
         { label: '61-80',  min: 61,  max: 80,  count: 0, color: '#A7E431' },
@@ -6234,16 +6258,16 @@ function renderAnalyticsDashboard() {
                 {
                     label: 'Обеспеченность,%',
                     data: serviceStats.map(s => s.provided),
-                    backgroundColor: '#638CE8',
-                    borderColor: '#638CE8',
+                    backgroundColor: '#4AC15D',
+                    borderColor: '#4AC15D',
                     borderWidth: 0,
                     stack: 'total'
                 },
                 {
                     label: 'Дефицит,%',
                     data: serviceStats.map(s => s.deficit),
-                    backgroundColor: '#F4AE73',
-                    borderColor: '#F4AE73',
+                    backgroundColor: '#ED933B',
+                    borderColor: '#ED933B',
                     borderWidth: 0,
                     stack: 'total'
                 }
@@ -6290,16 +6314,16 @@ function renderAnalyticsDashboard() {
                 {
                     label: 'Обеспеченность,%',
                     data: mobileStats.map(s => s.provided),
-                    backgroundColor: '#638CE8',
-                    borderColor: '#638CE8',
+                    backgroundColor: '#4AC15D',
+                    borderColor: '#4AC15D',
                     borderWidth: 0,
                     stack: 'total'
                 },
                 {
                     label: 'Дефицит,%',
                     data: mobileStats.map(s => s.deficit),
-                    backgroundColor: '#F4AE73',
-                    borderColor: '#F4AE73',
+                    backgroundColor: '#ED933B',
+                    borderColor: '#ED933B',
                     borderWidth: 0,
                     stack: 'total'
                 }
@@ -8308,13 +8332,13 @@ function handleSelectedClear() {
             const ds0 = ratingChart.data.datasets[0];
             const ds1 = ratingChart.data.datasets[1];
 
-            ds0.backgroundColor = displayData.map(() => '#638CE8');
-            ds0.borderColor     = displayData.map(() => '#638CE8');
+            ds0.backgroundColor = displayData.map(() => '#4AC15D');
+            ds0.borderColor     = displayData.map(() => '#4AC15D');
             ds0.borderWidth     = displayData.map(() => 0);
 
             if (ds1) {
-                ds1.backgroundColor = displayData.map(() => '#F4AE73');
-                ds1.borderColor     = displayData.map(() => '#F4AE73');
+                ds1.backgroundColor = displayData.map(() => '#ED933B');
+                ds1.borderColor     = displayData.map(() => '#ED933B');
                 ds1.borderWidth     = displayData.map(() => 0);
             }
         }
