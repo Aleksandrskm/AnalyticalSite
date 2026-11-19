@@ -124,11 +124,11 @@ body {
 /* Кнопки коэффициентов */
 .pd-link-title {
     display: flex; justify-content: space-between; align-items: center;
-    width: 100%; padding: 8px 12px;
+    width: 100%; padding: 6px 8px;
     background: var(--pd-bg-color); border: 2px solid var(--pd-border-color);
-    color: #0000cc; font-size: 14px; font-weight: bold; cursor: arial; text-align: left;
+    color: #0000cc; font-size: 17px; font-weight: bold; cursor: arial; text-align: left;
 }
-.pd-link-title span { font-size: 12px; transition: transform 0.2s; }
+.pd-link-title span { font-size: 17px; transition: transform 0.2s; }
 .pd-expand-button.is-open span { transform: rotate(90deg); }
 .pd-expand-content { border: 1px solid #000; padding: 5px; margin-top: -5px; background: #fff; }
 .pd-coeff-table { width: 100%; border-collapse: collapse; font-size: 12px; }
