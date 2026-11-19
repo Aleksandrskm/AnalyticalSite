@@ -3,64 +3,67 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/planning_development.css') }}">
 
-<h2>Детализация обеспеченности ТИ населенного пункта</h2>
-
-<div class="pd-header-block">
-    <div class="pd-header-text">деревня Беклемишевская</div>
-    <div class="pd-header-text">Архангельская область</div>
-    <div class="pd-header-text">Устьянский муниципальный район</div>
+<div class="loader-container loader-container--hidden">
+    <span class="loader"></span>
+    <span class="loader-container__title">Загрузка...</span>
 </div>
 
-<main class="pd-layout pd-screen-layout">
-    <section class="pd-top-overview pd-screen-overview" aria-label="Общая информация и обеспеченность">
-        <div class="pd-location-data pd-panel">
-            <div class="pd-data-title">Показатели населённого пункта</div>
-            <div class="pd-data-row"><span>Население</span><strong>877</strong></div>
-            <div class="pd-data-row"><span>Площадь, кв. км.</span><strong>1</strong></div>
-            <div class="pd-data-row"><span>Широта</span><strong>50.295574</strong></div>
-            <div class="pd-data-row"><span>Долгота</span><strong>103.331812</strong></div>
-            <div class="pd-data-row"><span>Код ФИАС</span><strong class="pd-code">a7392390-b3df-4c58-be2c-181154bfea1c</strong></div>
-        </div>
+<div class="pd-page-wrapper">
+    <h2 class="pd-main-title">Детализация обеспеченности ТИ населенного пункта</h2>
 
-        <div class="pd-overall pd-panel">
-            <div class="pd-overall-heading">
-                <span class="pd-blue-title">Обеспеченность ТИ населенного пункта</span>
-            </div>
-            <div class="pd-gauge pd-gauge--large">
-                <div class="pd-gauge-track">
-                    <i class="pd-gauge-marker" style="left:80%"></i>
-                </div>
-            </div>
-            <div class="pd-overall-legend">
-                <span class="pd-positive">Обеспеченность <b>80%</b></span>
-                <span class="pd-negative">Дефицит <b>20%</b></span>
-            </div>
-        </div>
+    <div class="pd-header-block">
+        <div class="pd-header-text" id="pd-header-name">Загрузка...</div>
+        <div class="pd-header-text" id="pd-header-region">Загрузка...</div>
+        <div class="pd-header-text" id="pd-header-district">Загрузка...</div>
+    </div>
 
-        <div class="pd-weights pd-panel">
-            <button class="pd-link-title pd-expand-button" type="button"
-                    aria-expanded="false" aria-controls="pd-kind-coefficients">
-                Коэффициенты значимости видов связи&nbsp;<span>▷</span>
-            </button>
-            <div class="pd-expand-content" id="pd-kind-coefficients" hidden>
-                <table class="pd-coeff-table">
-                    <thead><tr><th>Вид связи</th><th>Коэффициент</th></tr></thead>
-                    <tbody>
-                        <tr><td>Мобильная связь</td><td>1,0</td></tr>
-                        <tr><td>ШПД</td><td>1,0</td></tr>
-                        <tr><td>Телевидение</td><td>1,0</td></tr>
-                        <tr><td>Радиовещание</td><td>1,0</td></tr>
-                        <tr><td>Спутниковая связь</td><td>1,0</td></tr>
-                        <tr><td>Проводная связь</td><td>1,0</td></tr>
-                        <tr><td>Почтовая связь</td><td>1,0</td></tr>
-                    </tbody>
+    <main class="pd-layout">
+        <section class="pd-top-overview">
+            <div class="pd-panel pd-location-data">
+                <div class="pd-panel-title">Показатели населённого пункта</div>
+                <table class="pd-info-table">
+                    <tr><td>Население</td><td class="pd-align-right" id="pd-info-population">—</td></tr>
+                    <tr><td>Площадь, кв. км.</td><td class="pd-align-right" id="pd-info-area">—</td></tr>
+                    <tr><td>Широта</td><td class="pd-align-right" id="pd-info-lat">—</td></tr>
+                    <tr><td>Долгота</td><td class="pd-align-right" id="pd-info-lon">—</td></tr>
+                    <tr><td>Код ФИАС</td><td class="pd-align-right pd-small-text" id="pd-info-fias">—</td></tr>
                 </table>
             </div>
 
-            <div class="pd-private-weights">
-                <button class="pd-link-title pd-expand-button" type="button"
-                        aria-expanded="false" aria-controls="pd-private-coefficients">
-                    Коэффициенты значимости частных показателей&nbsp;<span>▷</span>
+            <div class="pd-panel pd-overall">
+                <div class="pd-panel-title pd-overall-title">Обеспеченность населенного пункта</div>
+                <div class="pd-gauge pd-gauge--large">
+                    <div class="pd-gauge-track">
+                        <i class="pd-gauge-marker" style="left:80%"></i>
+                    </div>
+                </div>
+                <div class="pd-overall-legend">
+                    <span class="pd-positive">Обеспеченность <b>80%</b></span>
+                    <span class="pd-negative">Дефицит <b>20%</b></span>
+                </div>
+            </div>
+
+            <div class="pd-panel pd-weights">
+                <button class="pd-link-title pd-expand-button" type="button" aria-expanded="false" aria-controls="pd-kind-coefficients">
+
+                Коэффициенты значимости видов связи <span>▷</span>
+                </button>
+                <div class="pd-expand-content" id="pd-kind-coefficients" hidden>
+                    <table class="pd-coeff-table">
+                        <thead><tr><th>Вид связи</th><th>Коэффициент</th></tr></thead>
+                        <tbody>
+                            <tr><td>Мобильная связь</td><td>1,0</td></tr>
+                            <tr><td>ШПД</td><td>1,0</td></tr>
+                            <tr><td>Телевидение</td><td>1,0</td></tr>
+                            <tr><td>Радиовещание</td><td>1,0</td></tr>
+                            <tr><td>Спутниковая связь</td><td>1,0</td></tr>
+                            <tr><td>Проводная связь</td><td>1,0</td></tr>
+                            <tr><td>Почтовая связь</td><td>1,0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="pd-link-title pd-expand-button" type="button" aria-expanded="false" aria-controls="pd-private-coefficients">
+                    Коэффициенты значимости частных показателей <span>▷</span>
                 </button>
                 <div class="pd-expand-content" id="pd-private-coefficients" hidden>
                     <table class="pd-coeff-table">
@@ -75,20 +78,14 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="pd-types-layout pd-screen-types" aria-label="Виды связи">
-        <div class="pd-types-panel">
+        <section class="pd-unified-table-wrapper">
             <div class="pd-blue-title">Виды и технологии связи</div>
-            <div class="pd-type-gauges" id="pd-type-gauges"></div>
-        </div>
-    </section>
+            <div class="pd-unified-grid" id="pd-dashboard-grid"></div>
+        </section>
+    </main>
+</div>
 
-    <section class="pd-tech-section pd-screen-tech" aria-label="Технологии и объекты инфраструктуры">
-        <div class="pd-tech-grid pd-category-grid" id="pd-dashboard-grid"></div>
-    </section>
-</main>
-
-<script src="{{ url_for('static', filename='js/planning_development.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='js/planning_development.js') }}"></script>
 {% endblock %}
