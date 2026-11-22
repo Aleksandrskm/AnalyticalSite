@@ -7316,7 +7316,7 @@ confirm-modal__btn--yes {
     flex: 0 0 auto;
     width: 100%;
     min-height: 210px;
-    overflow: hidden;
+    /*overflow: hidden;*/
     position: relative;
 }
 
