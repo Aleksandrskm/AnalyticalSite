@@ -72,11 +72,26 @@ body {
     justify-content: flex-start;
 }
 
-/* Панель коэффициентов заметно шире остальных */
+/* Панель коэффициентов — grid: слева пусто, справа кнопки по ширине max-content */
 .pd-weights {
     flex: 2 1 200px;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    align-content: start;
     gap: 10px;
-    justify-content: flex-start;
+}
+
+/* Кнопки коэффициентов — правая колонка, ширина = самая длинная надпись, одна строка */
+.pd-weights > .pd-expand-button {
+    grid-column: 2;
+    width: 100%;
+    white-space: nowrap;
+    justify-self: stretch;
+}
+
+/* Раскрывающиеся панели — на всю ширину контейнера */
+.pd-weights > .pd-expand-content {
+    grid-column: 1 / -1;
 }
 
 /* Показатели */
@@ -123,10 +138,18 @@ body {
 
 /* Кнопки коэффициентов */
 .pd-link-title {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; padding: 6px 8px;
-    background: var(--pd-bg-color); border: 2px solid var(--pd-border-color);
-    color: #0000cc; font-size: 17px; font-weight: bold; cursor: arial; text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: var(--pd-bg-color);
+    border: 2px solid var(--pd-border-color);
+    color: #0000cc;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
 }
 .pd-link-title span { font-size: 17px; transition: transform 0.2s; }
 .pd-expand-button.is-open span { transform: rotate(90deg); }
