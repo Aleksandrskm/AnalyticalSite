@@ -2840,7 +2840,7 @@ button,
     display: flex;
     align-items: center;
     border: 1px solid #000 !important;
-    background-color: #f9fafb !important;
+    background-color: grey !important;
     padding: 8px 12px !important;
     text-align: left !important;
     font-weight: 600;
@@ -4494,7 +4494,7 @@ button,
 
 .compare-group__header {
     border: none !important;
-    border-bottom: 2px solid #bfdbfe !important;
+    border-bottom: 2px solid black !important;
     background: transparent !important;
     padding: 12px 0 !important;
     margin-bottom: 8px !important;
@@ -5640,7 +5640,7 @@ confirm-modal__btn--yes {
     width: max-content !important;
 }
 
-.compare-group { display: flex; flex-direction: column; margin-bottom: 24px; }
+.compare-group { display: flex; flex-direction: column; margin-bottom: 2px; }
 
 .compare-group__header {
     display: flex;
@@ -5729,4 +5729,3055 @@ confirm-modal__btn--yes {
 .compare-table__cell--empty {
     color: #d1d5db !important;
     font-weight: 400 !important;
+}
+/* Обёртка тела группы */
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сама таблица — единый вид, без двойных рамок */
+.compare-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    margin: 0 !important;
+}
+
+/* Первая колонка */
+.compare-table__field-th {
+    width: var(--col-title-w) !important;
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important; /* при collapse рамки схлопнутся */
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    vertical-align: middle;
+    position: sticky;
+    left: 0;      /* если нужен горизонтальный скролл */
+    z-index: 2;
+}
+
+/* Данные */
+.compare-table__cell {
+    padding: 10px 12px !important;
+    border: 1px solid #ccc !important;
+    text-align: center !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    vertical-align: middle;
+}
+
+/* Подсветки */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* 1. Убираем flex-gap, который создавал разрывы между строками таблицы */
+.compare-group__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0 !important; /* ВАЖНО: убираем зазор */
+}
+
+/* 2. Сама таблица — единая сетка */
+.compare-table {
+    width: 100% !important;
+    border-collapse: collapse !important; /* Схлопываем рамки */
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    margin: 0 !important;
+    border: 1px solid #ccc !important; /* Внешняя граница таблицы */
+}
+
+/* 3. Строки не должны быть grid/flex */
+.compare-table tr,
+.compare-row {
+    display: table-row !important; /* Возвращаем табличный лэйаут */
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+/* 4. Заголовки и ячейки */
+.compare-table th,
+.compare-table td,
+.compare-table__field-th,
+.compare-table__cell {
+    border: 1px solid #ccc !important; /* Внутренние границы */
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+    vertical-align: middle;
+}
+
+/* 5. Фикс левой колонки (чтобы рамка не пропадала при скролле) */
+.compare-table__field-th {
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+
+    /* Sticky оставляем, но добавляем border-right для четкости */
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-right: 1px solid #ccc !important;
+}
+
+/* 6. Ячейки данных */
+.compare-table__cell {
+    text-align: center !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    word-break: break-word !important;
+}
+
+/* 7. Цвета подсветки (фон не должен перекрывать границы) */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* 1. Возвращаем табличные свойства всему дереву таблицы */
+.compare-table {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    border: 1px solid #ccc !important;
+}
+
+.compare-table tbody {
+    display: table-row-group !important;
+}
+
+/* 2. Сбрасываем старые grid/flex стили у строк */
+.compare-table tr,
+.compare-row {
+    display: table-row !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    border: none !important;
+}
+
+/* 3. Возвращаем ячейкам правильное поведение */
+.compare-table th,
+.compare-table td,
+.compare-table__field-th,
+.compare-table__cell {
+    display: table-cell !important;
+    border: 1px solid #ccc !important;
+    padding: 10px 12px !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    height: auto !important;
+}
+
+/* 4. Настройки левой колонки (фиксируем, чтобы не было наложения) */
+.compare-table__field-th {
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* 5. Ячейки данных */
+.compare-table__cell {
+    text-align: center !important;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    word-break: break-word !important;
+}
+
+/* 6. Убираем зазоры у обертки тела группы */
+.compare-group__body {
+    display: block !important; /* Блок, а не flex! */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 7. Оставляем цвета подсветки */
+.compare-table__cell--best { background-color: #bfdbfe !important; color: #1e40af !important; }
+.compare-table__cell--better { background-color: #eff6ff !important; color: #2563eb !important; }
+.compare-table__cell--empty { color: #d1d5db !important; font-weight: 400 !important; }
+/* Контейнер группы */
+.compare-group__body {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Таблица */
+.compare-table {
+    display: table !important;
+    width: max-content !important; /* Таблица сжимается по контенту, не растягивается на 100% экрана */
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    border: 1px solid #ccc !important;
+}
+
+/* Общие настройки ячеек */
+.compare-table th,
+.compare-table td,
+.compare-table__field-th,
+.compare-table__cell {
+    display: table-cell !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 10px !important; /* Уменьшили отступы, чтобы поля не были огромными */
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    line-height: 1.3 !important;
+    font-size: 14px;
+}
+
+/* Левая колонка (названия полей) — строгая ширина */
+.compare-table__field-th {
+    width: 230px !important; /* Фиксируем ширину */
+    min-width: 230px !important;
+    max-width: 230px !important;
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    color: #374151;
+    white-space: normal !important;
+}
+
+/* Колонки с данными — строгая ширина, чтобы не растягивались */
+.compare-table__cell {
+    width: 150px !important; /* Фиксируем ширину колонки данных */
+    min-width: 150px !important;
+    max-width: 150px !important;
+    text-align: center !important;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word !important;
+}
+
+/* Подсветки */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* Контейнер группы */
+.compare-group__body {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Таблица */
+.compare-table {
+    display: table !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+
+    /* Внешняя граница */
+    border: 1px solid #000000 !important;
+}
+
+/* Строки */
+.compare-table tr,
+.compare-row {
+    display: table-row !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+/* Общие настройки ячеек */
+.compare-table th,
+.compare-table td,
+.compare-table__field-th,
+.compare-table__cell {
+    display: table-cell !important;
+
+    /* Внутренние границы */
+    border: 1px solid #000000 !important;
+
+    padding: 8px 10px !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    line-height: 1.3 !important;
+    font-size: 14px;
+}
+
+/* Левая колонка (названия полей) */
+.compare-table__field-th {
+    width: 230px !important;
+    min-width: 230px !important;
+    max-width: 230px !important;
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    color: #374151;
+    white-space: normal !important;
+}
+
+/* Колонки с данными */
+.compare-table__cell {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    text-align: center !important;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word !important;
+}
+
+/* Подсветки */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* Контейнер группы */
+.compare-group__body {
+    display: block;
+    width: 100% !important;
+    overflow-x: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Таблица */
+.compare-table {
+    display: table !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    border: 1px solid #000000 !important;
+}
+
+/* Строки */
+.compare-table tr,
+.compare-row {
+    display: table-row !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+/* Общие настройки ячеек */
+.compare-table th,
+.compare-table td,
+.compare-table__field-th,
+.compare-table__cell {
+    display: table-cell !important;
+    border: 1px solid #000000 !important;
+    padding: 8px 10px !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    line-height: 1.3 !important;
+    font-size: 14px;
+}
+
+/* Левая колонка */
+.compare-table__field-th {
+    width: 230px !important;
+    min-width: 230px !important;
+    max-width: 230px !important;
+    background-color: #f9fafb !important;
+    text-align: left !important;
+    font-weight: 600;
+    color: #374151;
+    white-space: normal !important;
+}
+
+/* Колонки с данными */
+.compare-table__cell {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    text-align: center !important;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word !important;
+}
+
+/* Подсветки */
+.compare-table__cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+.compare-table__cell--better {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+}
+.compare-table__cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+/* Контейнер группы */
+.compare-group__body {
+    display: block; /* Убрали !important */
+    width: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Класс для скрытия (сработает надежнее любого инлайн-стиля) */
+.compare-group__body.is-collapsed {
+    display: none !important;
+}
+#compare-view{
+    --compare-col-title: 230px;   /* = ширина sticky-колонки названий полей */
+    --compare-card-w: 160px;      /* = ширина карточки И ячейки */
+    --compare-gap: 5px;
+    --compare-cols: 0;
+}
+
+.compare-carousel-wrapper{ display:flex; align-items:stretch; gap:8px; }
+.compare-carousel-viewport{ flex:1 1 auto; min-width:0; overflow:hidden; }
+
+/* карточки */
+.compare-cards-row{ display:flex; }
+.compare-cards-spacer{ flex:0 0 var(--compare-col-title); width:var(--compare-col-title); }
+.compare-cards-movable{
+    display:flex; gap:var(--compare-gap);
+    transition:transform .25s ease; will-change:transform;
+}
+.compare-card{ flex:0 0 var(--compare-card-w); width:var(--compare-card-w); box-sizing:border-box; position:relative; }
+
+/* таблица */
+.compare-table{ width:100%; table-layout:fixed; border-collapse:collapse; }
+.compare-table__field-th{
+    width:var(--compare-col-title); min-width:var(--compare-col-title);
+    position:sticky; left:0; z-index:2; background:#fff;
+    text-align:left; vertical-align:middle;
+}
+.compare-table__data-td{ padding:0; vertical-align:middle; }
+.compare-data-clip{ overflow:hidden; }                 /* режем то, что за вьюпортом */
+.compare-data-cells{
+    display:flex; gap:var(--compare-gap);
+    transition:transform .25s ease; will-change:transform;
+}
+.compare-cell{
+    flex:0 0 var(--compare-card-w); width:var(--compare-card-w);
+    box-sizing:border-box; padding:6px 8px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.compare-cell--best{ background: #e8f3f7; font-weight:700; }
+.compare-cell--empty{ color:#9aa4b2; }
+
+.compare-group__body.is-collapsed{ display:none; }
+.compare-table-scroll-area{ max-height:60vh; overflow-y:auto; overflow-x:hidden; }
+/* ===== КАРТОЧКА СРАВНЕНИЯ ===== */
+#compare-view {
+    --compare-card-w: 220px;
+    --compare-col-title: 230px;
+    --compare-gap: 8px;
+}
+
+/* ✅ НОВОЕ: блок = карточка + график, двигаются синхронно */
+.compare-card-block {
+    flex: 0 0 var(--compare-card-w);
+    width: var(--compare-card-w);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.compare-card {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px 12px 0 0;
+    padding: 16px 12px 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.compare-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.compare-card__remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compare-card__remove:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: #ffe5e5;
+    border-color: #ef4444;
+}
+
+.compare-card__img-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    border-radius: 8px;
+    margin-bottom: 2px;
+}
+
+/* ✅ 3 ФИКСИРОВАННЫЕ СТРОКИ С ОБРЕЗКОЙ */
+.compare-card__title,
+.compare-card__region,
+.compare-card__district {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    min-height: 18px;
+    line-height: 18px;
+    cursor: default;
+}
+
+.compare-card__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0066ff;
+}
+
+.compare-card__region {
+    font-size: 11px;
+    color: #555;
+    font-weight: 500;
+}
+
+.compare-card__district {
+    font-size: 11px;
+    color: #888;
+    min-height: 15px;
+}
+
+.compare-card__stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 0 4px;
+}
+
+.compare-card__stat {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.compare-card__stat--provided {
+    background: linear-gradient(135deg, #e8f7ea 0%, #d4f1d8 100%);
+    color: #228028;
+    border: 1px solid #b8e6bc;
+}
+
+.compare-card__stat--deficit {
+    background: linear-gradient(135deg, #fde8e8 0%, #fbd5d5 100%);
+    color: #cc0000;
+    border: 1px solid #f5c6c6;
+}
+
+.compare-card__stat-val {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.compare-card__stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    letter-spacing: 0.3px;
+}
+
+/* ✅ ГРАФИК ПОД КАРТОЧКОЙ */
+.compare-card__chart {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    height: 70px;  /* ✅ УМЕНЬШЕНО с 100px */
+    padding: 4px 6px 6px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.compare-card__chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП — ЕДИНЫЙ БЛОК (КАРТОЧКИ + ГРАФИКИ) ===== */
+/* ============================================================ */
+#compare-view {
+    --compare-col-title: 230px;
+    --compare-card-w: 220px;
+    --compare-gap: 8px;
+    --compare-cols: 0;
+}
+
+/* Скрываем графики при классе */
+#compare-view.compare-view--charts-hidden .compare-card__chart {
+    display: none !important;
+}
+
+/* Карточка — единый блок с графиком */
+.compare-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    /* ← УБРАНА фиксированная высота 215px — теперь auto */
+    height: auto !important;
+    min-height: 200px !important;
+    position: relative;
+    padding: 12px 10px 0 10px; /* ← padding-bottom: 0, чтобы график сливался */
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e0e0e0;
+    border-bottom: none !important; /* ← убираем нижнюю границу, график продолжит */
+    border-radius: 12px 12px 0 0 !important; /* ← только сверху */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden; /* ← важно: обрезает содержимое по границам */
+}
+
+.compare-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.compare-card__remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.compare-card__remove:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: #ffe5e5;
+    border-color: #ef4444;
+}
+
+.compare-card__img-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    border-radius: 8px;
+    margin-bottom: 2px;
+}
+
+.compare-card__title,
+.compare-card__region,
+.compare-card__district {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    min-height: 18px;
+    line-height: 18px;
+    cursor: default;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.compare-card__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0066ff;
+}
+
+.compare-card__region {
+    font-size: 11px;
+    color: #555;
+    font-weight: 500;
+}
+
+.compare-card__district {
+    font-size: 11px;
+    color: #888;
+    min-height: 15px;
+}
+
+.compare-card__stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 0 4px 8px 4px; /* ← добавлен padding-bottom для отступа от графика */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.compare-card__stat {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.compare-card__stat--provided {
+    background: linear-gradient(135deg, #e8f7ea 0%, #d4f1d8 100%);
+    color: #228028;
+    border: 1px solid #b8e6bc;
+}
+
+.compare-card__stat--deficit {
+    background: linear-gradient(135deg, #fde8e8 0%, #fbd5d5 100%);
+    color: #cc0000;
+    border: 1px solid #f5c6c6;
+}
+
+.compare-card__stat-val {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.compare-card__stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    letter-spacing: 0.3px;
+}
+
+/* График — продолжение карточки */
+.compare-card__chart {
+    width: 100% !important;
+    height: 70px !important;
+    padding: 4px 6px 6px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-top: none !important; /* ← сливается с карточкой */
+    border-radius: 0 0 12px 12px !important; /* ← только снизу */
+    box-sizing: border-box;
+    margin-top: 0 !important;
+}
+
+.compare-card__chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Кнопка переключения графиков */
+#toggle-charts-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+#toggle-charts-btn:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+}
+/* ===== ОТДЕЛЬНЫЙ БЛОК ГРАФИКОВ ===== */
+.compare-charts-container {
+    margin-bottom: 12px;
+    max-height: 140px;
+}
+
+.compare-charts-container .compare-group__header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.compare-charts-container .compare-group__header:hover {
+    background: #f5f5f5;
+}
+
+.compare-charts-row {
+    display: flex;
+    gap: var(--compare-gap);
+    transition: transform 0.25s ease;
+    will-change: transform;
+    width: max-content;
+}
+
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w);
+    width: var(--compare-card-w);
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.compare-chart-card__canvas {
+    height: 80px;
+    position: relative;
+}
+
+.compare-chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Сворачивание блока графиков */
+.compare-charts-container .compare-group__body.is-collapsed {
+    display: none !important;
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ БЛОК: СРАВНЕНИЕ НП (компакт + выравнивание) ===== */
+/* ============================================================ */
+#compare-view {
+    --compare-col-title: 230px;
+    --compare-card-w: 220px;
+    --compare-gap: 8px;
+}
+
+/* --- Карточка: полная рамка, компактная высота --- */
+#compare-view .compare-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px 10px 10px !important;
+    gap: 4px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 10px !important;                /* ✅ скруг со всех сторон */
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#compare-view .compare-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 14px rgba(0,0,0,0.12);
+}
+
+#compare-view .compare-card__img-placeholder {
+    height: 30px !important;
+    margin-bottom: 0 !important;
+}
+
+#compare-view .compare-card__title,
+#compare-view .compare-card__region,
+#compare-view .compare-card__district {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    line-height: 16px;
+    min-height: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#compare-view .compare-card__title   { font-size: 13px; font-weight: 700; color: #0066ff; }
+#compare-view .compare-card__region  { font-size: 12px; color: black; }
+#compare-view .compare-card__district{ font-size: 12px; color: black; }
+
+#compare-view .compare-card__stats {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px !important;
+    padding: 0 4px !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#compare-view .compare-card__stat {
+    flex: 1;
+    text-align: center;
+    padding: 4px 4px !important;
+    border-radius: 6px;
+}
+
+#compare-view .compare-card__stat-val { font-size: 14px !important; }
+#compare-view .compare-card__stat-label { font-size: 9px !important; }
+
+/* --- Блок графиков: та же сетка, что у карточек --- */
+.compare-charts-container {
+    margin: 10px 0 12px !important;
+}
+
+.compare-charts-container .compare-group__header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.compare-charts-container .compare-group__body.is-collapsed {
+    display: none !important;
+}
+
+.compare-charts-row {
+    display: flex !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+/* spacer = 230px, как у карточек → колонки совпадают */
+.compare-charts-spacer {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: transparent;
+}
+
+.compare-charts-movable {
+    display: flex;
+    gap: var(--compare-gap);
+    transition: transform .25s ease;
+    will-change: transform;
+}
+
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #cfcfcf;
+    border-radius: 10px;
+    padding: 6px 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+
+/* ✅ высота графика уменьшена */
+.compare-chart-card__canvas {
+    height: 56px;
+    position: relative;
+}
+
+.compare-chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+/* ===== БЛОК ГРАФИКОВ (выровнен с карточками) ===== */
+.compare-charts-row {
+    display: flex !important;
+    width: max-content !important;
+    margin-bottom: 12px !important;
+    flex: 0 0 auto !important;
+}
+
+.compare-charts-spacer {
+    flex: 0 0 230px !important;
+    width: 230px !important;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+}
+
+.compare-charts-movable {
+    display: flex;
+    gap: 6px;
+    transition: margin-left 0.3s ease;
+}
+
+.compare-chart-card {
+    flex: 0 0 155px !important;
+    width: 155px !important;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    padding: 8px 8px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.compare-chart-card__canvas {
+    height: 70px;
+    position: relative;
+}
+
+.compare-chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ===== КАРТОЧКИ: уменьшенная ширина, чтобы влезали ===== */
+.compare-card {
+    flex: 0 0 155px !important;
+    width: 155px !important;
+    height: 215px !important;
+}
+/* ===== КАРТОЧКИ И ГРАФИКИ - ЕДИНЫЙ СТИЛЬ ===== */
+.compare-card {
+    flex: 0 0 160px !important;
+    width: 160px !important;
+    min-height: 215px !important;
+    height: auto !important;
+    position: relative;
+    padding: 12px 10px 10px;
+    background: #fff;
+    border: 1px solid #000 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible !important; /* ← ВАЖНО: убираем обрезку */
+}
+
+/* График внутри карточки */
+.compare-card__chart {
+    width: 100% !important;
+    height: 60px !important;
+    margin-top: 8px;
+    padding: 4px 6px 6px;
+    background: #fff;
+    border: 1px solid #000 !important;
+    border-radius: 6px !important;
+    box-sizing: border-box;
+}
+
+.compare-card__chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Если графики отдельным блоком */
+.compare-chart-card {
+    flex: 0 0 160px !important;
+    width: var(--compare-card-w) !important;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #000 !important;
+    border-radius: 8px !important;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.compare-chart-card__canvas {
+    height: 60px !important;
+    position: relative;
+}
+
+.compare-chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+/* ===== ОПТИМИЗАЦИЯ: СКРЫТИЕ НЕВИДИМЫХ ЭЛЕМЕНТОВ ===== */
+.compare-card,
+.compare-chart-card,
+.compare-cell {
+    /* Плавный переход при появлении/исчезновении */
+    transition: visibility 0.15s ease;
+}
+
+/* Невидимые элементы не получают фокус и не кликабельны */
+.compare-card[style*="visibility: hidden"],
+.compare-chart-card[style*="visibility: hidden"],
+.compare-cell[style*="visibility: hidden"] {
+    pointer-events: none;
+}
+/* ===== ТАБЛИЦА СРАВНЕНИЯ (CSS GRID) ===== */
+.compare-table {
+    display: grid;
+    /* Первая колонка 230px, остальные по ширине карточки (155px или 160px) */
+    grid-template-columns: 230px repeat(var(--compare-cols, 1), 155px);
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+}
+
+/* "Расплющиваем" строки, чтобы th и td стали прямыми детьми грида */
+.compare-row {
+    display: contents !important;
+}
+
+/* Липкий заголовок строки */
+.compare-table__field-th {
+    grid-column: 1;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #f9fafb;
+    border: 1px solid #ccc;
+    border-right: 2px solid #bbb; /* Визуально отделяем липкую колонку */
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+}
+
+/* Ячейка данных (теперь это td, но выглядит как блок) */
+.compare-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Подсветки */
+.compare-cell--best {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+    font-weight: 800 !important;
+}
+
+.compare-cell--empty {
+    color: #d1d5db !important;
+    font-weight: 400 !important;
+}
+
+/* Контейнер скролла таблицы */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    /*overflow-x: auto !important; !* Разрешаем скролл, чтобы работал scrollLeft *!*/
+    position: relative;
+    padding-bottom: 20px;
+}
+
+/* Скрываем полосу прокрутки для красоты (опционально, но синхронизация работает) */
+.compare-table-scroll-area::-webkit-scrollbar {
+    height: 8px;
+}
+.compare-table-scroll-area::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+/* Таблица */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Левая колонка с названиями (Население, Площадь...) */
+.compare-table__field-th {
+    width: var(--compare-col-title, 230px);
+    text-align: left;
+    vertical-align: middle;
+    /* твои паддинги, границы */
+}
+
+/* Правая колонка с данными */
+.compare-table__data-td {
+    position: relative;
+    overflow: hidden; /* ВАЖНО: вместо удаленного .compare-data-clip */
+    vertical-align: middle;
+    /* твои паддинги, границы */
+}
+
+/* Двигающийся контейнер */
+.compare-data-cells {
+    display: flex;
+    gap: var(--compare-gap, 5px);
+    transition: transform 0.2s ease-out;
+    will-change: transform;
+}
+
+/* Ячейки-коробочки */
+.compare-cell {
+    flex: 0 0 var(--compare-card-w, 160px);
+    /* ... остальные стили коробочек ... */
+}
+/* Обертка для скролла таблицы */
+.compare-table-scroll-area {
+    overflow-x: auto; /* если вдруг таблица не влезет */
+}
+
+/* Основная таблица */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse; /* Сплошная сетка */
+    table-layout: fixed; /* Фиксирует ширину колонок */
+}
+
+/* Левая колонка */
+.compare-table__field-th {
+    width: var(--compare-col-title, 230px);
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    vertical-align: middle;
+    background-color: #f9f9f9;
+}
+
+/* Колонки с данными */
+.compare-cell {
+    width: var(--compare-card-w, 160px);
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+}
+
+/* Выделение лучшего значения (голубой фон) */
+.compare-cell--best {
+    background-color: #a7c8f8;
+    font-weight: bold;
+    color: #1a3c6e;
+}
+
+/* Пустые значения */
+.compare-cell--empty {
+    color: #999;
+}
+/* Контейнер, который обрезает всё лишнее */
+.compare-table-clip {
+    width: 100%;
+    overflow: hidden;
+    padding: 5px 0; /* немного отступа, чтобы границы не прилипали */
+}
+
+/* Подвижная обертка */
+.compare-table-movable {
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+/* Сама таблица */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse; /* Сплошная сетка */
+    table-layout: fixed;       /* Фиксирует ширину колонок */
+}
+
+/* Левая колонка с названиями */
+.compare-table__field-th {
+    width: var(--compare-col-title, 230px); /* Ширина берется из JS */
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+    background-color: #fafafa;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Ячейки с данными (коробочки) */
+.compare-cell {
+    width: var(--compare-card-w, 160px); /* Ширина 1:1 с карточками */
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+    font-weight: 500;
+}
+
+/* Выделение лучшего значения */
+.compare-cell--best {
+    background-color: #a7c8f8;
+    font-weight: bold;
+    color: #1a3c6e;
+}
+
+/* Пустые значения */
+.compare-cell--empty {
+    color: #999;
+}
+/* Контейнер, который обрезает лишнее */
+.compare-table-clip {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 4px 0;
+}
+
+/* Контейнер, который сдвигается через transform */
+.compare-table-movable {
+    transition: transform 0.3s ease;
+    will-change: transform;
+    /* width задается через JS */
+}
+
+/* Сама таблица */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* СТРОГО фиксированные колонки */
+    box-sizing: border-box;
+}
+
+/* Левая колонка */
+.compare-table__field-th {
+    width: var(--compare-col-title, 230px);
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+    background-color: #fafafa;
+    font-weight: 500;
+    color: #333;
+    box-sizing: border-box;
+}
+
+/* Ячейки с данными */
+.compare-cell {
+    width: var(--compare-card-w, 160px);
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+/* Лучшее значение */
+.compare-cell--best {
+    background-color: #a7c8f8;
+    font-weight: bold;
+    color: #1a3c6e;
+}
+
+/* Пустая ячейка */
+.compare-cell--empty {
+    color: #999;
+}
+/* Контейнер, который обрезает лишнее */
+.compare-table-clip {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 4px 0;
+}
+
+/* Контейнер, который сдвигается через transform */
+.compare-table-movable {
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+/* Таблица */
+.compare-table {
+    width: 100%;
+    border-collapse: separate; /* Меняем collapse на separate для корректной работы sticky */
+    border-spacing: 0;         /* Убираем отступы между ячейками */
+    table-layout: fixed;
+}
+
+/* Левая колонка (НЕ СДВИГАЕТСЯ) */
+.compare-table__field-th {
+    width: var(--compare-col-title, 230px);
+    position: sticky;
+    left: 0;
+    z-index: 2; /* Выше остальных ячеек */
+    background-color: #fafafa; /* Важно! Должен быть непрозрачный фон */
+    border: 1px solid #ccc;
+    border-left: none; /* Чтобы не было двойных рамок из-за separate */
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+    font-weight: 500;
+    color: #333;
+    box-sizing: border-box;
+}
+
+/* Ячейки с данными */
+.compare-cell {
+    width: var(--compare-card-w, 160px);
+    border: 1px solid #ccc;
+    border-left: none; /* Убираем двойную границу слева */
+    padding: 10px 12px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+/* Лучшее значение */
+.compare-cell--best {
+    background-color: #a7c8f8;
+    font-weight: bold;
+    color: #1a3c6e;
+}
+
+/* Пустая ячейка */
+.compare-cell--empty {
+    color: #999;
+}
+
+/* Убираем нижнюю границу у последней строки, чтобы не было двойной */
+.compare-table tr:last-child .compare-table__field-th,
+.compare-table tr:last-child .compare-cell {
+    border-bottom: none;
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП — ФИНАЛЬНЫЙ БЛОК (перекрывает всё выше) ===== */
+/* ============================================================ */
+
+#compare-view {
+    --compare-col-title: 230px;
+    --compare-card-w: 160px;
+    --compare-gap: 5px;
+    --compare-cols: 0;
+
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+}
+
+.compare-view__header { flex: 0 0 auto; margin-bottom: 8px; }
+.compare-view__title  {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 10px;
+    color: #111;
+}
+
+.compare-view__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    flex: 0 0 auto;
+    padding: 0 4px;
+}
+
+.compare-view__empty {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 15px;
+}
+
+/* --- Обёртка карусели --- */
+.compare-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 8px;
+    padding: 0 44px;
+    box-sizing: border-box;
+}
+
+.compare-carousel-viewport {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden !important;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* --- Стрелки --- */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    color: #555;
+    font-size: 16px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.carousel-btn--prev { left: 0; }
+.carousel-btn--next { right: 0; }
+.carousel-btn:hover:not(:disabled) {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+.carousel-btn:disabled { opacity: 0.25; cursor: default; }
+
+/* --- Блок карточек --- */
+.compare-cards-row {
+    display: flex;
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 210px;
+    /*overflow: hidden;*/
+    position: relative;
+}
+
+.compare-cards-spacer {
+    flex: 0 0 var(--compare-col-title);
+    width: var(--compare-col-title);
+    min-width: var(--compare-col-title);
+    flex-shrink: 0;
+}
+
+.compare-cards-movable {
+    display: flex;
+    gap: var(--compare-gap);
+    flex: 0 0 auto;
+    will-change: transform;
+}
+.compare-cards-movable.is-animated { transition: transform 0.25s ease; }
+
+.compare-card {
+    flex: 0 0 var(--compare-card-w);
+    width: var(--compare-card-w);
+    min-height: 210px;
+    box-sizing: border-box;
+    position: relative;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    padding: 12px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.compare-card__img-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    background: #f5f7fa;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.compare-card__title,
+.compare-card__region,
+.compare-card__district {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    line-height: 18px;
+}
+
+.compare-card__title    { font-size: 13px; font-weight: 700; color: #0066ff; }
+.compare-card__region   { font-size: 12px; color: #333; }
+.compare-card__district { font-size: 11px; color: #888; }
+
+.compare-card__stats {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding: 0 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.compare-card__stat {
+    flex: 1;
+    text-align: center;
+    padding: 4px;
+    border-radius: 6px;
+}
+.compare-card__stat--provided { background: #e8f7ea; color: #228028; }
+.compare-card__stat--deficit  { background: #fde8e8; color: #cc0000; }
+.compare-card__stat-val   { display: block; font-size: 14px; font-weight: 700; }
+.compare-card__stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+.compare-card__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    z-index: 2;
+    padding: 0;
+}
+.compare-card__remove:hover { opacity: 1; background: #ffe5e5; border-color: #ef4444; }
+
+/* --- Блок графиков --- */
+.compare-charts-container {
+    flex: 0 0 auto;
+    min-height: 120px;
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.compare-charts-row {
+    display: flex;
+    min-height: 120px;
+    position: relative;
+}
+
+.compare-charts-spacer {
+    flex: 0 0 var(--compare-col-title);
+    width: var(--compare-col-title);
+    flex-shrink: 0;
+}
+
+.compare-charts-movable {
+    display: flex;
+    gap: var(--compare-gap);
+    flex: 0 0 auto;
+    will-change: transform;
+}
+.compare-charts-movable.is-animated { transition: transform 0.25s ease; }
+
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w);
+    width: var(--compare-card-w);
+    height: 110px;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.compare-chart-card__canvas { height: 100%; position: relative; }
+.compare-chart-canvas       { width: 100% !important; height: 100% !important; display: block; }
+
+/* --- Таблица --- */
+.compare-table-scroll-area {
+    flex: 1 1 auto;
+    min-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.compare-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.compare-group {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0;
+}
+
+.compare-group__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f4f6fa;
+    border-bottom: 1px solid #dcdcdc;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e3a8a;
+    position: static;
+    width: auto;
+    margin: 0;
+}
+
+.compare-group__title { font-size: 14px; font-weight: 700; }
+.compare-group__toggle { font-size: 11px; color: #3b82f6; }
+
+.compare-group__body {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    width: auto !important;
+    overflow: visible !important;
+}
+.compare-group__body.is-collapsed { display: none !important; }
+
+/* --- КЛЮЧЕВОЕ: две синхронные колонки --- */
+.compare-table-clip {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    background: #fff;
+    padding: 0;
+    position: relative;
+}
+
+.compare-table-frozen {
+    flex: 0 0 var(--compare-col-title);
+    width: var(--compare-col-title);
+    min-width: var(--compare-col-title);
+    background: #fafafa;
+    border-right: 1px solid #dcdcdc;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+}
+
+.compare-frozen-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    border-bottom: 1px solid #e5e5e5;
+    box-sizing: border-box;
+    line-height: 1.3;
+    min-height: 30px;
+    height: auto;
+}
+.compare-frozen-row:last-child { border-bottom: none; }
+
+.compare-table-scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.compare-table-movable {
+    display: flex;
+    will-change: transform;
+}
+.compare-table-movable.is-animated { transition: transform 0.25s ease; }
+
+.compare-table {
+    display: table !important;
+    width: auto !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    margin: 0 !important;
+}
+
+.compare-table tbody { display: table-row-group !important; }
+.compare-table tr { display: table-row !important; margin: 0 !important; }
+
+.compare-table td,
+.compare-cell {
+    display: table-cell !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    padding: 6px 10px !important;
+    font-size: 13px;
+    color: #2a2a2a;
+    border-bottom: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+    text-align: center;
+    box-sizing: border-box;
+    line-height: 1.3;
+    height: 30px;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-table tr:last-child td { border-bottom: none; }
+
+.compare-cell--best {
+    background: #e8f5e9 !important;
+    font-weight: 700 !important;
+    color: #1b5e20 !important;
+}
+.compare-cell--empty { color: #b0b0b0 !important; }
+
+/* Чередование строк */
+.compare-table tr:nth-child(even) td { background: #fbfbfb; }
+.compare-table tr:nth-child(even) .compare-cell--best { background: #dff0e0 !important; }
+
+/* Ховер */
+.compare-table tr:hover td { background: #eef5ff !important; }
+.compare-table tr:hover .compare-cell--best { background: #d6ebd8 !important; }
+
+/* Кнопки тулбара — базовый вид, если не было */
+.compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid #000;
+    background: #fff;
+    color: #1a1a1a;
+    transition: background 0.15s;
+}
+.compare-btn:hover { background: #f3f3f3; }
+
+.compare-view__diff-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    color: #1a1a1a;
+}
+.compare-view__diff-toggle input { cursor: pointer; }
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП — ПРАВКА 2 (скролл, высоты, ячейки) ===== */
+/* ============================================================ */
+
+/* --- Обёртка карусели: гарантируем вертикальный скролл --- */
+.compare-carousel-wrapper {
+    padding: 0 44px !important;
+}
+
+.compare-carousel-viewport {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;   /* ← вертикальный скролл при малой высоте */
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding-right: 4px;            /* место под скроллбар */
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+}
+
+/* --- Карточки: не сжимаются, минимум 220px --- */
+.compare-cards-row {
+    flex: 0 0 auto !important;
+    min-height: 220px !important;
+}
+
+.compare-card {
+    min-height: 220px !important;
+}
+
+/* --- Графики: чуть выше и canvas на всю высоту --- */
+.compare-charts-container {
+    flex: 0 0 auto !important;
+    min-height: 140px !important;
+    margin-bottom: 4px !important;
+}
+
+.compare-charts-row {
+    min-height: 140px !important;
+}
+
+.compare-chart-card {
+    height: 130px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 6px !important;
+}
+
+.compare-chart-card__canvas {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+.compare-chart-canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+}
+
+/* --- Таблица: остаётся flex-grow, минимальная высота 240px --- */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 240px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: 12px !important;
+}
+
+/* --- Ячейки таблицы: выше и просторнее --- */
+.compare-table td,
+.compare-cell {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
+}
+
+.compare-frozen-row {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
+}
+
+/* Уравниваем заголовки групп с остальными блоками */
+.compare-group__header {
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+}
+
+/* Спейсеры карточек/графиков — как и раньше 230px */
+.compare-cards-spacer,
+.compare-charts-spacer {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+}
+
+/* ============================================================ */
+/* На малой высоте (< 700px) — ещё компактнее, но всё видно */
+/* ============================================================ */
+@media (max-height: 700px) {
+    .compare-cards-row,
+    .compare-card {
+        min-height: 190px !important;
+    }
+    .compare-charts-container,
+    .compare-charts-row {
+        min-height: 110px !important;
+    }
+    .compare-chart-card {
+        height: 100px !important;
+    }
+    .compare-table-scroll-area {
+        min-height: 180px !important;
+    }
+    .compare-table td,
+    .compare-cell,
+    .compare-frozen-row {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 8px 10px !important;
+    }
+    .compare-group__header {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП — ПРАВКА 3 (скролл, обрезка, высоты) ===== */
+/* ============================================================ */
+
+/* 1. ОБЩИЙ КОНТЕЙНЕР: убираем жесткие ограничения */
+#compare-view {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* 2. ОБЕРТКА КАРУСЕЛИ: без жесткого скролла, только для стрелок */
+.compare-carousel-wrapper {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important; /* Меняем на колонку, чтобы блоки шли друг под другом */
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 44px !important; /* Отступ для стрелок */
+}
+
+/* 3. ВЬЮПОРТ: скролл ТОЛЬКО здесь и только когда контент не влезает */
+.compare-carousel-viewport {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: 8px !important;
+    padding-top: 4px !important; /* Чуть-чуть места сверху, чтобы карточки не липли к краю */
+    box-sizing: border-box !important;
+    scrollbar-gutter: stable !important;
+}
+
+/* 4. БЛОКИ: убираем min-height, который заставлял скролл появляться рано */
+.compare-cards-row {
+    flex: 0 0 auto !important;
+    min-height: 0 !important; /* Карточки сами задают высоту */
+    margin-bottom: 0 !important;
+}
+
+.compare-card {
+    min-height: 200px !important; /* Вернули нормальную высоту, но без фанатизма */
+}
+
+.compare-charts-container {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.compare-charts-row {
+    min-height: 0 !important;
+}
+
+.compare-chart-card {
+    height: 120px !important; /* Фиксируем высоту графика, чтобы не прыгал */
+}
+
+/* 5. ТАБЛИЦА: скролл только если реально не влезает, без фиксированного min-height */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 200px !important; /* Небольшой минимум для удобства */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: 20px !important;
+}
+
+/* 6. ЯЧЕЙКИ: чуть выше и просторнее */
+.compare-table td,
+.compare-cell {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.4 !important;
+}
+
+.compare-frozen-row {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.4 !important;
+}
+
+/* 7. СТРЕЛКИ: привязываем к верху, чтобы не наезжали на таблицу */
+.carousel-btn {
+    top: 100px !important; /* Центр относительно карточек (200px / 2) */
+    transform: translateY(-50%) !important;
+    position: absolute !important;
+    z-index: 20 !important;
+}
+
+/* 8. Адаптив для маленьких экранов (если высота < 700px) */
+@media (max-height: 700px) {
+    .compare-card {
+        min-height: 170px !important;
+    }
+    .compare-chart-card {
+        height: 100px !important;
+    }
+    .compare-table td,
+    .compare-cell,
+    .compare-frozen-row {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 6px 10px !important;
+    }
+    .compare-table-scroll-area {
+        min-height: 150px !important;
+    }
+    .carousel-btn {
+        top: 85px !important;
+    }
+}
+/* ============================================================ */
+/* ===== СРАВНЕНИЕ НП — ИДЕАЛЬНОЕ ВЫРАВНИВАНИЕ (ФИНАЛ) ===== */
+/* ============================================================ */
+
+/* 1. Глобальные переменные ширины */
+#compare-view {
+    --compare-col-title: 230px;
+    --compare-card-w: 160px;
+    --compare-gap: 5px;
+    --compare-cols: 0;
+
+    /* Шаг сетки: карточка + отступ. Обязательно для точного сдвига */
+    --col-step: calc(var(--compare-card-w) + var(--compare-gap));
+}
+
+/* 2. Обертка карусели и скролл */
+.compare-carousel-wrapper {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 44px !important; /* Место под стрелки */
+}
+
+.compare-carousel-viewport {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-top: 4px !important;
+    padding-bottom: 16px !important;
+    box-sizing: border-box !important;
+    scrollbar-gutter: stable !important;
+}
+
+/* 3. ВЫРАВНИВАНИЕ КАРТОЧЕК И ГРАФИКОВ */
+.compare-cards-row,
+.compare-charts-row {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+.compare-cards-spacer,
+.compare-charts-spacer {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+    max-width: var(--compare-col-title) !important;
+}
+
+.compare-cards-movable,
+.compare-charts-movable {
+    display: flex !important;
+    gap: var(--compare-gap) !important;
+    will-change: transform !important;
+}
+.compare-cards-movable.is-animated,
+.compare-charts-movable.is-animated {
+    transition: transform 0.25s ease !important;
+}
+
+/* Карточка: строгая ширина */
+.compare-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    box-sizing: border-box !important; /* Важно: padding не расширяет карточку */
+    min-height: 200px !important;
+    margin: 0 !important;
+}
+
+/* График: строгая ширина */
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    box-sizing: border-box !important;
+    height: 120px !important;
+    margin: 0 !important;
+}
+
+.compare-chart-card__canvas {
+    height: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+.compare-chart-canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* 4. ВЫРАВНИВАНИЕ ТАБЛИЦЫ */
+.compare-table-scroll-area {
+    flex: 1 1 auto !important;
+    min-height: 200px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: 24px !important;
+}
+
+.compare-table-clip {
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+    background: #fff !important;
+}
+
+/* Левая колонка таблицы (названия полей) */
+.compare-table-frozen {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+    max-width: var(--compare-col-title) !important;
+    background: #fafafa !important;
+    border-right: 1px solid #dcdcdc !important;
+    z-index: 3 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.compare-frozen-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important; /* Убрали вертикальный padding, высота задается жестко */
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    box-sizing: border-box !important;
+    line-height: 1.3 !important;
+}
+
+/* Правая часть таблицы (ячейки с данными) */
+.compare-table-scroll {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.compare-table-movable {
+    display: flex !important;
+    will-change: transform !important;
+}
+.compare-table-movable.is-animated {
+    transition: transform 0.25s ease !important;
+}
+
+.compare-table {
+    display: table !important;
+    width: max-content !important; /* Таблица растягивается по контенту */
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    margin: 0 !important;
+}
+
+/* ЯЧЕЙКА ТАБЛИЦЫ: строгая ширина и высота, как у карточки */
+.compare-table td,
+.compare-cell {
+    display: table-cell !important;
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+
+    height: 44px !important;
+    min-height: 44px !important;
+
+    /* Учитываем padding в ширине */
+    box-sizing: border-box !important;
+
+    /* Убираем вертикальные padding, чтобы высота была точной */
+    padding: 0 12px !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+
+    font-size: 13.5px !important;
+    color: #2a2a2a !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    border-right: 1px solid #e5e5e5 !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Убираем лишние границы у последних элементов */
+/*.compare-table tr:last-child td { border-bottom: none !important; }*/
+/*.compare-table td:last-child { border-right: none !important; }*/
+
+/* 5. Подсветки */
+.compare-cell--best {
+    background: #e8f5e9 !important;
+    font-weight: 700 !important;
+    color: #1b5e20 !important;
+}
+.compare-cell--empty { color: #b0b0b0 !important; }
+
+.compare-table tr:nth-child(even) td { background: #fbfbfb !important; }
+.compare-table tr:nth-child(even) .compare-cell--best { background: #dff0e0 !important; }
+
+.compare-table tr:hover td { background: #eef5ff !important; }
+.compare-table tr:hover .compare-cell--best { background: #d6ebd8 !important; }
+
+/* 6. Стрелки по центру карточек */
+.carousel-btn {
+    top: 100px !important;
+    transform: translateY(-50%) !important;
+    position: absolute !important;
+    z-index: 20 !important;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-height: 700px) {
+    .compare-card { min-height: 170px !important; }
+    .compare-chart-card { height: 100px !important; }
+    .compare-table td, .compare-cell, .compare-frozen-row {
+        height: 38px !important; min-height: 38px !important; font-size: 13px !important;
+    }
+    .compare-table-scroll-area { min-height: 150px !important; }
+    .carousel-btn { top: 85px !important; }
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ ФИКС: ИДЕАЛЬНАЯ СЕТКА ===== */
+/* ============================================================ */
+
+#compare-view {
+    --compare-col-title: 230px !important;
+    --compare-card-w: 160px !important;
+    --compare-gap: 5px !important;
+}
+
+/* 1. Контейнеры для сдвига */
+.compare-cards-movable,
+.compare-charts-movable,
+.compare-table-movable {
+    display: flex !important;
+    gap: var(--compare-gap) !important;
+    will-change: transform !important;
+}
+
+.compare-cards-movable.is-animated,
+.compare-charts-movable.is-animated,
+.compare-table-movable.is-animated {
+    transition: transform 0.25s ease !important;
+}
+
+/* 2. Выравниваем ширину ВСЕХ элементов по одной переменной */
+.compare-cards-spacer,
+.compare-charts-spacer,
+.compare-table-frozen {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+    max-width: var(--compare-col-title) !important;
+}
+
+.compare-card,
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+/* 3. Таблица */
+.compare-table-clip {
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+}
+
+.compare-table-scroll {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.compare-table {
+    display: flex !important; /* Превращаем таблицу во flex, чтобы gap работал */
+    flex-direction: column !important;
+    width: max-content !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.compare-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.compare-table tr {
+    display: flex !important;
+}
+
+/* 4. Ячейки таблицы (строгая ширина) */
+.compare-table td,
+.compare-cell {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    height: 44px !important;
+    box-sizing: border-box !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-bottom: 1px solid black !important;
+    border-right: 1px solid black !important;
+    font-size: 13.5px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.compare-frozen-row {
+    height: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    box-sizing: border-box !important;
+}
+/* ============================================================ */
+/* ===== ФИНАЛЬНЫЙ ФИКС ОБРЕЗКИ ТАБЛИЦЫ ===== */
+/* ============================================================ */
+
+/* 1. Контейнер таблицы разрешаем чуть шире, чтобы последняя ячейка не резалась */
+.compare-table-scroll {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    /* Убираем overflow: hidden, чтобы тень/граница последней ячейки не обрезалась */
+    overflow: visible !important;
+}
+
+/* 2. Сама таблица должна иметь точную ширину по контенту */
+.compare-table {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    /* Добавляем минимальную ширину, чтобы flex-контейнер не сжимал таблицу меньше положенного */
+    min-width: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.compare-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.compare-table tr {
+    display: flex !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+/* 3. Ячейки: добавляем border-box и фиксированную ширину */
+.compare-table td,
+.compare-cell {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    height: 44px !important;
+    box-sizing: border-box !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 13.5px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Убираем правую границу у самой последней ячейки, чтобы она не прилипала к краю */
+.compare-table td:last-child {
+    border-right: none !important;
+}
+
+/* 4. Сдвигаемый контейнер должен иметь запас справа */
+.compare-table-movable {
+    display: flex !important;
+    gap: var(--compare-gap) !important;
+    will-change: transform !important;
+    /* Небольшой padding справа, чтобы при крайнем сдвиге последняя колонка не липла к скроллбару */
+    padding-right: 2px !important;
+}
+
+/* 5. Синхронизация высот (для левой и правой части) */
+.compare-frozen-row {
+    height: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    box-sizing: border-box !important;
+}
+/* ============================================================ */
+/* ===== ЧЕРНЫЕ ГРАНИЦЫ ДЛЯ ТАБЛИЦЫ СРАВНЕНИЯ ===== */
+/* ============================================================ */
+
+/* 1. Общий контур для таблицы (чтобы справа и снизу была четкая черная линия) */
+.compare-table-clip {
+    border: 1px solid #000 !important;
+    border-radius: 4px !important;
+    background: #fff !important;
+}
+
+/* Убираем двойные рамки внутри clip */
+.compare-table-frozen {
+    border-right: 1px solid #000 !important;
+}
+
+/* 2. Ячейки: делаем все границы черными */
+.compare-table td,
+.compare-cell,
+.compare-frozen-row {
+    border-bottom: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+}
+
+/* 3. Фикс правой и нижней границы (чтобы не было двойных линий) */
+/* Убираем правую границу у последней ячейки в строке (её заменит контур clip) */
+.compare-table td:last-child {
+    border-right: 1px solid !important;
+}
+
+/* Убираем нижнюю границу у последней строки (её заменит контур clip) */
+.compare-table tr:last-child td {
+    border-bottom: 1px solid !important;
+}
+
+.compare-frozen-row:last-child {
+    border-bottom: 1px solid !important;
+}
+
+/* 4. Черные границы для заголовков групп и всей обертки группы */
+.compare-group {
+    border: none !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+}
+
+.compare-group__header {
+    border-bottom: 1px solid #000 !important;
+    background-color: #f4f6fa !important; /* Оставляем легкий фон для читаемости, но границы черные */
+}
+
+/* 5. Если у карточек и графиков тоже серые рамки — делаем их черными */
+.compare-card,
+.compare-chart-card {
+    border: 1px solid #000 !important;
+}
+
+/* 6. Ховеры и подсветки: чтобы границы не пропадали при наведении */
+.compare-table tr:hover td {
+    border-color: #000 !important;
+}
+/* ============================================================ */
+/* ===== ИДЕАЛЬНАЯ СЕТКА БЕЗ НАСЛАИВАНИЯ (FLEX) ===== */
+/* ============================================================ */
+
+/* 1. Внешний контейнер: ТОЛЬКО левая и верхняя граница */
+.compare-table-clip {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    background: #fff !important;
+
+    /* Только левая и верхняя рамка (низ и право создадут ячейки) */
+    border-left: 1px solid #000 !important;
+    border-top: 1px solid #000 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+}
+
+/* 2. Левая колонка (заголовки) */
+.compare-table-frozen {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+    max-width: var(--compare-col-title) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fafafa !important;
+    /* Правая граница отделяет её от данных */
+    border-right: 1px solid #000 !important;
+}
+
+/* Ячейки левой колонки: ТОЛЬКО нижняя граница */
+.compare-frozen-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+
+    border-bottom: 1px solid #000 !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+/* 3. Правая колонка (данные) */
+.compare-table-scroll {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.compare-table-movable {
+    display: flex !important;
+    will-change: transform !important;
+}
+.compare-table-movable.is-animated {
+    transition: transform 0.25s ease !important;
+}
+
+.compare-table {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.compare-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.compare-table tr {
+    display: flex !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+/* Ячейки правой колонки: ТОЛЬКО правая и нижняя границы */
+.compare-table td,
+.compare-cell {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #fff !important;
+
+    /* Только правая и нижняя границы! */
+    border-right: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+    border-top: none !important;
+    border-left: none !important;
+
+    font-size: 13.5px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 4. Подсветки и ховеры */
+.compare-cell--best {
+    background-color: #e8f5e9 !important;
+    font-weight: 700 !important;
+}
+.compare-cell--empty {
+    color: #b0b0b0 !important;
+}
+.compare-table tr:hover td {
+    background-color: #eef5ff !important;
+}
+
+/* 5. Убираем лишние отступы у последних строк в группах */
+.compare-group {
+    margin-bottom: 12px !important; /* Чуть отступа между группами */
+    padding-left: 3px;
+}
+.compare-group:last-child {
+    margin-bottom: 0 !important;
+}
+/* ============================================================ */
+/* ===== ФИКС ПОДСВЕТКИ ЛУЧШИХ ЗНАЧЕНИЙ ===== */
+/* ============================================================ */
+
+/* 1. Лучшее значение (зеленый фон) — перекрываем всё остальное */
+.compare-table tr td.compare-cell--best,
+.compare-table tr:hover td.compare-cell--best {
+    background-color: #e8f5e9 !important;
+    font-weight: 700 !important;
+    color: #1b5e20 !important;
+}
+
+/* 2. Зебра (чередование) должна игнорировать ячейки с классом best */
+.compare-table tr:nth-child(even) td:not(.compare-cell--best) {
+    background-color: #fbfbfb !important;
+}
+
+/* 3. Ховер (наведение) — не должен перебивать цвет best */
+.compare-table tr:hover td:not(.compare-cell--best) {
+    background-color: #eef5ff !important;
+}
+
+/* 4. Убеждаемся, что пустые ячейки имеют свой цвет */
+.compare-table td.compare-cell--empty {
+    color: #b0b0b0 !important;
+    font-weight: 400 !important;
+}
+/* ============================================================ */
+/* ===== СИНЯЯ ПОДСВЕТКА В ТАБЛИЦЕ ===== */
+/* ============================================================ */
+
+/* Лучшее значение: голубой фон, синий текст */
+.compare-table tr td.compare-cell--best,
+.compare-table tr:hover td.compare-cell--best {
+    background-color: #e0f2fe !important; /* Светло-голубой */
+    color: #0369a1 !important;            /* Темно-синий текст */
+    font-weight: 700 !important;
+}
+
+/* Зебра и ховер не должны перебивать синюю подсветку */
+.compare-table tr:nth-child(even) td:not(.compare-cell--best) {
+    background-color: #fbfbfb !important;
+}
+.compare-table tr:hover td:not(.compare-cell--best) {
+    background-color: #eef5ff !important;
+}
+
+/* ============================================================ */
+/* ===== БЛОК "% ОБЕСП." В КАРТОЧКЕ ===== */
+/* ============================================================ */
+
+/* Обычное состояние (если не лучшее) */
+.compare-card__stat--provided {
+    background: #eff6ff !important; /* Очень светлый голубой */
+    color: #2563eb !important;      /* Синий текст */
+    border: 1px solid #bfdbfe !important;
+}
+
+/* Состояние, если это лучшее значение (передаем класс из JS) */
+.compare-card__stat--provided.is-best {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border-color: #7dd3fc !important;
+    box-shadow: 0 0 0 1px #7dd3fc inset;
+}
+
+.compare-card__stat--provided .compare-card__stat-val {
+    color: inherit !important; /* Наследует цвет от родителя */
+}
+.compare-card__stat--provided .compare-card__stat-label {
+    color: inherit !important; /* Наследует цвет от родителя */
+    opacity: 0.8;
+}
+/* ============================================================ */
+/* ===== АБСОЛЮТНЫЙ ФИКС ЦВЕТОВ (ПЕРЕБИВАЕТ ВСЁ ЗЕЛЕНОЕ) ===== */
+/* ============================================================ */
+
+/* 1. Принудительно делаем синюю подсветку для ЛУЧШИХ значений в таблице */
+#compare-view .compare-table tr td.compare-cell--best,
+#compare-view .compare-table tr:hover td.compare-cell--best {
+    background-color: #e0f2fe !important; /* Светло-голубой фон */
+    color: #0369a1 !important;            /* Темно-синий текст */
+    font-weight: 700 !important;          /* Жирный шрифт */
+}
+
+/* 2. Убираем зеленую подсветку, если она вдруг осталась где-то в старых правилах */
+#compare-view .compare-table tr td.compare-cell--best {
+    border-color: #000 !important; /* Оставляем черные границы */
+}
+
+/* 3. Строка при наведении (если она не best) */
+#compare-view .compare-table tr:hover td:not(.compare-cell--best) {
+    background-color: #eef5ff !important; /* Легкий синеватый ховер */
+}
+
+/* 4. Убеждаемся, что пустые ячейки серые */
+#compare-view .compare-table tr td.compare-cell--empty {
+    color: #b0b0b0 !important;
+    font-weight: 400 !important;
+}
+/* ============================================================ */
+/* ===== ИДЕАЛЬНОЕ ВЫРАВНИВАНИЕ 1 В 1 ===== */
+/* ============================================================ */
+
+/* 1. Задаем переменные для ширины и отступов */
+#compare-view {
+    --compare-col-title: 230px;
+    --compare-card-w: 160px;
+    --compare-gap: 5px;
+
+    /* Общая ширина карточки + отступ, чтобы JS и CSS работали синхронно */
+    --col-step: calc(var(--compare-card-w) + var(--compare-gap));
+}
+
+/* 2. Карточки: строгая ширина, фиксированный border-box */
+.compare-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    box-sizing: border-box !important; /* Рамки входят в ширину */
+    margin: 0 !important;
+}
+
+/* 3. Графики: то же самое */
+.compare-chart-card {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+/* 4. Контейнеры, которые двигаются (gap должен быть одинаковым) */
+.compare-cards-movable,
+.compare-charts-movable {
+    display: flex !important;
+    gap: var(--compare-gap) !important;
+    /* Отключаем любой padding, который мог бы сбить ширину */
+    padding: 0 !important;
+}
+
+/* 5. Таблица: левая и правая часть */
+.compare-table-clip {
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+    /* Внешняя рамка (левая и верхняя) */
+    border-left: 1px solid #000 !important;
+    border-top: 1px solid #000 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+}
+
+/* Левая колонка (заголовки) */
+.compare-table-frozen {
+    flex: 0 0 var(--compare-col-title) !important;
+    width: var(--compare-col-title) !important;
+    min-width: var(--compare-col-title) !important;
+    max-width: var(--compare-col-title) !important;
+    background: #fafafa !important;
+    border-right: 1px solid #000 !important; /* Граница между колонками */
+    box-sizing: border-box !important;
+}
+
+.compare-frozen-row {
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+    border-bottom: 1px solid #000 !important;
+    box-sizing: border-box !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+}
+
+/* Правая колонка (данные) */
+.compare-table-scroll {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.compare-table-movable {
+    display: flex !important;
+    /* Убираем gap, чтобы ячейки стыковались рамками */
+    gap: 0 !important;
+    will-change: transform !important;
+}
+
+.compare-table {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    border: none !important;
+}
+
+.compare-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.compare-table tr {
+    display: flex !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+/* Ячейки данных */
+.compare-table td,
+.compare-cell {
+    flex: 0 0 var(--compare-card-w) !important;
+    width: var(--compare-card-w) !important;
+    min-width: var(--compare-card-w) !important;
+    max-width: var(--compare-card-w) !important;
+    height: 44px !important;
+    box-sizing: border-box !important; /* Важно! */
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #fff !important;
+
+    /* Границы: правая и нижняя (чтобы стыковаться с внешней рамкой clip) */
+    border-right: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+    border-top: none !important;
+    border-left: none !important;
+
+    font-size: 13.5px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 6. Подсветки */
+#compare-view .compare-table tr td.compare-cell--best,
+#compare-view .compare-table tr:hover td.compare-cell--best {
+    background-color: #e0f2fe !important; /* Светло-голубой фон */
+    color: #0369a1 !important;            /* Синий текст */
+    font-weight: 700 !important;
+}
+
+.compare-cell--empty {
+    color: #b0b0b0 !important;
+}
+
+/* 7. Стрелки */
+.carousel-btn {
+    top: 100px !important; /* Центрируем по карточкам */
+    transform: translateY(-50%) !important;
 }
