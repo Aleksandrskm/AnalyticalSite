@@ -5156,7 +5156,7 @@ button,
     line-height: 1;
 }
 .compare-card__stat--deficit .compare-card__stat-label {
-    color: #ef4444;
+    color: #dc2626;
 }
 .compare-card__stat-label {
     font-size: 10px;
@@ -6472,8 +6472,8 @@ confirm-modal__btn--yes {
 
 .compare-card__region {
     font-size: 11px;
-    color: #555;
-    font-weight: 500;
+    color: black;
+    font-weight: 700;
 }
 
 .compare-card__district {
@@ -6509,7 +6509,7 @@ confirm-modal__btn--yes {
 .compare-card__stat--deficit {
     background: linear-gradient(135deg, #fde8e8 0%, #fbd5d5 100%);
     color: #cc0000;
-    border: 1px solid #f5c6c6;
+    border: 1px solid #cc0000;
 }
 
 .compare-card__stat-val {
@@ -8579,7 +8579,7 @@ confirm-modal__btn--yes {
 .compare-card__stat--provided {
     background: #eff6ff !important; /* Очень светлый голубой */
     color: #2563eb !important;      /* Синий текст */
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid #2563eb !important;
 }
 
 /* Состояние, если это лучшее значение (передаем класс из JS) */
@@ -8780,4 +8780,48 @@ confirm-modal__btn--yes {
 .carousel-btn {
     top: 100px !important; /* Центрируем по карточкам */
     transform: translateY(-50%) !important;
+}
+/* Домик делаем больше */
+.compare-card__img-placeholder svg {
+    width: 32px;
+    height: 32px;
+    stroke: rgb(0, 102, 255);
+}
+
+/* Район — жирный */
+.compare-card__district {
+    font-weight: 700;
+}
+.compare-card__stat{
+    min-width: 110px;
+    max-width: 110px;
+}
+/* Синяя подпись — насыщенная и жирная */
+.compare-card__stat--provided .compare-card__stat-label {
+    color: #1d4ed8;      /* более насыщенный синий */
+    font-weight: 800;    /* максимальная жирность */
+}
+
+/* Красная подпись — насыщенная и жирная */
+.compare-card__stat--deficit .compare-card__stat-label {
+    color: #dc2626;      /* более насыщенный красный */
+    font-weight: 800;    /* максимальная жирность */
+}
+
+/* Общие настройки размера для подписи */
+.compare-card__stat-label {
+    font-size: 10px;
+    line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: 0.3px; /* чуть разрядим для читаемости */
+}
+.compare-card__stat--provided.is-best {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1px #60a5fa inset;
+}
+.compare-card__stat--provided.is-best .compare-card__stat-val,
+.compare-card__stat--provided.is-best .compare-card__stat-label {
+    color: #1d4ed8 !important;
 }
