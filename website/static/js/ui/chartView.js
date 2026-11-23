@@ -133,7 +133,7 @@ function selectSearchResult(item, index) {
     if (ci === -1) ci = index;
     const isSel = i => (item.id != null && dd[i].id != null) ? String(dd[i].id) === String(item.id) : (dd[i].name && item.name && dd[i].name === item.name);
     const ds0 = state.ratingChart.data.datasets[0];
-    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#4AC15D');
+    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#36AE4C');
     ds0.borderColor = ds0.backgroundColor;
     ds0.borderWidth = dd.map((d, i) => isSel(i) ? 3 : 0);
     if (state.ratingChart.data.datasets[1]) {
@@ -193,7 +193,7 @@ function showItemTooltip(item, chartIndex) {
         if (color) { const s = document.createElement('span'); s.className = 'chart-tooltip__swatch'; s.style.backgroundColor = color; row.appendChild(s); }
         row.appendChild(document.createTextNode(text)); b.appendChild(row);
     };
-    addRow('#4AC15D', `Обеспеченность: ${rt}`);
+    addRow('#36AE4C', `Обеспеченность: ${rt}`);
     addRow('#ED933B', `Дефицит: ${dt}`);
     addRow(null, `Место в обеспеченности: ${place} из ${total}`);
     addRow(null, `Население: ${pop.toLocaleString()} чел.`);
@@ -288,8 +288,8 @@ export function clearChartSelection() {
     if (!state.ratingChart) return;
     state.selectedSearchItem = null; state.selectedSearchIndex = -1;
     const dd = getChartDisplayData(); if (!dd?.length) return;
-    state.ratingChart.data.datasets[0].backgroundColor = '#4AC15D';
-    state.ratingChart.data.datasets[0].borderColor = '#4AC15D';
+    state.ratingChart.data.datasets[0].backgroundColor = '#36AE4C';
+    state.ratingChart.data.datasets[0].borderColor = '#36AE4C';
     state.ratingChart.data.datasets[0].borderWidth = 0;
     if (state.ratingChart.data.datasets[1]) {
         state.ratingChart.data.datasets[1].backgroundColor = '#ED933B';
@@ -321,7 +321,7 @@ export function highlightSelectedOnChart() {
     state.selectedSettlementHighlighted = true;
     const isSel = d => String(d.id) === String(state.selectedSettlementId);
     const ds0 = state.ratingChart.data.datasets[0];
-    ds0.backgroundColor = dd.map(d => isSel(d) ? '#ff0000' : '#4AC15D');
+    ds0.backgroundColor = dd.map(d => isSel(d) ? '#ff0000' : '#36AE4C');
     ds0.borderColor = ds0.backgroundColor;
     ds0.borderWidth = dd.map(d => isSel(d) ? 3 : 0);
     if (state.ratingChart.data.datasets[1]) {
@@ -352,7 +352,7 @@ export function restoreSelectionById(attempt = 0) {
     else { state.selectedSearchItem = null; state.selectedSearchIndex = -1; state.selectedSettlementHighlighted = false; }
     const isSel = i => state.selectedSettlementHighlighted && dd[i] && String(dd[i].id) === String(state.selectedSettlementId);
     const ds0 = state.ratingChart.data.datasets[0];
-    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#4AC15D');
+    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#36AE4C');
     ds0.borderColor = ds0.backgroundColor;
     ds0.borderWidth = dd.map((d, i) => isSel(i) ? 3 : 0);
     if (state.ratingChart.data.datasets[1]) {
@@ -388,7 +388,7 @@ function restoreSelectionAfterUpdate() {
         return d.name && state.selectedSearchItem.name && d.name === state.selectedSearchItem.name;
     };
     const ds0 = state.ratingChart.data.datasets[0];
-    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#4AC15D');
+    ds0.backgroundColor = dd.map((d, i) => isSel(i) ? '#ff0000' : '#36AE4C');
     ds0.borderColor = ds0.backgroundColor;
     ds0.borderWidth = dd.map((d, i) => isSel(i) ? 3 : 0);
     if (state.ratingChart.data.datasets[1]) {
@@ -489,8 +489,8 @@ export function rebuildChartPreservingZoom() {
     state.chartDisplayData = dd;
     state.ratingChart.data.labels = dd.map(it => it.name || `ID: ${it.id}`);
     state.ratingChart.data.datasets[0].data = dd.map(it => Math.max(0, Math.min(100, it.rating || 0)));
-    state.ratingChart.data.datasets[0].backgroundColor = '#4AC15D';
-    state.ratingChart.data.datasets[0].borderColor = '#4AC15D';
+    state.ratingChart.data.datasets[0].backgroundColor = '#36AE4C';
+    state.ratingChart.data.datasets[0].borderColor = '#36AE4C';
     state.ratingChart.data.datasets[1].data = dd.map(it => 100 - Math.max(0, Math.min(100, it.rating || 0)));
     state.ratingChart.data.datasets[1].backgroundColor = '#ED933B';
     state.ratingChart.data.datasets[1].borderColor = '#ED933B';
@@ -665,49 +665,91 @@ const blockCountsPlugin = {
     afterDatasetsDraw(chart) {
         if (state.currentChartFormat !== 'full') return;
         const dd = getChartDisplayData(); if (!dd?.length) return;
-        const { ctx, chartArea, scales } = chart; if (!chartArea) return;
+        const { ctx, chartArea, scales, canvas } = chart; if (!chartArea) return;
         const total = dd.length;
+
         const blocks = [
-            { label: '100%',   from: 100, to: 100, yPos: 104, count: 0, color: '#3BC35D' },
-            { label: '81–99%', from: 81,  to: 99,  yPos: 90,  count: 0, color: '#3BC35D' },
-            { label: '61–80%', from: 61,  to: 80,  yPos: 70,  count: 0, color: '#A7E431' },
-            { label: '41–60%', from: 41,  to: 60,  yPos: 50,  count: 0, color: '#618CEA' },
-            { label: '21–40%', from: 21,  to: 40,  yPos: 30,  count: 0, color: '#4CBDF7' },
-            { label: '1–20%',  from: 1,   to: 20,  yPos: 10,  count: 0, color: '#ED933B' },
-            { label: '0%',     from: 0,   to: 0,   yPos: -4,  count: 0, color: '#ED933B' }
+            { label: 'Обеспеченность: 100%',   from: 100, to: 100, count: 0, color: '#ffffff', textColor: '#000000' },
+            { label: 'Обеспеченность: 81–99%', from: 81,  to: 99,  count: 0, color: '#0F8A0B', textColor: '#fff' },
+            { label: 'Обеспеченность: 61–80%', from: 61,  to: 80,  count: 0, color: '#69F034', textColor: '#000' },
+            { label: 'Обеспеченность: 41–60%', from: 41,  to: 60,  count: 0, color: '#005BFB', textColor: '#fff' },
+            { label: 'Обеспеченность: 21–40%', from: 21,  to: 40,  count: 0, color: '#5FF1FF', textColor: '#000' },
+            { label: 'Обеспеченность: 1–20%',  from: 1,   to: 20,  count: 0, color: '#f57c00', textColor: '#000' },
+            { label: 'Обеспеченность: 0%',     from: 0,   to: 0,   count: 0, color: '#ffffff', textColor: '#000000' }
         ];
+
         dd.forEach(it => {
             let v = Number(it.rating); if (!isFinite(v)) v = 0;
             v = Math.max(0, Math.min(100, v));
             const b = blocks.find(bl => v >= bl.from && v <= bl.to);
             if (b) b.count++;
         });
+
         ctx.save();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
-        [20,40,60,80,100].forEach(val => {
-            const y = scales.y.getPixelForValue(val);
-            if (y >= chartArea.top && y <= chartArea.bottom) {
-                ctx.beginPath(); ctx.moveTo(chartArea.left, y); ctx.lineTo(chartArea.right, y); ctx.stroke();
-            }
-        });
-        ctx.restore();
+
         const meta = chart.getDatasetMeta(0);
         const last = meta.data[meta.data.length - 1];
-        const startX = (last ? last.x + (last.width || 0) / 2 : chartArea.right) + 20;
-        ctx.save();
-        ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-        blocks.forEach(b => {
-            let yMid = scales.y.getPixelForValue(b.yPos);
-            yMid = Math.max(20, Math.min(chart.height - 20, yMid));
-            const pct = ((b.count / total) * 100).toFixed(2);
-            ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = b.color;
-            ctx.fillText(b.label, startX, yMid - 8);
-            ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = 'black';
-            ctx.fillText(`${b.count} НП (${pct}%)`, startX, yMid + 10);
+        const gap = 20;
+        const startX = (last ? last.x + (last.width || 0) / 2 : chartArea.right) + gap;
+
+        // Ограничиваем ширину блока так, чтобы правая граница не вылезала за canvas
+        const maxAvailW = canvas.width - startX - 4;
+        const blockW = Math.min(230, maxAvailW);
+
+        const totalHeight = chartArea.bottom - chartArea.top;
+        const blockHeight = totalHeight / blocks.length;
+
+        const pxAlign = v => Math.round(v) + 0.5; // чёткая линия
+
+        blocks.forEach((b, index) => {
+            const y = chartArea.top + index * blockHeight;
+            const y2 = y + blockHeight;
+            const rightX = startX + blockW;
+
+            ctx.fillStyle = b.color;
+            ctx.fillRect(startX, y, blockW, blockHeight);
+
+            ctx.strokeStyle = (b.color === '#ffffff') ? '#000000' : 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1;
+
+            // Рисуем рамку с пиксельным выравниванием
+            ctx.beginPath();
+            ctx.moveTo(pxAlign(startX), y);
+            ctx.lineTo(pxAlign(startX), y2);
+            ctx.moveTo(pxAlign(rightX), y);
+            ctx.lineTo(pxAlign(rightX), y2);
+            ctx.moveTo(startX, pxAlign(y));
+            ctx.lineTo(rightX, pxAlign(y));
+            ctx.moveTo(startX, pxAlign(y2));
+            ctx.lineTo(rightX, pxAlign(y2));
+            ctx.stroke();
+
+            // текст
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            const centerX = startX + blockW / 2;
+            const centerY = y + blockHeight / 2;
+
+            ctx.fillStyle = b.textColor;
+
+            const line1 = b.label;
+            const line2 = `${b.count} НП (${((b.count / total) * 100).toFixed(2)}%)`;
+
+            // Первая строка: процентные диапазоны — делаем жирными и чуть крупнее
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(line1, centerX, centerY - 10);
+
+            // Вторая строка: количество НП и проценты
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(line2, centerX, centerY + 10);
         });
-        ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = 'black';
-        ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
         ctx.fillText(`Всего НП: ${total}`, chartArea.right, chartArea.bottom + 25);
+
         ctx.restore();
     }
 };
@@ -762,7 +804,7 @@ export function createRatingChart(data, type) {
     const labels = dd.map(it => it.name || `ID: ${it.id}`);
     const pv = dd.map(it => Math.max(0, Math.min(100, it.rating || 0)));
     const dv = dd.map(it => 100 - Math.max(0, Math.min(100, it.rating || 0)));
-    const pc1 = dd.map(() => '#4AC15D');
+    const pc1 = dd.map(() => '#36AE4C');
     const pc2 = dd.map(() => '#ED933B');
     const ratingsAll = sd.map(it => Number(it.rating) || 0);
     const n = ratingsAll.length;
@@ -798,7 +840,7 @@ export function createRatingChart(data, type) {
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            layout: { padding: { top: 8, bottom: state.currentChartFormat === 'full' ? 40 : 90, right: 210 } },
+            layout: { padding: { top: 8, bottom: state.currentChartFormat === 'full' ? 40 : 90, right: 250 } },
             interaction: { mode: 'index', intersect: true, axis: 'x' },
             onClick: (evt, elements) => {
                 if (!elements?.length) return;
@@ -821,13 +863,13 @@ export function createRatingChart(data, type) {
                 if (elements?.length) {
                     const hi = elements[0].index;
                     cnv.style.cursor = 'pointer';
-                    ds0.backgroundColor = dd.map((_, i) => i === hi ? '#ff1a1a' : isSel(i) ? '#ff0000' : '#4AC15D');
+                    ds0.backgroundColor = dd.map((_, i) => i === hi ? '#ff1a1a' : isSel(i) ? '#ff0000' : '#36AE4C');
                     ds0.borderColor = ds0.backgroundColor; ds0.hoverBackgroundColor = '#ff1a1a';
                     ds1.backgroundColor = dd.map((_, i) => i === hi ? '#cc0000' : isSel(i) ? '#cc0000' : '#ED933B');
                     ds1.borderColor = ds1.backgroundColor; ds1.hoverBackgroundColor = '#cc0000';
                 } else {
                     cnv.style.cursor = 'default';
-                    ds0.backgroundColor = dd.map((_, i) => isSel(i) ? '#ff0000' : '#4AC15D');
+                    ds0.backgroundColor = dd.map((_, i) => isSel(i) ? '#ff0000' : '#36AE4C');
                     ds0.borderColor = ds0.backgroundColor;
                     ds1.backgroundColor = dd.map((_, i) => isSel(i) ? '#cc0000' : '#ED933B');
                     ds1.borderColor = ds1.backgroundColor;
@@ -840,7 +882,7 @@ export function createRatingChart(data, type) {
                     labels: {
                         font: { size: 16, weight: 'bold' }, color: 'black', boxWidth: 22, boxHeight: 14, padding: 12,
                         generateLabels: () => [
-                            { text: 'Обеспеченность,%', fillStyle: '#4AC15D', strokeStyle: '#4AC15D', lineWidth: 1, hidden: false, index: 0 },
+                            { text: 'Обеспеченность,%', fillStyle: '#36AE4C', strokeStyle: '#36AE4C', lineWidth: 1, hidden: false, index: 0 },
                             { text: 'Дефицит,%', fillStyle: '#ED933B', strokeStyle: '#ED933B', lineWidth: 1, hidden: false, index: 1 }
                         ]
                     }
@@ -859,7 +901,7 @@ export function createRatingChart(data, type) {
                             return ctx.datasetIndex === 0 ? `Обеспеченность: ${Math.round(r)}%` : `Дефицит: ${Math.round(100 - r)}%`;
                         },
                         labelColor: ctx => ctx.datasetIndex === 0
-                            ? { borderColor: '#4AC15D', backgroundColor: '#4AC15D', borderWidth: 1, borderRadius: 2 }
+                            ? { borderColor: '#36AE4C', backgroundColor: '#36AE4C', borderWidth: 1, borderRadius: 2 }
                             : { borderColor: '#ED933B', backgroundColor: '#ED933B', borderWidth: 1, borderRadius: 2 },
                         labelTextColor: () => '#000',
                         afterBody: ctx => {
