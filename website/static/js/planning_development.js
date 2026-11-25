@@ -425,7 +425,7 @@ function createArrowSvg(percent) {
     text.setAttribute('text-anchor', 'middle');
     text.setAttribute('dominant-baseline', 'central');
     text.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
-    text.setAttribute('font-size', '13');
+    text.setAttribute('font-size', '16');
     text.setAttribute('font-weight', 'bold');
     text.setAttribute('fill', '#000000');          // чёрный
     text.textContent = `${p}%`;
