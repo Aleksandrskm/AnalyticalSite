@@ -5,7 +5,7 @@
     --pd-text-color: #000;
     --pd-positive-color: #008000;
     --pd-negative-color: #cc0000;
-    --pd-gradient: linear-gradient(90deg, #ff7f00 0 20%, #00ffff 20% 40%, #0000ff 40% 60%, #00ff00 60% 80%, #008000 80% 100%);
+    --pd-gradient: linear-gradient(90deg, #ED933B 0 20%, #4CBDF7 20% 40%, #618CEA 40% 60%, #A7E431 60% 80%, #3BC35D 80% 100%);
     --pd-font: Arial, Helvetica, sans-serif;
 }
 
@@ -161,7 +161,10 @@ body {
 .pd-unified-table-wrapper {
     border: 2px solid var(--pd-border-color);
     background: var(--pd-bg-color);
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;                    /* оба скроллбара */
+    max-height: calc(100vh - 280px);   /* обёртка вписывается в вьюпорт */
 }
 
 .pd-blue-title {
@@ -171,14 +174,29 @@ body {
     color: #0000cc;
     padding: 10px 0;
     border-bottom: 2px solid var(--pd-border-color);
+    position: sticky;
+    top: 0;
+    left: 0;
+    background: var(--pd-bg-color);
+    z-index: 2;
 }
 
-.pd-unified-grid { display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; }
+/* 7 колонок: минимум — min-content (не лезет за карточку),
+   максимум — 1fr (заполняет свободное место на широком экране).
+   width: 100% растягивает сетку; если min-content суммарно больше —
+   сетка переполняет контейнер, срабатывает overflow у обёртки. */
+.pd-unified-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(min-content, 1fr));
+    width: 100%;
+}
 
 /* Колонки */
 .pd-category-column {
     border-right: 2px solid var(--pd-border-color);
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 .pd-category-column:last-child { border-right: none; }
 
@@ -256,7 +274,7 @@ body {
     display: flex;
     flex-direction: column;
     width: 40px;
-    height: 90%;
+    height: 75%;
     min-height: 40px;
     background: #fff;
     flex-shrink: 0;
@@ -288,73 +306,56 @@ body {
     z-index: 10;
 }
 
+/* Блочная стрелка (SVG-фигура в стиле Paint): контур 1 px + заливка зоны */
 .pd-mini-arrow {
-    position: relative;
-    padding: 1px 4px;
-    border: 1px solid #2c3e50;
-    border-radius: 4px;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    background: var(--pd-arrow-color, #00ffff);
-    color: #1a2b3b;
-    font-size: 18px;
-    font-weight: bold;
-    white-space: nowrap;
-    margin-left: 12px;
-}
-
-.pd-mini-arrow::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    bottom: -1px;
-    left: -12px;
-    width: 11px;
-    background: #2c3e50;
-    clip-path: polygon(100% 0, 100% 100%, 0 50%);
-}
-
-.pd-mini-arrow::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -11px;
-    width: 10px;
-    background: var(--pd-arrow-color, #00ffff);
-    clip-path: polygon(100% 0, 100% 100%, 0 50%);
-}
-
-/* Таблица внутри карточки — записи в одну строку */
-.pd-card-table {
-    width: 100%;
-    min-width: 0;
-    flex: 1 1 0;
-    border-collapse: collapse;
-    font-size: 12px;
+    display: block;
     margin: 0;
-    table-layout: fixed;
+    padding: 0;
+    border: 0;
+    background: none;
+    overflow: visible;                 /* чтобы 1 px контура не обрезался по краям viewBox */
+    shape-rendering: geometricPrecision;
+}
+
+/* ==================== Таблица внутри карточки ==================== */
+/* В один столбик: наименование сверху, значение снизу.
+   Шрифты — исходные (12px, monospace, значение bold).
+   Ширина уменьшена на 40% (60% от исходной).
+   Наименование и значение выровнены по левому краю. */
+.pd-card-table {
+    width: 60%;
+    min-width: 0;
+    flex: 0 1 60%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 0;
+    table-layout: auto;
 }
 
 .pd-card-table td {
-    border-bottom: 1px solid var(--pd-border-color);
-    padding: 3px 4px;
+    padding: 2px 2px;
     line-height: 1.2;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
-.pd-card-table tr:last-child td { border-bottom: none; }
-
+/* Наименование — верхняя строка пары, старый стиль */
 .pd-card-table .td-label {
-    width: 70%;
     text-align: left;
-    border-right: 1px solid var(--pd-border-color);
     font-family: monospace, sans-serif;
 }
 
+/* Значение — нижняя строка пары, старый стиль, выравнивание по левому краю */
 .pd-card-table .td-value {
-    width: 30%;
-    text-align: right;
+    text-align: left;
     font-weight: bold;
     font-family: monospace, sans-serif;
+}
+
+/* Разделитель между метриками — под значением; у последней строки снят */
+.pd-card-table .pd-card-table__value-row td {
+    border-bottom: 1px solid var(--pd-border-color);
+}
+.pd-card-table tr:last-child td {
+    border-bottom: none;
 }

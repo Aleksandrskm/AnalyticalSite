@@ -43,7 +43,9 @@ const TECHNOLOGY_CARDS = [
     { category: 'Почтовая связь',    title: 'Почтовые отделения', key: 'posts', keyFallback: 'post' }
 ];
 
-const SCALE_COLORS = ['#008000', '#00ff00', '#0000ff', '#00ffff', '#ff7f00'];
+const SCALE_COLORS = ['#3BC35D', '#A7E431', '#618CEA', '#4CBDF7', '#ED933B'];
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // ==================== Загрузка населённого пункта ====================
 
@@ -220,11 +222,11 @@ function clampPercent(value) {
 
 function getScaleColor(percent) {
     const p = clampPercent(percent);
-    if (p <= 20) return '#ff7f00';
-    if (p <= 40) return '#00ffff';
-    if (p <= 60) return '#0000ff';
-    if (p <= 80) return '#00ff00';
-    return '#008000';
+    if (p <= 20) return '#ED933B';
+    if (p <= 40) return '#4CBDF7';
+    if (p <= 60) return '#618CEA';
+    if (p <= 80) return '#A7E431';
+    return '#3BC35D';
 }
 
 function getArrowTop(percent) {
@@ -369,6 +371,69 @@ function createTypeGaugeHeader(category, percent) {
 
 // ==================== Карточки технологий ====================
 
+/**
+ * Однонаправленная блочная стрелка (фигура в стиле Paint), указывающая влево
+ * на вертикальную диаграмму:
+ *   - замкнутый контур толщиной 1 px;
+ *   - заливка = цвет зоны диаграммы, на которую указывает остриё;
+ *   - значение выводится внутри тела стрелки чёрным жирным шрифтом;
+ *   - высота (H и h) увеличена в 2 раза по сравнению с первой версией;
+ *   - ширина подобрана так, чтобы фигура не выходила за отведённые
+ *     66 px справа от диаграммы (W = 54, старт в 6 px от её правого края).
+ */
+function createArrowSvg(percent) {
+    const p = clampPercent(percent);
+    const fill = getScaleColor(p);
+
+    // Геометрия фигуры (px) — высота удвоена
+    const H     = 44;                 // высота головы
+    const h     = 22;                 // высота тела
+    const headW = 18;                 // ширина головы
+    const bodyW = 36;                 // длина тела
+    const W     = headW + bodyW;      // общая ширина = 54
+
+    // Замкнутый контур — одно остриё слева, «хвост» прямоугольный справа
+    const pts = [
+        [0,         H / 2],            // левое остриё
+        [headW,     0],                // верх головы
+        [headW,     (H - h) / 2],      // верх тела (слева)
+        [W,         (H - h) / 2],      // верх тела (справа)
+        [W,         (H + h) / 2],      // низ тела (справа)
+        [headW,     (H + h) / 2],      // низ тела (слева)
+        [headW,     H]                 // низ головы
+    ];
+
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'pd-mini-arrow');
+    svg.setAttribute('width', String(W));
+    svg.setAttribute('height', String(H));
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `${p}%`);
+
+    const polygon = document.createElementNS(SVG_NS, 'polygon');
+    polygon.setAttribute('points', pts.map(([x, y]) => `${x},${y}`).join(' '));
+    polygon.setAttribute('fill', fill);            // цвет зоны, на которую указывает
+    polygon.setAttribute('stroke', '#2c3e50');     // внешний контур
+    polygon.setAttribute('stroke-width', '1');     // 1 px
+    polygon.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(polygon);
+
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('x', String((headW + W) / 2));
+    text.setAttribute('y', String(H / 2));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'central');
+    text.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+    text.setAttribute('font-size', '13');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('fill', '#000000');          // чёрный
+    text.textContent = `${p}%`;
+    svg.appendChild(text);
+
+    return svg;
+}
+
 function createChart(percent) {
     const p = clampPercent(percent);
 
@@ -390,13 +455,8 @@ function createChart(percent) {
     const arrowGroup = document.createElement('div');
     arrowGroup.className = 'pd-arrow-group';
     arrowGroup.style.setProperty('--pd-arrow-top', getArrowTop(p));
+    arrowGroup.appendChild(createArrowSvg(p));
 
-    const arrow = document.createElement('div');
-    arrow.className = 'pd-mini-arrow';
-    arrow.textContent = `${p}%`;
-    arrow.style.setProperty('--pd-arrow-color', getScaleColor(p));
-
-    arrowGroup.appendChild(arrow);
     chart.appendChild(arrowGroup);
     wrapper.appendChild(chart);
     return wrapper;
@@ -416,18 +476,23 @@ function createTable(data) {
 
     const fragment = document.createDocumentFragment();
     for (const [label, value] of rows) {
-        const tr = document.createElement('tr');
-
+        // Наименование — верхняя строка пары
+        const trLabel = document.createElement('tr');
+        trLabel.className = 'pd-card-table__label-row';
         const tdLabel = document.createElement('td');
         tdLabel.className = 'td-label';
         tdLabel.textContent = label;
+        trLabel.appendChild(tdLabel);
 
+        // Значение — нижняя строка пары
+        const trValue = document.createElement('tr');
+        trValue.className = 'pd-card-table__value-row';
         const tdValue = document.createElement('td');
         tdValue.className = 'td-value';
         tdValue.textContent = toDisplayValue(value);
+        trValue.appendChild(tdValue);
 
-        tr.append(tdLabel, tdValue);
-        fragment.appendChild(tr);
+        fragment.append(trLabel, trValue);
     }
     table.appendChild(fragment);
     return table;
