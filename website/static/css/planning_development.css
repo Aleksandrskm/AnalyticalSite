@@ -5,7 +5,7 @@
     --pd-text-color: #000;
     --pd-positive-color: #008000;
     --pd-negative-color: #cc0000;
-    --pd-gradient: linear-gradient(90deg, #ED933B 0 20%, #4CBDF7 20% 40%, #618CEA 40% 60%, #A7E431 60% 80%, #3BC35D 80% 100%);
+    --pd-gradient: linear-gradient(90deg, #f57c00 0 20%, #5ff1ff 20% 40%, #618CEA 40% 60%, #69f034 60% 80%, #0f8a0b 80% 100%);
     --pd-font: Arial, Helvetica, sans-serif;
 }
 
@@ -274,7 +274,7 @@ body {
     display: flex;
     flex-direction: column;
     width: 40px;
-    height: 75%;
+    height: 79%;
     min-height: 40px;
     background: #fff;
     flex-shrink: 0;

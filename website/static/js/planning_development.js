@@ -43,7 +43,7 @@ const TECHNOLOGY_CARDS = [
     { category: 'Почтовая связь',    title: 'Почтовые отделения', key: 'posts', keyFallback: 'post' }
 ];
 
-const SCALE_COLORS = ['#3BC35D', '#A7E431', '#618CEA', '#4CBDF7', '#ED933B'];
+const SCALE_COLORS = ['#0f8a0b', '#69f034', '#618CEA', '#5ff1ff', '#f57c00'];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -222,11 +222,11 @@ function clampPercent(value) {
 
 function getScaleColor(percent) {
     const p = clampPercent(percent);
-    if (p <= 20) return '#ED933B';
-    if (p <= 40) return '#4CBDF7';
+    if (p <= 20) return '#f57c00';
+    if (p <= 40) return '#5ff1ff';
     if (p <= 60) return '#618CEA';
-    if (p <= 80) return '#A7E431';
-    return '#3BC35D';
+    if (p <= 80) return '#69f034';
+    return '#0f8a0b';
 }
 
 function getArrowTop(percent) {
