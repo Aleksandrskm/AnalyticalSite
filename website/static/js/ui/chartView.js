@@ -573,7 +573,7 @@ export function renderChartControls(currentSortField) {
     const ctrl = document.createElement('div'); ctrl.id = 'chart-controls'; ctrl.className = 'chart-controls';
     const sl = document.createElement('label'); sl.textContent = 'Сортировка:'; sl.className = 'chart-controls__label'; ctrl.appendChild(sl);
     const ss = document.createElement('select'); ss.id = 'chart-sort-select'; ss.className = 'chart-controls__select';
-    [{ v: 'rating', t: 'По убыванию обесп. ТИ' }, { v: 'rating_asc', t: 'По возрастанию обесп.ТИ' }].forEach(o => {
+    [{ v: 'rating', t: 'По убыванию обесп.' }, { v: 'rating_asc', t: 'По возрастанию обесп.' }].forEach(o => {
         const op = document.createElement('option'); op.value = o.v; op.textContent = o.t;
         if (o.v === currentSortField) op.selected = true;
         ss.appendChild(op);
@@ -669,13 +669,13 @@ const blockCountsPlugin = {
         const total = dd.length;
 
         const blocks = [
-            { label: 'Обеспеченность: 100%',   from: 100, to: 100, count: 0, color: '#ffffff', textColor: '#000000' },
-            { label: 'Обеспеченность: 81–99%', from: 81,  to: 99,  count: 0, color: '#0F8A0B', textColor: '#fff' },
+            { label: 'Обеспеченность: 100%',   from: 100, to: 100, count: 0, color: '#0F8A0B', textColor: '#fff' },
+            { label: 'Обеспеченность: 81–99%', from: 81,  to: 99,  count: 0, color: '#3BC35D', textColor: '#000' },
             { label: 'Обеспеченность: 61–80%', from: 61,  to: 80,  count: 0, color: '#69F034', textColor: '#000' },
             { label: 'Обеспеченность: 41–60%', from: 41,  to: 60,  count: 0, color: '#005BFB', textColor: '#fff' },
             { label: 'Обеспеченность: 21–40%', from: 21,  to: 40,  count: 0, color: '#5FF1FF', textColor: '#000' },
-            { label: 'Обеспеченность: 1–20%',  from: 1,   to: 20,  count: 0, color: '#f57c00', textColor: '#000' },
-            { label: 'Обеспеченность: 0%',     from: 0,   to: 0,   count: 0, color: '#ffffff', textColor: '#000000' }
+            { label: 'Обеспеченность: 1–20%',  from: 1,   to: 20,  count: 0, color: '#ED933B', textColor: '#000' },
+            { label: 'Обеспеченность: 0%',     from: 0,   to: 0,   count: 0, color: '#f57c00', textColor: '#000000' }
         ];
 
         dd.forEach(it => {
@@ -753,7 +753,100 @@ const blockCountsPlugin = {
         ctx.restore();
     }
 };
+/* ================= ЗАГОЛОВОК ГРАФИКА ================= */
+function buildChartTitle(baseTitle, data) {
+    const rows = Array.isArray(data) ? data : [];
 
+    // ---- Выбранные регионы ----
+    const selected = Array.isArray(state.currentRegions) ? state.currentRegions : [];
+    const selectedCodes = new Set(
+        selected
+            .map(r => (typeof r === 'string' ? r : (r && r.code) || ''))
+            .filter(Boolean)
+            .map(String)
+    );
+    const isAllRegions = selectedCodes.size === 0;
+
+    // ---- Названия регионов из данных ----
+    const regionNamesSet = new Set();
+    rows.forEach(r => {
+        if (!r) return;
+        const name = (r.region_name || '').trim();
+        if (!name) return;
+        if (!isAllRegions) {
+            const code = r.region_code != null ? String(r.region_code) : '';
+            // Фильтруем ТОЛЬКО если у строки реально есть код.
+            // Если кода нет — строку не выбрасываем (данные уже отфильтрованы таблицей).
+            if (code && !selectedCodes.has(code)) return;
+        }
+        regionNamesSet.add(name);
+    });
+    let regionNames = Array.from(regionNamesSet);
+
+    // ---- Fallback: имена прямо из state.currentRegions ----
+    if (!isAllRegions && regionNames.length === 0) {
+        regionNames = Array.from(new Set(
+            selected
+                .map(r => (r && typeof r === 'object') ? (r.name || r.label || '').trim() : '')
+                .filter(Boolean)
+        ));
+    }
+
+    // ---- Радиокнопка «все» ----
+    const allRadio = document.getElementById('number-settlements');
+    const isAllPop = allRadio ? allRadio.checked : false;
+
+    // ---- Диапазон населения ----
+    let minPop = null, maxPop = null;
+    if (!isAllPop) {
+        const pr = state.currentPopRange;
+        if (Array.isArray(pr)) {
+            minPop = pr[0] ?? null;
+            maxPop = pr[1] ?? null;
+        } else if (pr && typeof pr === 'object') {
+            minPop = (pr.min ?? pr.from ?? null);
+            maxPop = (pr.max ?? pr.to ?? null);
+        }
+        if (minPop === null) {
+            const el = document.getElementById('numbers-settlement');
+            if (el && el.value !== '') minPop = el.value;
+        }
+        if (maxPop === null) {
+            const el = document.getElementById('numbers-settlements');
+            if (el && el.value !== '') maxPop = el.value;
+        }
+    }
+
+    const norm = v => (v === undefined || v === null || v === '') ? null : v;
+    minPop = norm(minPop);
+    maxPop = norm(maxPop);
+    const hasPop = (minPop !== null) || (maxPop !== null);
+
+    const popPart = hasPop
+        ? ` для НП численностью от ${minPop !== null ? minPop : '0'} до ${maxPop !== null ? maxPop : '∞'} чел.`
+        : '';
+
+    // ---- Региональная часть ----
+    let suffix = '';
+
+    if (isAllRegions) {
+        if (regionNames.length === 1) {
+            suffix = `: ${regionNames[0]}${popPart || ' для всех НП'}`;
+        } else {
+            suffix = `: все регионы${popPart || ' для всех НП'}`;
+        }
+    } else {
+        const allNpPart = isAllPop ? ' для всех НП' : '';
+        if (regionNames.length > 0) {
+            suffix = `: ${regionNames.join(', ')}${allNpPart}${popPart}`;
+        } else {
+            // Регион выбран, но имя неизвестно — НЕ пишем «все регионы»
+            suffix = `${allNpPart}${popPart}`;
+        }
+    }
+
+    return `${baseTitle}${suffix}`;
+}
 /* ================= СОЗДАНИЕ ГРАФИКА ================= */
 export function createRatingChart(data, type) {
     const canvas = document.getElementById('rating-chart');
@@ -1001,18 +1094,20 @@ export function createRatingChart(data, type) {
     const h = cc2?.querySelector('.chart-header');
     if (h) {
         h.innerHTML = '';
-        const t = document.createElement('div'); t.className = 'chart-title'; t.textContent = 'График обеспеченности НП региона';
+        const t = document.createElement('div');
+        t.className = 'chart-title';
+        t.textContent = buildChartTitle('График обеспеченности НП региона', data);
         h.appendChild(t);
     }
     renderChartControls(sf);
+    const totalPopulation = dd.reduce((sum, it) => sum + (Number(it.population) || 0), 0);
+    const popLabels = totalPopulation.toLocaleString('ru-RU');
     if (h) {
         const stats = [
             { label: 'Количество НП',            value: n.toLocaleString('ru-RU'), color: '#0066ff' },
-            { label: 'Численность населения',    value: popLabel,                  color: '#4c00a8' },
+            { label: 'Общая численность населения',    value: popLabels,                  color: '#4c00a8' },
             { label: 'Средняя обеспеченность',   value: avg.toFixed(2),            color: '#228028' },
             { label: 'Средний дефицит',          value: avgD.toFixed(2),           color: '#cc0000' },
-            { label: 'Медианная обеспеченность', value: med.toFixed(2),            color: '#228028' },
-            { label: 'Медианный дефицит',        value: medD.toFixed(2),           color: '#cc0000' }
         ];
         renderChartStatsCards(h, stats, 'chart-stats-row');
     }

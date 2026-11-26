@@ -20,8 +20,8 @@ export function handleClear() {
     const radioAll   = document.getElementById('number-settlements');
     const from = document.getElementById('numbers-settlement');
     const to   = document.getElementById('numbers-settlements');
-    if (radioRange) radioRange.checked = true;
-    if (radioAll)   radioAll.checked = false;
+    if (radioRange) radioRange.checked = false;
+    if (radioAll)   radioAll.checked = true;
     if (from) from.value = 1;
     if (to)   to.value = 10000;
 

@@ -43,29 +43,48 @@ export function renderAnalyticsDashboard() {
     const d = document.createElement('div'); d.id = 'analytics-dashboard';
 
     const hb = document.createElement('div'); hb.className = 'analytics-header';
-    const t = document.createElement('div'); t.className = 'analytics-title'; t.textContent = 'Диаграмма обеспеченности НП региона';
+    const t = document.createElement('div'); t.className = 'analytics-title';
     const sub = document.createElement('div'); sub.className = 'analytics-subtitle';
-    const names = state.currentRegions.map(r => {
-        const o = document.querySelector(`#region option[value="${r}"]`); return o ? o.textContent : r;
-    });
-    sub.textContent = names.length ? `Регион(ы): ${names.join(', ')}` : 'Регион(ы): не выбраны';
-    hb.append(t, sub); d.appendChild(hb);
 
+// ---- Регионы ----
+    const names = (state.currentRegions || []).map(r => {
+        const o = document.querySelector(`#region option[value="${r}"]`);
+        return o ? o.textContent : r;
+    });
+    const regionPart = names.length ? names.join(', ') : 'все регионы';
+    sub.textContent = names.length ? `Регион(ы): ${names.join(', ')}` : 'Регион(ы): не выбраны';
+
+// ---- Диапазон населения ----
     const radioAll = document.getElementById('number-settlements');
     const fromI = document.getElementById('numbers-settlement');
     const toI = document.getElementById('numbers-settlements');
     const isAll = !!(radioAll && radioAll.checked);
-    const popFrom = isAll ? 1 : (parseInt(fromI?.value) || 1);
-    const popTo = isAll ? 17000000 : (parseInt(toI?.value) || 17000000);
+    const popFrom = isAll ? 0 : (parseInt(fromI?.value) || 0);
+    const popTo = isAll ? Infinity : (parseInt(toI?.value) || Infinity);
+    const hasPop = !isAll && (popFrom !== null || popTo !== null);
+    const popPart = hasPop
+        ? ` для НП численностью от ${popFrom.toLocaleString('ru-RU')} до ${popTo.toLocaleString('ru-RU')} чел.`
+        : '';
+
+// ---- Динамический заголовок ----
+    t.textContent = `Диаграмма обеспеченности НП региона: ${regionPart}${popPart || ' для всех НП'}`;
+
+    hb.append(t); d.appendChild(hb);
+
+// ---- Подсчёт KPI ----
     const items = state.settlementsData.items || [];
     const total = items.length;
     let totalPop = 0, sumR = 0, cntR = 0;
+
     items.forEach(it => {
         const p = Number(it.population) || 0;
-        if (p >= popFrom && p <= popTo) totalPop += p;
+        // При "все НП" фильтр не применяем — берём всё, как в chartView.js
+        if (isAll || (p >= popFrom && p <= popTo)) totalPop += p;
+
         const r = state.allRatings[String(it.id)];
         if (r && r.rating != null && !isNaN(r.rating)) { sumR += Number(r.rating); cntR++; }
     });
+
     const avgR = cntR ? sumR / cntR : 0;
     const avgD = cntR ? 100 - avgR : 0;
 
@@ -77,9 +96,10 @@ export function renderAnalyticsDashboard() {
         const l = document.createElement('div'); l.className = 'kpi-card__label'; l.textContent = label;
         c.append(v, l); return c;
     };
+
     cards.append(
         mk('Количество НП', total.toLocaleString('ru-RU'), '#0066ff'),
-        mk('Численность населения', isAll ? 'Все НП' : `${popFrom.toLocaleString('ru-RU')}–${popTo.toLocaleString('ru-RU')}`, '#4c00a8'),
+        mk('Общая численность населения', totalPop.toLocaleString('ru-RU'), '#4c00a8'), // Теперь реальная сумма
         mk('Средняя обеспеченность', avgR.toFixed(2), '#43A047'),
         mk('Средний дефицит', avgD.toFixed(2), '#cc0000')
     );
