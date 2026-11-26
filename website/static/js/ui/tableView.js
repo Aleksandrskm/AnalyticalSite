@@ -136,7 +136,92 @@ export function applyLocalUpdates(settlementId, table, updates) {
         });
     }
 }
+/* ================= ЗАГОЛОВОК ТАБЛИЦЫ ================= */
+function buildTableTitle(baseTitle, data) {
+    const rows = Array.isArray(data) ? data : [];
 
+    // ---- Выбранные регионы ----
+    const selectedCodes = new Set(
+        (Array.isArray(state.currentRegions) ? state.currentRegions : [])
+            .map(r => (typeof r === 'string' ? r : (r && r.code) || ''))
+            .filter(Boolean)
+            .map(String)
+    );
+    const isAllRegions = selectedCodes.size === 0;
+
+    // ---- Уникальные названия регионов из данных ----
+    const regionNamesSet = new Set();
+    rows.forEach(r => {
+        if (!r) return;
+        const name = (r.region_name || '').trim();
+        if (!name) return;
+        if (!isAllRegions) {
+            const code = r.region_code != null ? String(r.region_code) : '';
+            if (!selectedCodes.has(code)) return;
+        }
+        regionNamesSet.add(name);
+    });
+    const regionNames = Array.from(regionNamesSet);
+
+    // ---- Радиокнопка «все» ----
+    const allRadio = document.getElementById('number-settlements');
+    const isAllPop = allRadio ? allRadio.checked : false;
+
+    // ---- Диапазон населения ----
+    let minPop = null, maxPop = null;
+    if (!isAllPop) {
+        const pr = state.currentPopRange;
+        if (Array.isArray(pr)) {
+            minPop = pr[0] ?? null;
+            maxPop = pr[1] ?? null;
+        } else if (pr && typeof pr === 'object') {
+            minPop = (pr.min ?? pr.from ?? null);
+            maxPop = (pr.max ?? pr.to   ?? null);
+        }
+
+        // Если state пустой — берём прямо из инпутов
+        if (minPop === null) {
+            const el = document.getElementById('numbers-settlement');
+            if (el && el.value !== '') minPop = el.value;
+        }
+        if (maxPop === null) {
+            const el = document.getElementById('numbers-settlements');
+            if (el && el.value !== '') maxPop = el.value;
+        }
+    }
+
+    const norm = v => (v === undefined || v === null || v === '') ? null : v;
+    minPop = norm(minPop);
+    maxPop = norm(maxPop);
+    const hasPop = (minPop !== null) || (maxPop !== null);
+
+    const popPart = hasPop
+        ? `для НП численностью от ${minPop !== null ? minPop : '0'} до ${maxPop !== null ? maxPop : '∞'} чел.`
+        : '';
+
+    // ---- Региональная часть ----
+    let suffix = '';
+
+    if (isAllRegions) {
+        if (regionNames.length === 1) {
+            suffix = `: ${regionNames[0]} для всех НП${popPart}`;
+        } else if (regionNames.length > 1) {
+            suffix = `: все регионы для всех НП${popPart}`;
+        } else {
+            suffix = `: для всех НП${popPart}`;
+        }
+    } else {
+        // Выбран конкретный регион(ы)
+        const allNpPart = isAllPop ? ' для всех НП' : '';
+        if (regionNames.length > 0) {
+            suffix = `: ${regionNames.join(', ')}${allNpPart}${popPart}`;
+        } else {
+            suffix = `: все регионы${allNpPart}${popPart}`;
+        }
+    }
+
+    return `${baseTitle}${suffix}`;
+}
 /* ================= ОБЩЕЕ: ПОКАЗАТЬ КНОПКИ И РАЗМЕР ===== */
 function ensureTableButtons() {
     state.isChartMode = false;
@@ -261,55 +346,37 @@ export function selectInitialRowInTable(tbody, options = {}) {
 /* ================= ДВОЙНОЙ КЛИК ================= */
 export function setupDoubleClickHandler() {
     const table = document.getElementById('settlements-table');
-    if (table) {
-        table.addEventListener('dblclick', function (e) {
-            const row = e.target.closest('tr');
-            if (!row) return;
-            const headerCells = this.querySelectorAll('thead th');
-            let hasRating = false;
-            headerCells.forEach(th => {
-                if (
-                    th.textContent.includes('БС') ||
-                    th.textContent.includes('Количество БС') ||
-                    th.textContent.includes('обеспеченность')
-                ) hasRating = true;
-            });
-            if (hasRating) return;
-            const id = row.dataset.id;
+    if (!table) return;
+
+    table.addEventListener('dblclick', function (e) {
+        const row = e.target.closest('tbody tr');
+        if (!row) return;
+        const id = row.dataset.id;
+        if (!id) return;
+
+        // Подсветка выбранной строки
+        document.querySelectorAll('#settlements-table tbody tr').forEach(tr => tr.classList.remove('selected'));
+        row.classList.add('selected');
+
+        if (state.showRatings) {
+            // Режим таблицы обеспеченности → модалка рейтинга
+            openEditModal(id, 'rating', 'rating');
+        } else {
+            // Режим таблицы НП → модалка НП
             const lat = parseFloat(row.dataset.lat);
             const lon = parseFloat(row.dataset.lon);
             const area = parseFloat(row.dataset.area);
             const name = row.dataset.name;
-            if (id && !isNaN(lat) && !isNaN(lon)) {
-                document.querySelectorAll('#settlements-table tbody tr').forEach(tr => tr.classList.remove('selected'));
-                row.classList.add('selected');
+
+            if (!isNaN(lat) && !isNaN(lon)) {
                 state.selectedSettlementId = id;
                 state.selectedSettlementLat = lat;
                 state.selectedSettlementLon = lon;
                 state.selectedSettlementArea = area || 1;
                 state.selectedSettlementName = name || '';
-                openEditModal(id, 'settlement', 'settlements');
             }
-        });
-    }
-    document.addEventListener('dblclick', function (e) {
-        const tbl = document.getElementById('settlements-table');
-        if (!tbl) return;
-        const headerCells = tbl.querySelectorAll('thead th');
-        let hasRating = false;
-        headerCells.forEach(th => {
-            if (
-                th.textContent.includes('БС') ||
-                th.textContent.includes('Количество БС') ||
-                th.textContent.includes('обеспеченность')
-            ) hasRating = true;
-        });
-        if (!hasRating) return;
-        const row = e.target.closest('#settlements-table tbody tr');
-        if (!row) return;
-        document.querySelectorAll('#settlements-table tbody tr').forEach(tr => tr.classList.remove('selected'));
-        row.classList.add('selected');
-        openEditModal(row.dataset.id, 'rating', 'rating');
+            openEditModal(id, 'settlement', 'settlements');
+        }
     });
 }
 
@@ -436,7 +503,7 @@ export function renderSettlementsTableOnly(data, total, page, pageSize, keepFilt
     const oldT = document.querySelector('.settlements-title'); if (oldT) oldT.remove();
     const title = document.createElement('h3');
     title.className = 'settlements-title';
-    title.textContent = 'Таблица населенных пунктов';
+    title.textContent = buildTableTitle('Таблица населенных пунктов региона', data);
     table.parentNode.insertBefore(title, table);
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
@@ -571,7 +638,7 @@ export function renderCombinedTable(data, total, page, pageSize, keepFilter = fa
     const oldT = document.querySelector('.settlements-title'); if (oldT) oldT.remove();
     const title = document.createElement('h3');
     title.className = 'settlements-title';
-    title.textContent = 'Таблица обеспеченности НП региона';
+    title.textContent = buildTableTitle('Таблица обеспеченности НП региона', data);
     table.parentNode.insertBefore(title, table);
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
@@ -600,29 +667,45 @@ export function renderCombinedTable(data, total, page, pageSize, keepFilter = fa
     state.currentSettlementsFiltered = sorted;
     state.originalDataForFilter = data;
     state.originalTotalForFilter = total;
-    const ratingGroups = buildRatingGroups();
-    const settlementBase = [
-        { key: 'id', label: 'ID' }, { key: 'name', label: 'Название' },
-        { key: 'region_name', label: 'Регион' }, { key: 'region_code', label: 'Код региона' },
-        { key: 'district_name', label: 'Муниципальное образование' }
+
+    // === ТОЛЬКО РАЗРЕШЁННЫЕ КОЛОНКИ, «Обеспеченность» сразу после «Название» ===
+    const isScoreKey = (k) => k === 'rating' || /^rating_/i.test(k);
+
+    // Обратный маппинг: objectKey → label из RANKING_COLUMN_LABELS (русские названия)
+    const rankingLabelByKey = {};
+    Object.keys(RANKING_COLUMN_LABELS).forEach(db => {
+        const key = RANKING_DB_TO_OBJECT_KEY[db] || db;
+        rankingLabelByKey[key] = RANKING_COLUMN_LABELS[db];
+    });
+
+    const settlementBaseTop = [
+        { key: 'id', label: 'ID' },
+        { key: 'name', label: 'Название' }
     ];
-    const ratingCol = { key: 'rating', label: 'обеспеченность' };
-    const settlementRest = [
-        { key: 'area', label: 'Площадь (км²)' }, { key: 'lat', label: 'Широта' },
-        { key: 'lon', label: 'Долгота' }, { key: 'population', label: 'Население' }, { key: 'fias_id', label: 'Код ФИАС' }
+    const ratingCol = { key: 'rating', label: 'Обеспеченность, %' };
+    const settlementBaseBottom = [
+        { key: 'area', label: 'Площадь (км²)' },
+        { key: 'district_name', label: 'Муниципальное образование' },
+        { key: 'lon', label: 'Долгота' },
+        { key: 'lat', label: 'Широта' },
+        { key: 'population', label: 'Население' }
     ];
-    const summary = [
-        { key: 'count_abonents_summary', label: 'Общее количество абонентов' },
-        { key: 'population_percent_summary', label: 'Общий процент охвата населения' },
-        { key: 'communication_coverage_summary', label: 'Общее покрытие' },
-        { key: 'communication_coverage_percent_summary', label: 'Общий процент покрытия' },
-        { key: 'traffic_summary', label: 'Общий объем трафика' },
-        { key: 'traffic_percent_summary', label: 'Общий процент трафика' },
-        { key: 'operators_percent_summary', label: 'Общий процент операторов' }
-    ];
+
+    // Только rating_* из ratingGroups; label — из RANKING_COLUMN_LABELS + добавляем ", %"
     const ratingHeaders = [];
-    ratingGroups.forEach(g => g.fields.forEach(f => ratingHeaders.push({ key: f.key, label: f.label, group: g.title })));
-    const headers = [...settlementBase, ratingCol, ...settlementRest, ...summary, ...ratingHeaders];
+    buildRatingGroups().forEach(g => {
+        g.fields.forEach(f => {
+            if (isScoreKey(f.key) && f.key !== 'rating') {
+                let label = rankingLabelByKey[f.key] || f.label;
+                if (!label.endsWith(', %')) label += ', %'; // Добавляем процент
+                ratingHeaders.push({ key: f.key, label, group: g.title });
+            }
+        });
+    });
+
+    // Порядок: ID, Название, Обеспеченность, Площадь, МО, Долгота, Широта, Население, rating_*
+    const headers = [...settlementBaseTop, ratingCol, ...settlementBaseBottom, ...ratingHeaders];
+
     buildFilterUI(data, headers,
         (f, v, ex) => {
             state.savedFilterField = f; state.savedFilterValue = v; state.savedFilterExact = ex;

@@ -30,6 +30,9 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
     const settlement = state.settlementsData.items.find(it => String(it.id) === String(settlementId)) || {};
     const ranking = state.allRatings[String(settlementId)] || {};
 
+    // Предикат "SCORE-поля": rating или rating_*
+    const isScoreKey = (k) => k === 'rating' || /^rating_/i.test(k);
+
     // Определяем, какие таблицы разрешено редактировать
     let allowedTables = [];
     let allowExtraRatingFields = false;
@@ -40,7 +43,7 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
         allowedTables = ['settlements', 'ranking'];
         allowExtraRatingFields = false;
     } else {
-        // auto — показываем всё
+        // auto — показываем всё (но ограничиваем набор SCORE-полей)
         allowedTables = ['settlements', 'ranking'];
         allowExtraRatingFields = true;
     }
@@ -59,13 +62,14 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
 
     let tableHeaderOrder = getColumnOrderFromTable('#settlements-table');
 
-    // ⚠️ FALLBACK: если таблица скрыта (display: none) или пуста — используем buildRatingGroups()
+    // ⚠️ FALLBACK: если таблица скрыта (display: none) или пуста — используем разрешённый набор
     if (tableHeaderOrder.length === 0) {
         tableHeaderOrder = [
-            'id', 'name', 'region_name', 'region_code', 'district_name',
-            'area', 'lat', 'lon', 'population', 'fias_id',
+            'id', 'name', 'area', 'district_name', 'lon', 'lat', 'population',
             'rating',
-            ...buildRatingGroups().flatMap(g => g.fields.map(f => f.key))
+            ...buildRatingGroups()
+                .flatMap(g => g.fields.map(f => f.key))
+                .filter(k => isScoreKey(k) && k !== 'rating')
         ];
     }
 
@@ -97,9 +101,32 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
     const orderedFields = [];
     const seen = new Set();
 
+    // Вспомогательная функция: добавляет ", %" к метке, если это поле SCORE
+    const formatLabel = (k, baseLabel) => {
+        let lbl = baseLabel;
+        if (isScoreKey(k) && !lbl.endsWith(', %')) {
+            lbl += ', %';
+        }
+        return lbl;
+    };
+
     tableHeaderOrder.forEach(key => {
         if (seen.has(key)) return;
         seen.add(key);
+
+        // 🔒 Спецслучай: rating — всегда RAT_SUM_NP, метка «Обеспеченность, %»
+        // Срабатывает РАНЬШЕ ветки rankingKeyToDb, чтобы не подменяться на rating_*
+        if (key === 'rating') {
+            if (!allowedTables.includes('ranking')) return;
+            orderedFields.push({
+                table: 'ranking',
+                dbColumn: 'RAT_SUM_NP',
+                objectKey: 'rating',
+                label: 'Обеспеченность, %',
+                value: getValueByDbColumn(ranking, 'RAT_SUM_NP', RANKING_DB_TO_OBJECT_KEY)
+            });
+            return;
+        }
 
         // Проверяем, есть ли ключ в ranking
         if (rankingKeyToDb[key]) {
@@ -110,7 +137,7 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
                 table: 'ranking',
                 dbColumn,
                 objectKey: key,
-                label: rankingLabelByKey[key] || dbColumn,
+                label: formatLabel(key, rankingLabelByKey[key] || dbColumn),
                 value: getValueByDbColumn(ranking, dbColumn, RANKING_DB_TO_OBJECT_KEY)
             });
             return;
@@ -129,26 +156,14 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
             });
             return;
         }
-
-        // Специальный случай: rating
-        if (key === 'rating') {
-            if (!allowedTables.includes('ranking')) return;
-            orderedFields.push({
-                table: 'ranking',
-                dbColumn: 'RAT_SUM_NP',
-                objectKey: 'rating',
-                label: 'Обеспеченность',
-                value: getValueByDbColumn(ranking, 'RAT_SUM_NP', RANKING_DB_TO_OBJECT_KEY)
-            });
-        }
     });
 
-    // Если разрешены дополнительные поля рейтинга — добавляем все группы
+    // Если разрешены дополнительные поля рейтинга — добавляем все rating_* (кроме rating)
     if (allowExtraRatingFields) {
-        const allGroups = buildRatingGroups();
-        allGroups.forEach(group => {
+        buildRatingGroups().forEach(group => {
             group.fields.forEach(f => {
                 if (seen.has(f.key)) return;
+                if (!isScoreKey(f.key) || f.key === 'rating') return;
                 const dbColumn = rankingKeyToDb[f.key];
                 if (!dbColumn) return;
                 seen.add(f.key);
@@ -156,11 +171,27 @@ export async function openEditModal(settlementId, type, tableMode = 'auto') {
                     table: 'ranking',
                     dbColumn,
                     objectKey: f.key,
-                    label: f.label,
+                    label: formatLabel(f.key, f.label),
                     value: getValueByDbColumn(ranking, dbColumn, RANKING_DB_TO_OBJECT_KEY)
                 });
             });
         });
+    }
+
+    // 🔒 Для таблицы обеспеченности (rating/auto) жёстко ограничиваем набор полей
+    if (tableMode === 'rating' || tableMode === 'auto') {
+        const allowedKeys = new Set([
+            'id', 'name', 'area', 'district_name', 'lon', 'lat', 'population',
+            'rating',
+            ...buildRatingGroups()
+                .flatMap(g => g.fields.map(f => f.key))
+                .filter(k => isScoreKey(k) && k !== 'rating')
+        ]);
+        for (let i = orderedFields.length - 1; i >= 0; i--) {
+            if (!allowedKeys.has(orderedFields[i].objectKey)) {
+                orderedFields.splice(i, 1);
+            }
+        }
     }
 
     // Удаляем старую модалку, если есть
